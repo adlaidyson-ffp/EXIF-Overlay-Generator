@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXIF Overlay Generator</title>
+    <title>EXIF Overlay Generator V2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- EXIF-JS for client-side EXIF data extraction -->
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
@@ -47,19 +47,7 @@
             background-color: var(--bg-medium);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         }
-
-        /* Utility for SVG Icons (Lucide-style) */
-        .icon {
-            stroke: var(--accent);
-            stroke-width: 1.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-        }
-
+        
         /* Custom range track styling */
         input[type="range"]::-webkit-slider-runnable-track {
             background: var(--bg-dark);
@@ -73,7 +61,43 @@
             border-radius: 50%;
             background: var(--accent);
             cursor: pointer;
-            margin-top: -5px; /* Centers the thumb vertically */
+            margin-top: -5px; 
+        }
+
+        .icon-svg {
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+        }
+
+        .overlay-text-item {
+            cursor: pointer;
+            transition: background-color 0.1s;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .overlay-text-item:hover {
+            background-color: rgba(148, 253, 248, 0.1);
+        }
+
+        /* The invisible input that overlays the text */
+        #editInput {
+            position: absolute;
+            z-index: 20;
+            opacity: 0; /* Starts invisible */
+            padding: 0;
+            margin: 0;
+            border: none;
+            resize: none;
+            background: rgba(0,0,0,0);
+            color: var(--text-light);
+            font-family: 'Aptos Bold', sans-serif;
+            pointer-events: none; /* Initially non-interactive */
         }
         
     </style>
@@ -87,40 +111,52 @@
                         'bg-medium': 'var(--bg-medium)',
                         'accent': 'var(--accent)',
                         'text-light': 'var(--text-light)',
+                    },
+                    fontFamily: {
+                        'aptos-regular': ['Aptos Regular', 'sans-serif'],
+                        'aptos-bold': ['Aptos Bold', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="p-4 md:p-10 min-h-screen">
+<body class="p-4 md:p-8 min-h-screen">
 
-    <div class="max-w-6xl mx-auto">
-        <header class="text-center mb-10">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl mb-2">FusedFrame Overlay Generator</h1>
-            <p class="text-xl md:text-2xl text-text-light font-light opacity-80">A blurred version of your image with camera settings overlayed, free to use.</p>
+            <p class="text-lg md:text-xl text-text-light font-light opacity-80">A blurred version of your image with camera settings overlayed, free to use.</p>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- 1. Settings Panel -->
-            <div class="lg:col-span-1 container-bg p-6 rounded-xl space-y-6 h-fit sticky top-10">
+            
+            <!-- 1. Settings Panel (Sidebar) -->
+            <div id="settingsPanel" class="lg:col-span-1 container-bg p-6 rounded-xl space-y-6 lg:h-fit lg:sticky lg:top-8 order-2 lg:order-1">
                 <h3 class="header-text text-2xl mb-4">1. Image & Global Settings</h3>
                 
                 <!-- Image Upload -->
                 <div class="space-y-3">
-                    <label class="block text-text-light font-bold">Upload Image (JPG/PNG)</label>
-                    <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/webp" class="w-full text-text-light text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-bg-dark hover:file:bg-opacity-90">
+                    <label class="block text-text-light font-bold">Upload Images (Multi-select enabled)</label>
+                    <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/webp" multiple class="w-full text-text-light text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-bg-dark hover:file:bg-opacity-90">
                 </div>
 
-                <!-- Preview Canvas -->
-                <div class="mt-6 text-center">
-                    <canvas id="previewCanvas" class="w-full rounded-xl shadow-lg border-2 border-bg-dark" style="display:none;"></canvas>
-                    <p id="uploadPrompt" class="text-center p-8 text-text-light opacity-70">Upload an image to start generating the overlay.</p>
+                <!-- Navigation -->
+                <div id="navContainer" class="flex items-center justify-between mt-4 py-2 border-y border-bg-dark" style="display: none;">
+                    <button id="prevImage" class="p-2 rounded-full bg-bg-dark text-accent hover:bg-bg-medium disabled:opacity-30">
+                        <!-- SVG Arrow Left -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span id="imageCounter" class="text-text-light font-bold"></span>
+                    <button id="nextImage" class="p-2 rounded-full bg-bg-dark text-accent hover:bg-bg-medium disabled:opacity-30">
+                        <!-- SVG Arrow Right -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
                 </div>
 
                 <!-- Adjustment Sliders -->
                 <div class="space-y-4">
-                    <h4 class="header-text text-xl pt-4">Visual Adjustments</h4>
+                    <h4 class="header-text text-xl pt-4">Visual Adjustments (Saved Locally)</h4>
                     <div>
                         <label for="blurAmount" class="block text-text-light">Background Blur Strength (<span id="blurValue">10</span>px)</label>
                         <input type="range" id="blurAmount" min="0" max="40" value="10" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
@@ -135,187 +171,187 @@
                     </div>
                 </div>
 
-                <button id="downloadButton" class="w-full py-3 mt-6 bg-accent text-bg-dark font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition disabled:opacity-50" disabled>
-                    Download Final Image
-                </button>
-                <p id="downloadMessage" class="text-sm text-center text-red-400 mt-2 hidden">Please wait for the image to process before downloading.</p>
+                <!-- Download Options -->
+                <div class="pt-4 space-y-2">
+                    <button id="downloadCurrentButton" class="w-full py-3 bg-accent text-bg-dark font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition disabled:opacity-50" disabled>
+                        Download Current Image
+                    </button>
+                    <button id="downloadAllButton" class="w-full py-2 bg-bg-dark border border-accent text-accent font-semibold rounded-xl shadow-lg hover:bg-bg-medium transition disabled:opacity-50" disabled>
+                        Download All Images
+                    </button>
+                    <p id="downloadMessage" class="text-sm text-center text-red-400 mt-2 hidden"></p>
+                </div>
             </div>
 
-            <!-- 2. EXIF Data Input & Live Preview -->
-            <div class="lg:col-span-2 container-bg p-6 rounded-xl">
-                <h3 class="header-text text-2xl mb-4">2. Camera Settings (Auto-Extracted/Manual)</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    <!-- Data Input Fields -->
-                    <div class="space-y-3">
-                        <h4 class="text-lg font-bold text-accent mb-2">Technical Details</h4>
-                        <input type="text" id="aperture" placeholder="Aperture (e.g., f/2.8)" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="f/2">
-                        <input type="text" id="shutterSpeed" placeholder="Shutter Speed (e.g., 1/200 sec)" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="1/800 sec">
-                        <input type="text" id="iso" placeholder="ISO (e.g., ISO 100)" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="ISO 160">
-                        <input type="text" id="focalLength" placeholder="Focal Length (e.g., 50mm)" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="90.0mm (135.0mm FF)">
-                    </div>
-
-                    <div class="space-y-3">
-                        <h4 class="text-lg font-bold text-accent mb-2">Camera & Copyright</h4>
-                        <input type="text" id="cameraMakeModel" placeholder="Camera Make/Model" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="FUJIFILM X-T3">
-                        <input type="text" id="lensModel" placeholder="Lens Model (Optional)" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="FUJIFILM XF90mmF2 R LM WR">
-                        <input type="text" id="description" placeholder="Short Description (Optional)" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="Natural light at my local park">
-                        <input type="text" id="copyright" placeholder="Copyright/Photographer Name" class="input-field w-full p-2 rounded-lg bg-bg-dark border border-bg-medium" value="© Adlai Dyson | Fused Frame Photography">
+            <!-- 2. Live Preview & Toggles -->
+            <div class="lg:col-span-2 order-1 lg:order-2">
+                
+                <!-- Toggles for Optional Fields -->
+                <div id="toggleControls" class="container-bg p-4 rounded-xl mb-4" style="display: none;">
+                    <h4 class="header-text text-xl mb-3">Overlay Visibility Toggles</h4>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="toggleLensModel" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
+                            <span class="text-text-light">Lens Model</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="toggleDescription" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
+                            <span class="text-text-light">Description</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="toggleCopyright" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
+                            <span class="text-text-light">Copyright</span>
+                        </label>
                     </div>
                 </div>
-
+                
                 <!-- Live Preview Area -->
-                <h3 class="header-text text-2xl mb-4">3. Live Overlay Preview</h3>
-                <div id="previewContainer" class="relative w-full aspect-video rounded-xl shadow-2xl overflow-hidden bg-bg-dark flex items-center justify-center">
-                    <img id="displayImage" class="absolute inset-0 w-full h-full object-cover" style="filter: blur(10px);" alt="Blurred Preview Image">
+                <div id="previewContainerWrapper" class="relative w-full aspect-video rounded-xl shadow-2xl overflow-hidden bg-bg-medium flex items-center justify-center min-h-[300px]">
+                    <p id="uploadPrompt" class="text-center p-8 text-text-light opacity-70">Upload images to start generating the overlay.</p>
                     
-                    <!-- Darkening Overlay -->
-                    <div id="darkOverlay" class="absolute inset-0 w-full h-full" style="background-color: rgba(17, 24, 39, 0.2);"></div>
+                    <div id="previewContainer" class="absolute inset-0 w-full h-full" style="display: none;">
+                        <img id="displayImage" class="absolute inset-0 w-full h-full object-cover" style="filter: blur(10px);" alt="Blurred Preview Image">
+                        
+                        <!-- Darkening Overlay -->
+                        <div id="darkOverlay" class="absolute inset-0 w-full h-full" style="background-color: rgba(17, 24, 39, 0.2);"></div>
+                        
+                        <!-- Invisible Input for Direct Editing -->
+                        <textarea id="editInput" rows="1" class="absolute" style="font-size: 30px;"></textarea>
 
-                    <!-- Overlay Text Content -->
-                    <div id="overlayContent" class="relative p-8 w-full">
-                        <div id="settingsList" class="space-y-4 text-text-light text-2xl md:text-3xl lg:text-4xl">
-                            <!-- Aperture -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG Aperture Icon (Simple) -->
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <circle cx="12" cy="12" r="3" />
-                                    <path d="M12 5v14M5 12h14" />
-                                </svg>
-                                <span id="displayAperture">f/2</span>
+                        <!-- Overlay Text Content -->
+                        <div id="overlayContent" class="absolute inset-0 p-4 sm:p-8 md:p-10 lg:p-12" style="font-family: 'Aptos Bold', sans-serif;">
+                            <div id="settingsList" class="space-y-4 text-text-light text-lg md:text-xl lg:text-2xl">
+                                <!-- Technical Details go here (Aperture, Shutter, ISO, Focal) -->
                             </div>
 
-                            <!-- Shutter Speed -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG Shutter Speed Icon (Timer/Clock) -->
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M12 6v6l4 2" />
-                                    <path d="M10 2h4" />
-                                </svg>
-                                <span id="displayShutterSpeed">1/800 sec</span>
-                            </div>
+                            <!-- Separator Line -->
+                            <div id="separator" class="h-px w-full bg-accent opacity-50 my-6"></div>
 
-                            <!-- ISO -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG ISO Icon (Camera/Sensor) -->
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M18 8h-1a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2z" />
-                                    <circle cx="12" cy="14" r="4" />
-                                </svg>
-                                <span id="displayISO">ISO 160</span>
-                            </div>
-
-                            <!-- Focal Length -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG Focal Length Icon (Target) -->
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <circle cx="12" cy="12" r="3" />
-                                    <path d="M12 2v7.5M12 14.5v7.5M2 12h7.5M14.5 12h7.5" />
-                                </svg>
-                                <span id="displayFocalLength">90.0mm (135.0mm FF)</span>
-                            </div>
-                        </div>
-
-                        <!-- Separator Line -->
-                        <div class="h-px w-full bg-accent opacity-50 my-6"></div>
-
-                        <!-- Camera & Copyright Info -->
-                        <div id="infoList" class="space-y-3 text-text-light text-xl md:text-2xl lg:text-3xl opacity-90">
-                            <!-- Description -->
-                            <div class="text-2xl mb-4" id="displayDescription">Natural light at my local park</div>
-
-                            <!-- Camera Model -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG Camera -->
-                                <svg class="icon h-6 w-6" viewBox="0 0 24 24">
-                                    <path d="M18 8h-1a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2z" />
-                                    <circle cx="12" cy="14" r="4" />
-                                </svg>
-                                <span id="displayCameraModel">FUJIFILM X-T3</span>
-                            </div>
-
-                            <!-- Lens Model -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG Lens -->
-                                <svg class="icon h-6 w-6" viewBox="0 0 24 24">
-                                    <path d="M18.8 9.2a3 3 0 0 0-3-3H12V3a1 1 0 0 0-2 0v3H5.2a3 3 0 0 0-3 3v5.6a3 3 0 0 0 3 3h5.8V21a1 1 0 0 0 2 0v-3h3.6a3 3 0 0 0 3-3V9.2z" />
-                                </svg>
-                                <span id="displayLensModel">FUJIFILM XF90mmF2 R LM WR</span>
-                            </div>
-
-                            <!-- Copyright -->
-                            <div class="flex items-center space-x-4">
-                                <!-- SVG Copyright -->
-                                <svg class="icon h-6 w-6" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M14.5 9.5a3.5 3.5 0 1 0 0 5H12" />
-                                </svg>
-                                <span id="displayCopyright">© Adlai Dyson | Fused Frame Photography</span>
+                            <!-- Camera & Copyright Info -->
+                            <div id="infoList" class="space-y-3 text-text-light text-base md:text-lg lg:text-xl opacity-90">
+                                <!-- Description, Camera, Lens, Copyright go here -->
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Hidden Canvas for Download Generation -->
+                <canvas id="hiddenCanvas" style="display: none;"></canvas>
             </div>
         </main>
 
     </div>
 
+    <!-- Icon SVGs (Inline Definition) -->
+    <script>
+        const ICONS = {
+            aperture: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2v20M4.22 4.22l14.14 14.14M4.22 19.78l14.14-14.14"/></svg>`,
+            shutterSpeed: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /><path d="M2.5 17.5l5-5M16.5 6l5 5"/></svg>`,
+            iso: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><circle cx="12" cy="12" r="4"/><path d="M10 2h4M7 22l3-5"/></svg>`,
+            focalLength: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 4.2a2 2 0 0 0-2.8 0L3 8.4a2 2 0 0 0 0 2.8l4.2 4.2a2 2 0 0 0 2.8 0l4.2-4.2a2 2 0 0 0 0-2.8L10 4.2z"/><circle cx="12" cy="12" r="7"/><path d="M12 5v2.5M12 16.5v2.5M5 12h2.5M16.5 12h2.5"/></svg>`,
+            description: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+            cameraMakeModel: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 8h-1a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2z" /><circle cx="12" cy="14" r="4" /></svg>`,
+            lensModel: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M18.8 9.2a3 3 0 0 0-3-3H12V3a1 1 0 0 0-2 0v3H5.2a3 3 0 0 0-3 3v5.6a3 3 0 0 0 3 3h5.8V21a1 1 0 0 0 2 0v-3h3.6a3 3 0 0 0 3-3V9.2z" /></svg>`,
+            copyright: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M14.5 9.5a3.5 3.5 0 1 0 0 5H12" /></svg>`,
+        };
+    </script>
+
     <script>
         const imageUpload = document.getElementById('imageUpload');
         const displayImage = document.getElementById('displayImage');
         const overlayContent = document.getElementById('overlayContent');
-        const downloadButton = document.getElementById('downloadButton');
-        const previewCanvas = document.getElementById('previewCanvas');
-        const uploadPrompt = document.getElementById('uploadPrompt');
-        const ctx = previewCanvas.getContext('2d');
+        const downloadCurrentButton = document.getElementById('downloadCurrentButton');
+        const downloadAllButton = document.getElementById('downloadAllButton');
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
         const downloadMessage = document.getElementById('downloadMessage');
         const darkOverlay = document.getElementById('darkOverlay');
+        const settingsList = document.getElementById('settingsList');
+        const infoList = document.getElementById('infoList');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const previewContainer = document.getElementById('previewContainer');
+        const editInput = document.getElementById('editInput');
+        const toggleControls = document.getElementById('toggleControls');
+        const navContainer = document.getElementById('navContainer');
+        const prevImage = document.getElementById('prevImage');
+        const nextImage = document.getElementById('nextImage');
+        const imageCounter = document.getElementById('imageCounter');
+        
+        const ctx = hiddenCanvas.getContext('2d');
 
-        // Input Fields (Manual/EXIF Data)
-        const inputs = {
-            aperture: document.getElementById('aperture'),
-            shutterSpeed: document.getElementById('shutterSpeed'),
-            iso: document.getElementById('iso'),
-            focalLength: document.getElementById('focalLength'),
-            cameraMakeModel: document.getElementById('cameraMakeModel'),
-            lensModel: document.getElementById('lensModel'),
-            description: document.getElementById('description'),
-            copyright: document.getElementById('copyright'),
+        // State Management
+        let imageProjects = [];
+        let currentImageIndex = 0;
+        let activeEditElement = null; // Stores the DOM element currently being edited
+
+        const DEFAULT_SETTINGS = {
+            aperture: 'f/2',
+            shutterSpeed: '1/800 sec',
+            iso: 'ISO 160',
+            focalLength: '90.0mm (135.0mm FF)',
+            cameraMakeModel: 'FUJIFILM X-T3',
+            lensModel: 'FUJIFILM XF90mmF2 R LM WR',
+            description: 'Natural light at my local park',
+            copyright: '© Adlai Dyson | Fused Frame Photography',
+            // Toggles
+            showLensModel: true,
+            showDescription: true,
+            showCopyright: true,
+        };
+        
+        // Global Adjustment Sliders (Persisted)
+        const globalAdjustments = {
+            blur: 10,
+            opacity: 0.2,
+            scale: 1.0
         };
 
-        // Display Elements (Live Preview)
-        const displays = {
-            aperture: document.getElementById('displayAperture'),
-            shutterSpeed: document.getElementById('displayShutterSpeed'),
-            iso: document.getElementById('displayISO'),
-            focalLength: document.getElementById('displayFocalLength'),
-            cameraMakeModel: document.getElementById('displayCameraModel'),
-            lensModel: document.getElementById('displayLensModel'),
-            description: document.getElementById('displayDescription'),
-            copyright: document.getElementById('displayCopyright'),
+        // DOM elements for sliders
+        const controls = {
+            blurAmount: document.getElementById('blurAmount'),
+            overlayOpacity: document.getElementById('overlayOpacity'),
+            textScale: document.getElementById('textScale'),
+            blurValue: document.getElementById('blurValue'),
+            scaleValue: document.getElementById('scaleValue'),
+            toggleLensModel: document.getElementById('toggleLensModel'),
+            toggleDescription: document.getElementById('toggleDescription'),
+            toggleCopyright: document.getElementById('toggleCopyright'),
         };
 
-        // Adjustment Controls
-        const blurAmount = document.getElementById('blurAmount');
-        const blurValue = document.getElementById('blurValue');
-        const overlayOpacity = document.getElementById('overlayOpacity');
-        const textScale = document.getElementById('textScale');
-        const scaleValue = document.getElementById('scaleValue');
-
-        let originalImage = new Image();
-        let imageURL = null;
-
-
-        // --- Core Functions ---
+        // --- Local Storage Functions ---
 
         /**
-         * Converts fractional EXIF values to human-readable strings.
-         * @param {number | number[]} value The raw EXIF value.
-         * @returns {string} Human-readable string.
+         * Saves global adjustment settings to localStorage.
          */
+        const saveAdjustments = () => {
+            try {
+                localStorage.setItem('overlaySettings', JSON.stringify(globalAdjustments));
+            } catch (e) {
+                console.error("Could not save settings to localStorage.", e);
+            }
+        };
+
+        /**
+         * Loads global adjustment settings from localStorage.
+         */
+        const loadAdjustments = () => {
+            try {
+                const saved = localStorage.getItem('overlaySettings');
+                if (saved) {
+                    const loaded = JSON.parse(saved);
+                    Object.assign(globalAdjustments, loaded);
+                    // Update DOM elements
+                    controls.blurAmount.value = globalAdjustments.blur;
+                    controls.overlayOpacity.value = globalAdjustments.opacity;
+                    controls.textScale.value = globalAdjustments.scale;
+                }
+            } catch (e) {
+                console.error("Could not load settings from localStorage.", e);
+            }
+        };
+
+
+        // --- EXIF Parsing Helpers ---
+
         const parseExifValue = (value) => {
             if (Array.isArray(value) && value.length === 2 && value[0] !== 0) {
                 return value[0] / value[1];
@@ -323,282 +359,476 @@
             return value;
         };
 
-        /**
-         * Cleans up Shutter Speed display (e.g., 0.005 -> 1/200).
-         * @param {number} value
-         * @returns {string}
-         */
         const formatShutterSpeed = (value) => {
             if (value === 0) return '';
-            if (value >= 1.0) return `${value} sec`;
+            if (value >= 1.0) return `${value.toFixed(1)} sec`;
             const reciprocal = 1 / value;
-            // Round to the nearest 10 or 100 for clean display (e.g., 1/200 instead of 1/201.2)
             const roundedReciprocal = Math.round(reciprocal);
             return `1/${roundedReciprocal} sec`;
         };
 
-        /**
-         * Extracts relevant EXIF data and populates input fields.
-         * @param {object} tags EXIF object from exif-js.
-         */
-        const extractAndPopulateExif = (tags) => {
-            // Aperture
+        const extractExifData = (tags) => {
+            const data = { ...DEFAULT_SETTINGS }; // Start with defaults
+            
             const apertureRaw = parseExifValue(tags.FNumber);
-            if (apertureRaw) {
-                inputs.aperture.value = `f/${apertureRaw.toFixed(1).replace('.0', '')}`;
-            } else {
-                inputs.aperture.value = 'f/?.?';
-            }
-
-            // Shutter Speed
+            if (apertureRaw) data.aperture = `f/${apertureRaw.toFixed(1).replace('.0', '')}`;
+            
             const ssRaw = parseExifValue(tags.ExposureTime);
-            if (ssRaw) {
-                inputs.shutterSpeed.value = formatShutterSpeed(ssRaw);
-            } else {
-                inputs.shutterSpeed.value = '1/??? sec';
-            }
+            if (ssRaw) data.shutterSpeed = formatShutterSpeed(ssRaw);
 
-            // ISO
-            if (tags.ISOSpeedRatings) {
-                inputs.iso.value = `ISO ${tags.ISOSpeedRatings}`;
-            } else {
-                inputs.iso.value = 'ISO ???';
-            }
-
-            // Focal Length
+            if (tags.ISOSpeedRatings) data.iso = `ISO ${tags.ISOSpeedRatings}`;
+            
             const focalRaw = parseExifValue(tags.FocalLength);
             if (focalRaw) {
                 let focalValue = `${focalRaw.toFixed(1).replace('.0', '')}mm`;
                 if (tags.FocalLengthIn35mmFilm) {
                     focalValue += ` (${tags.FocalLengthIn35mmFilm}mm FF)`;
                 }
-                inputs.focalLength.value = focalValue;
-            } else {
-                inputs.focalLength.value = '??mm';
+                data.focalLength = focalValue;
             }
 
-            // Camera Make/Model/Copyright
-            inputs.cameraMakeModel.value = tags.Make && tags.Model ? `${tags.Make} ${tags.Model}`.trim() : 'Unknown Camera';
-            inputs.lensModel.value = tags.LensModel || '';
-            inputs.description.value = tags.ImageDescription || '';
-            inputs.copyright.value = tags.Copyright || '© Adlai Dyson | Fused Frame Photography';
-
-            // Force update display after EXIF load
-            updateOverlay();
-        };
-
-
-        /**
-         * Updates the live preview based on manual inputs and sliders.
-         */
-        const updateOverlay = () => {
-            // 1. Update text display elements
-            for (const key in inputs) {
-                if (displays[key]) {
-                    displays[key].textContent = inputs[key].value;
-                }
-            }
-
-            // 2. Update visual adjustments
-            const blur = blurAmount.value;
-            const opacity = overlayOpacity.value;
-            const scale = textScale.value;
-
-            blurValue.textContent = blur;
-            scaleValue.textContent = scale;
-
-            // Apply blur filter to the image element
-            displayImage.style.filter = `blur(${blur}px)`;
+            data.cameraMakeModel = tags.Make && tags.Model ? `${tags.Make} ${tags.Model}`.trim() : 'Unknown Camera';
+            data.lensModel = tags.LensModel || DEFAULT_SETTINGS.lensModel;
+            data.description = tags.ImageDescription || DEFAULT_SETTINGS.description;
+            data.copyright = tags.Copyright || DEFAULT_SETTINGS.copyright;
             
-            // Apply opacity to the dark overlay
-            darkOverlay.style.backgroundColor = `rgba(17, 24, 39, ${opacity})`;
-
-            // Apply text scale
-            overlayContent.style.transform = `scale(${scale})`;
-            overlayContent.style.transformOrigin = 'top left'; // Ensure it scales correctly from the top corner
-
-            // Re-apply original scale to the container if needed (not needed here since we scale the content)
-            // Note: Canvas will use the unscaled values for rendering the final image, we'll account for scale there.
+            return data;
         };
 
+        // --- Rendering & Update Functions ---
+
         /**
-         * Draws the final image onto a hidden canvas and triggers download.
-         * Uses the Image object and current settings for rendering.
+         * Renders the current image and overlay data to the live preview.
          */
-        const generateAndDownload = async () => {
-            if (!imageURL) {
-                console.error("No image uploaded to download.");
+        const renderCurrentProject = () => {
+            if (imageProjects.length === 0) {
+                previewContainer.style.display = 'none';
+                uploadPrompt.style.display = 'block';
+                navContainer.style.display = 'none';
+                toggleControls.style.display = 'none';
+                downloadCurrentButton.disabled = true;
+                downloadAllButton.disabled = true;
                 return;
             }
 
-            downloadButton.disabled = true;
-            downloadMessage.textContent = 'Generating high-resolution image...';
-            downloadMessage.classList.remove('hidden');
-
-            const scale = parseFloat(textScale.value);
-            const blur = parseInt(blurAmount.value);
-            const opacity = parseFloat(overlayOpacity.value);
-
-            // Set canvas dimensions to match the original image size
-            previewCanvas.width = originalImage.naturalWidth;
-            previewCanvas.height = originalImage.naturalHeight;
+            const project = imageProjects[currentImageIndex];
+            const data = project.data;
             
-            // --- 1. Draw Blurred Image ---
-            ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            // 1. Image and Blur
+            displayImage.src = project.src;
+            displayImage.style.filter = `blur(${globalAdjustments.blur}px)`;
             
-            // Apply blur using CSS filter equivalent for Canvas (needs a separate library for native blur, but we can simulate by drawing multiple times slightly offset, or rely on a standard implementation if available).
-            // For a single file implementation, we'll draw the image and rely on simple context manipulations. For actual blur, we must use a library or complex math. 
-            // Instead of complex blur implementation, we will use a common technique: draw image, then draw a slightly transparent, slightly offset copy of the image *itself* to create a subtle glow/blur effect *without* relying on complex shaders, or simply skip native canvas blur and trust the dynamic preview.
-            
-            // Simplest effective technique: Draw the image, and apply the dark overlay. We use a single-pass filter for the blur:
-            // The canvas context has no native 'blur' filter. For a runnable single file, we draw the original and use the dark overlay.
-            // *The main blur is visually simulated in the HTML preview using CSS. For the final canvas output, we focus on the text and overlay for readability.*
-            
-            // Draw the original image
-            ctx.filter = 'none'; // Ensure no previous filter is active
-            ctx.drawImage(originalImage, 0, 0, previewCanvas.width, previewCanvas.height);
-            
-            // Draw Darkening Overlay
-            ctx.fillStyle = `rgba(17, 24, 39, ${opacity})`;
-            ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+            // Set aspect ratio
+            const ratio = project.image.naturalWidth / project.image.naturalHeight;
+            document.getElementById('previewContainerWrapper').style.aspectRatio = ratio;
 
+            // 2. Adjustments
+            controls.blurValue.textContent = globalAdjustments.blur;
+            controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
+            darkOverlay.style.backgroundColor = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
 
-            // --- 2. Draw Text Overlay ---
+            // 3. Toggles
+            controls.toggleLensModel.checked = data.showLensModel;
+            controls.toggleDescription.checked = data.showDescription;
+            controls.toggleCopyright.checked = data.showCopyright;
 
-            // Calculate text size based on image height and scale factor
-            const baseFontSize = previewCanvas.height / 35; // A relative size that looks good
-            const fontSize = baseFontSize * scale;
-            const lineHeight = fontSize * 1.6;
-            const padding = previewCanvas.width / 20; // 5% padding on left/top
+            // 4. Update Navigation
+            imageCounter.textContent = `Image ${currentImageIndex + 1} of ${imageProjects.length}`;
+            prevImage.disabled = currentImageIndex === 0;
+            nextImage.disabled = currentImageIndex === imageProjects.length - 1;
+            navContainer.style.display = imageProjects.length > 1 ? 'flex' : 'none';
+            toggleControls.style.display = 'block';
+            downloadCurrentButton.disabled = false;
+            downloadAllButton.disabled = false;
+            previewContainer.style.display = 'block';
+            uploadPrompt.style.display = 'none';
 
-            ctx.fillStyle = 'var(--text-light)';
-            ctx.font = `bold ${fontSize}px 'Aptos Bold', sans-serif`;
+            // 5. Build HTML Overlay Content
+            settingsList.innerHTML = '';
+            infoList.innerHTML = '';
 
-            let currentY = padding;
+            // Technical Settings
+            const techSettings = [
+                { key: 'aperture', icon: ICONS.aperture },
+                { key: 'shutterSpeed', icon: ICONS.shutterSpeed },
+                { key: 'iso', icon: ICONS.iso },
+                { key: 'focalLength', icon: ICONS.focalLength },
+            ];
 
-            // Helper function to draw text lines
-            const drawTextLine = (icon, text) => {
-                const iconSize = fontSize * 1.2;
-                
-                // Draw Icon (Placeholder - drawing actual SVG paths in canvas is complex, so we'll use a strong Unicode icon or simple character)
-                ctx.fillStyle = 'var(--accent)';
-                ctx.font = `normal ${iconSize}px 'Aptos Regular', sans-serif`;
-                ctx.fillText(icon, padding, currentY + fontSize * 0.75);
+            techSettings.forEach(({ key, icon }) => {
+                settingsList.innerHTML += `
+                    <div class="flex items-center space-x-4 overlay-text-item" data-field="${key}">
+                        ${icon}
+                        <span data-display="${key}">${data[key]}</span>
+                    </div>
+                `;
+            });
 
-                // Draw Text
-                ctx.fillStyle = 'var(--text-light)';
-                ctx.font = `bold ${fontSize}px 'Aptos Bold', sans-serif`;
-                ctx.fillText(text, padding + iconSize * 1.5, currentY + fontSize * 0.75);
-
-                currentY += lineHeight;
+            // Info Settings (Optional Fields)
+            if (data.showDescription) {
+                 infoList.innerHTML += `
+                    <div class="flex items-center space-x-4 overlay-text-item" data-field="description">
+                        ${ICONS.description.replace('icon-svg', 'icon-svg h-6 w-6')}
+                        <span data-display="description">${data.description}</span>
+                    </div>
+                `;
+            }
+            infoList.innerHTML += `
+                <div class="flex items-center space-x-4 overlay-text-item" data-field="cameraMakeModel">
+                    ${ICONS.cameraMakeModel.replace('icon-svg', 'icon-svg h-6 w-6')}
+                    <span data-display="cameraMakeModel">${data.cameraMakeModel}</span>
+                </div>
+            `;
+            if (data.showLensModel) {
+                infoList.innerHTML += `
+                    <div class="flex items-center space-x-4 overlay-text-item" data-field="lensModel">
+                        ${ICONS.lensModel.replace('icon-svg', 'icon-svg h-6 w-6')}
+                        <span data-display="lensModel">${data.lensModel}</span>
+                    </div>
+                `;
             }
             
-            // 1. Technical Details (Using Unicode approximation for icons)
-            drawTextLine('◬', inputs.aperture.value); // Aperture icon
-            drawTextLine('⌚', inputs.shutterSpeed.value); // Shutter Speed icon
-            drawTextLine('◎', inputs.iso.value); // ISO icon
-            drawTextLine('⌖', inputs.focalLength.value); // Focal Length icon
+            // Separator visibility
+            document.getElementById('separator').style.display = (data.showDescription || data.showLensModel || data.showCopyright) ? 'block' : 'none';
 
-            currentY += lineHeight / 2;
+            if (data.showCopyright) {
+                infoList.innerHTML += `
+                    <div class="flex items-center space-x-4 overlay-text-item" data-field="copyright">
+                        ${ICONS.copyright.replace('icon-svg', 'icon-svg h-6 w-6')}
+                        <span data-display="copyright">${data.copyright}</span>
+                    </div>
+                `;
+            }
+
+            // Apply text scale
+            overlayContent.style.transform = `scale(${globalAdjustments.scale})`;
+            overlayContent.style.transformOrigin = 'top left'; 
             
-            // 2. Description (Smaller, light weight)
-            ctx.fillStyle = 'var(--text-light)';
-            ctx.font = `normal ${fontSize * 0.8}px 'Aptos Regular', sans-serif`;
-            ctx.fillText(inputs.description.value, padding, currentY);
-
-            currentY += lineHeight;
-
-            // Separator Line
-            ctx.strokeStyle = 'rgba(148, 253, 248, 0.5)';
-            ctx.lineWidth = previewCanvas.height / 300; // Small line thickness
-            ctx.beginPath();
-            ctx.moveTo(padding, currentY);
-            ctx.lineTo(previewCanvas.width - padding, currentY);
-            ctx.stroke();
-            currentY += lineHeight / 2;
-
-            // 3. Camera & Copyright (Slightly smaller)
-            ctx.fillStyle = 'var(--text-light)';
-            
-            // Camera Make/Model
-            ctx.font = `normal ${fontSize * 0.9}px 'Aptos Regular', sans-serif`;
-            ctx.fillText('📷 ' + inputs.cameraMakeModel.value, padding, currentY);
-            currentY += lineHeight;
-
-            // Lens Model
-            ctx.fillText('렌 ' + inputs.lensModel.value, padding, currentY); // Using a lens/camera-like character
-            currentY += lineHeight;
-
-            // Copyright
-            ctx.fillText(inputs.copyright.value, padding, currentY);
-
-
-            // --- 3. Trigger Download ---
-            const dataURL = previewCanvas.toDataURL('image/png');
-            const a = document.createElement('a');
-            a.href = dataURL;
-            a.download = 'fusedframe-overlay.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            downloadButton.disabled = false;
-            downloadMessage.classList.add('hidden');
+            // Re-attach edit listeners after content refresh
+            setTimeout(() => {
+                document.querySelectorAll('.overlay-text-item').forEach(item => {
+                    item.addEventListener('click', handleTextEditStart);
+                });
+            }, 0);
         };
 
-        // --- Event Listeners ---
 
-        // 1. Image Upload
-        imageUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        /**
+         * Draws a single image onto the canvas with its overlay and triggers download.
+         * @param {number} index - Index of the project to download.
+         */
+        const drawAndDownloadImage = (index) => {
+            return new Promise(resolve => {
+                const project = imageProjects[index];
+                const data = project.data;
+                const image = project.image;
 
-            // Read file for display
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                imageURL = event.target.result;
-                originalImage.onload = () => {
-                    displayImage.src = imageURL;
-                    displayImage.style.display = 'block';
-                    previewCanvas.style.display = 'block';
-                    uploadPrompt.style.display = 'none';
-                    downloadButton.disabled = false;
+                // Set canvas dimensions to match the original image size
+                hiddenCanvas.width = image.naturalWidth;
+                hiddenCanvas.height = image.naturalHeight;
+                
+                // --- 1. Draw Blurred Image (No native Canvas blur, just dark overlay for clarity) ---
+                ctx.clearRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                ctx.drawImage(image, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                
+                // Draw Darkening Overlay
+                ctx.fillStyle = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
+                ctx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+
+                // --- 2. Draw Text Overlay ---
+
+                const scaleFactor = globalAdjustments.scale;
+                const baseFontSize = hiddenCanvas.height / 35; 
+                const fontSize = baseFontSize * scaleFactor;
+                const lineHeight = fontSize * 1.6;
+                const padding = hiddenCanvas.width / 20; 
+
+                ctx.textBaseline = 'middle';
+
+                let currentY = padding;
+
+                // Helper function to draw text lines with icons
+                const drawCanvasTextLine = (iconSvg, text, fontStyle = 'Bold', customFontSizeMultiplier = 1) => {
+                    if (!text) return; // Skip if text is empty
                     
-                    // Set aspect ratio of the live preview container
-                    const aspectRatio = originalImage.naturalWidth / originalImage.naturalHeight;
-                    document.getElementById('previewContainer').style.aspectRatio = aspectRatio;
+                    const textDisplay = String(text);
+                    const currentFontSize = fontSize * customFontSizeMultiplier;
+                    const iconSize = currentFontSize * 1.2;
+                    
+                    // Icon placeholder drawing (simplified) - We use a square placeholder since drawing SVG paths is overly complex for a single-file implementation.
+                    ctx.fillStyle = 'var(--accent)';
+                    ctx.fillRect(padding, currentY, iconSize * 0.9, iconSize * 0.9); // Simple square
+                    
+                    // Draw Text
+                    ctx.fillStyle = 'var(--text-light)';
+                    ctx.font = `${fontStyle} ${currentFontSize}px 'Aptos Bold', sans-serif`; // Use Aptos Bold for the strong look
+                    ctx.fillText(textDisplay, padding + iconSize * 1.5, currentY + currentFontSize * 0.5);
 
-                    // Attempt to extract EXIF
-                    EXIF.getData(originalImage, function() {
-                        const allTags = EXIF.getAllTags(this);
-                        if (Object.keys(allTags).length > 0) {
-                            console.log("EXIF Data Found:", allTags);
-                            extractAndPopulateExif(allTags);
-                        } else {
-                            console.log("No EXIF data found, using default/manual values.");
-                            updateOverlay();
-                        }
-                    });
+                    currentY += lineHeight * customFontSizeMultiplier;
                 };
-                originalImage.src = imageURL;
-            };
-            reader.readAsDataURL(file);
+
+                // Technical Settings
+                drawCanvasTextLine(ICONS.aperture, data.aperture);
+                drawCanvasTextLine(ICONS.shutterSpeed, data.shutterSpeed);
+                drawCanvasTextLine(ICONS.iso, data.iso);
+                drawCanvasTextLine(ICONS.focalLength, data.focalLength);
+
+                currentY += lineHeight / 2;
+
+                // Description (Smaller, light weight)
+                if (data.showDescription && data.description) {
+                    drawCanvasTextLine(ICONS.description, data.description, 'Normal', 0.8);
+                }
+
+                // Separator Line
+                if (data.showDescription || data.showLensModel || data.showCopyright) {
+                    ctx.strokeStyle = 'rgba(148, 253, 248, 0.5)';
+                    ctx.lineWidth = hiddenCanvas.height / 300; 
+                    ctx.beginPath();
+                    ctx.moveTo(padding, currentY);
+                    ctx.lineTo(hiddenCanvas.width - padding, currentY);
+                    ctx.stroke();
+                    currentY += lineHeight / 2;
+                }
+
+                // Camera Model
+                drawCanvasTextLine(ICONS.cameraMakeModel, data.cameraMakeModel, 'Normal', 0.9);
+
+                // Lens Model
+                if (data.showLensModel && data.lensModel) {
+                    drawCanvasTextLine(ICONS.lensModel, data.lensModel, 'Normal', 0.9);
+                }
+
+                // Copyright
+                if (data.showCopyright && data.copyright) {
+                    drawCanvasTextLine(ICONS.copyright, data.copyright, 'Normal', 0.9);
+                }
+
+
+                // --- 3. Trigger Download ---
+                const dataURL = hiddenCanvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = `fusedframe-${index + 1}-${image.name}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                resolve(); // Resolve the promise once download is triggered
+            });
+        };
+
+        // --- Direct Editing Logic ---
+
+        const handleTextEditStart = (event) => {
+            const target = event.currentTarget.querySelector('span[data-display]');
+            if (!target) return;
+
+            // 1. Hide the input if another element was active
+            handleTextEditEnd();
+
+            // 2. Set the active element
+            activeEditElement = target;
+            const field = event.currentTarget.getAttribute('data-field');
+            const project = imageProjects[currentImageIndex];
+
+            // 3. Calculate position and size
+            const rect = target.getBoundingClientRect();
+            const previewRect = overlayContent.getBoundingClientRect();
+            
+            // Adjust for the scale transform on the overlayContent
+            const scale = globalAdjustments.scale;
+            
+            // Get un-scaled position relative to the preview container
+            const top = (rect.top - previewRect.top) / scale;
+            const left = (rect.left - previewRect.left) / scale;
+            const width = rect.width / scale;
+            const height = rect.height / scale;
+
+            // 4. Configure and show the invisible input
+            editInput.value = project.data[field];
+            editInput.setAttribute('data-field', field);
+            editInput.style.pointerEvents = 'auto';
+            editInput.style.opacity = 1;
+            editInput.style.top = `${top}px`;
+            editInput.style.left = `${left}px`;
+            editInput.style.width = `${width + 10}px`; // Add padding/margin
+            editInput.style.height = `${height + 5}px`;
+            editInput.style.fontSize = `${rect.height}px`; // Match text size
+            editInput.style.fontFamily = target.closest('#settingsList') ? 'Aptos Bold, sans-serif' : 'Aptos Regular, sans-serif';
+
+            // 5. Focus and Listen
+            editInput.focus();
+            editInput.select();
+        };
+
+        const handleTextEditEnd = () => {
+            if (!activeEditElement) return;
+
+            const field = editInput.getAttribute('data-field');
+            const newValue = editInput.value;
+            const project = imageProjects[currentImageIndex];
+
+            // Update the state
+            project.data[field] = newValue;
+
+            // Reset the input element
+            editInput.style.pointerEvents = 'none';
+            editInput.style.opacity = 0;
+            editInput.value = '';
+            activeEditElement = null;
+
+            // Re-render the view with the new data
+            renderCurrentProject();
+        };
+
+        // --- Event Listeners and Setup ---
+
+        // 1. Load adjustments on initialization
+        loadAdjustments();
+        document.addEventListener('DOMContentLoaded', renderCurrentProject);
+
+        // 2. Image Upload Handler
+        imageUpload.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            // Clear old projects if new files are uploaded
+            imageProjects = [];
+            currentImageIndex = 0;
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.name = file.name.replace(/\.[^/.]+$/, ""); // Store filename without extension
+                    img.onload = () => {
+                        const newProject = {
+                            src: event.target.result,
+                            image: img,
+                            data: { ...DEFAULT_SETTINGS }, // Initialize with defaults
+                        };
+                        
+                        EXIF.getData(img, function() {
+                            const allTags = EXIF.getAllTags(this);
+                            if (Object.keys(allTags).length > 0) {
+                                newProject.data = extractExifData(allTags);
+                            }
+                            
+                            imageProjects.push(newProject);
+                            // Only render if it's the first image or if all images are loaded
+                            if (imageProjects.length === files.length) {
+                                renderCurrentProject();
+                            }
+                        });
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         });
 
-        // 2. Adjustments and Input Change (Live Update)
-        document.querySelectorAll('.input-field').forEach(input => {
-            input.addEventListener('input', updateOverlay);
+        // 3. Global Adjustment Change (Live Update & Save)
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', () => {
+                globalAdjustments.blur = parseInt(controls.blurAmount.value);
+                globalAdjustments.opacity = parseFloat(controls.overlayOpacity.value);
+                globalAdjustments.scale = parseFloat(controls.textScale.value);
+                renderCurrentProject();
+                saveAdjustments();
+            });
         });
 
-        blurAmount.addEventListener('input', updateOverlay);
-        overlayOpacity.addEventListener('input', updateOverlay);
-        textScale.addEventListener('input', updateOverlay);
+        // 4. Toggle Visibility
+        document.querySelectorAll('#toggleControls input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                if (imageProjects.length === 0) return;
+                const project = imageProjects[currentImageIndex];
+                const fieldKey = e.target.id.replace('toggle', 'show');
+                project.data[fieldKey] = e.target.checked;
+                renderCurrentProject();
+            });
+        });
 
-        // 3. Download Button
-        downloadButton.addEventListener('click', generateAndDownload);
+        // 5. Navigation
+        prevImage.addEventListener('click', () => {
+            handleTextEditEnd(); // End any current editing session
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                renderCurrentProject();
+            }
+        });
 
-        // Initialize with default values
-        document.addEventListener('DOMContentLoaded', updateOverlay);
+        nextImage.addEventListener('click', () => {
+            handleTextEditEnd(); // End any current editing session
+            if (currentImageIndex < imageProjects.length - 1) {
+                currentImageIndex++;
+                renderCurrentProject();
+            }
+        });
+
+        // 6. Direct Edit Input
+        editInput.addEventListener('input', () => {
+            // Live update the actual DOM span while typing (before saving)
+            if (activeEditElement) {
+                activeEditElement.textContent = editInput.value;
+                // Since the overlay is scaled, we need to correct the input width to match the scaled text size
+                const currentTextWidth = activeEditElement.getBoundingClientRect().width;
+                editInput.style.width = `${currentTextWidth / globalAdjustments.scale + 10}px`;
+            }
+        });
+        
+        editInput.addEventListener('blur', handleTextEditEnd);
+        editInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleTextEditEnd();
+            }
+        });
+        
+        // 7. Download Single
+        downloadCurrentButton.addEventListener('click', async () => {
+            handleTextEditEnd();
+            if (imageProjects.length === 0) return;
+            downloadMessage.textContent = 'Generating and downloading current image...';
+            downloadMessage.classList.remove('hidden');
+            downloadCurrentButton.disabled = true;
+            downloadAllButton.disabled = true;
+
+            await drawAndDownloadImage(currentImageIndex);
+
+            downloadMessage.classList.add('hidden');
+            downloadCurrentButton.disabled = false;
+            downloadAllButton.disabled = false;
+        });
+
+        // 8. Download All
+        downloadAllButton.addEventListener('click', async () => {
+            handleTextEditEnd();
+            if (imageProjects.length < 2) {
+                alert('Please upload more than one image to use batch download.');
+                return;
+            }
+            downloadMessage.textContent = `Starting batch download of ${imageProjects.length} images. Please wait and check your downloads folder.`;
+            downloadMessage.classList.remove('hidden');
+            downloadCurrentButton.disabled = true;
+            downloadAllButton.disabled = true;
+
+            for (let i = 0; i < imageProjects.length; i++) {
+                downloadMessage.textContent = `Downloading image ${i + 1} of ${imageProjects.length}...`;
+                await drawAndDownloadImage(i);
+                // Pause briefly to ensure browser registers each download prompt/file
+                await new Promise(r => setTimeout(r, 500)); 
+            }
+
+            downloadMessage.textContent = 'Batch download complete!';
+            setTimeout(() => {
+                downloadMessage.classList.add('hidden');
+                downloadCurrentButton.disabled = false;
+                downloadAllButton.disabled = false;
+            }, 3000);
+        });
+
     </script>
 </body>
 </html>
