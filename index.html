@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXIF Overlay Generator V2</title>
+    <title>Overlay Generator V3</title>
+    <!-- Favicon Update -->
+    <link rel="icon" href="https://cdn.fusedframe.co.uk/main-logos/png/Square%20Favicon%20(No%20Circle).png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- EXIF-JS for client-side EXIF data extraction -->
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
@@ -64,6 +66,7 @@
             margin-top: -5px; 
         }
 
+        /* Styling for the new icon SVGs (colored to accent) */
         .icon-svg {
             stroke: var(--accent);
             stroke-width: 1.5;
@@ -73,6 +76,8 @@
             width: 28px;
             height: 28px;
             min-width: 28px;
+            /* Added smooth transition for hover effects */
+            transition: stroke 0.1s; 
         }
 
         .overlay-text-item {
@@ -83,6 +88,9 @@
         }
         .overlay-text-item:hover {
             background-color: rgba(148, 253, 248, 0.1);
+        }
+        .overlay-text-item:hover .icon-svg {
+            stroke: var(--text-light); /* Slight change on hover */
         }
 
         /* The invisible input that overlays the text */
@@ -98,6 +106,23 @@
             color: var(--text-light);
             font-family: 'Aptos Bold', sans-serif;
             pointer-events: none; /* Initially non-interactive */
+        }
+
+        /* Custom confirmation box styling */
+        #customAlert {
+            z-index: 50;
+            background-color: var(--bg-medium);
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.2s ease-out;
+            pointer-events: none;
+        }
+        #customAlert.active {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
         }
         
     </style>
@@ -121,11 +146,17 @@
         }
     </script>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
+<body class="p-4 md:p-8 min-h-screen flex flex-col">
 
-    <div class="max-w-7xl mx-auto">
+    <!-- Custom Alert/Message Box for non-alert() messages -->
+    <div id="customAlert" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-xl max-w-sm text-center">
+        <p id="alertMessage" class="mb-4 text-text-light font-semibold"></p>
+        <button id="alertClose" class="py-2 px-4 bg-accent text-bg-dark rounded-lg font-bold hover:opacity-90">OK</button>
+    </div>
+
+    <div class="max-w-7xl mx-auto flex-grow w-full">
         <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl mb-2">FusedFrame Overlay Generator</h1>
+            <h1 class="text-4xl md:text-5xl mb-2">Overlay Generator</h1>
             <p class="text-lg md:text-xl text-text-light font-light opacity-80">A blurred version of your image with camera settings overlayed, free to use.</p>
         </header>
 
@@ -139,6 +170,13 @@
                 <div class="space-y-3">
                     <label class="block text-text-light font-bold">Upload Images (Multi-select enabled)</label>
                     <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/webp" multiple class="w-full text-text-light text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-bg-dark hover:file:bg-opacity-90">
+                </div>
+
+                <!-- Clear Images Button -->
+                <div class="pt-2">
+                    <button id="clearImagesButton" class="w-full py-2 bg-red-800 text-white font-semibold rounded-xl shadow-lg hover:bg-red-700 transition disabled:opacity-50" disabled>
+                        Clear All Loaded Images
+                    </button>
                 </div>
 
                 <!-- Navigation -->
@@ -224,7 +262,7 @@
                                 <!-- Technical Details go here (Aperture, Shutter, ISO, Focal) -->
                             </div>
 
-                            <!-- Separator Line -->
+                            <!-- Separator Line (Always visible if image is loaded) -->
                             <div id="separator" class="h-px w-full bg-accent opacity-50 my-6"></div>
 
                             <!-- Camera & Copyright Info -->
@@ -239,19 +277,34 @@
                 <canvas id="hiddenCanvas" style="display: none;"></canvas>
             </div>
         </main>
-
+        
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-sm text-text-light opacity-70 border-t border-bg-medium pt-4">
+            <p>Any content you upload, never leaves your device.</p>
+            <p class="font-bold mt-1">Made by Adlai Dyson | Fused Frame Photography</p>
+        </footer>
     </div>
 
-    <!-- Icon SVGs (Inline Definition) -->
+    <!-- Icon SVGs (Inline Definition) - Replacing previous ones with new conceptual designs -->
     <script>
+        // Note: These SVGs replace the previous ones to reflect the user's new file names and request
+        // for an updated look (colored to #94fdf8 via the .icon-svg class).
         const ICONS = {
-            aperture: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2v20M4.22 4.22l14.14 14.14M4.22 19.78l14.14-14.14"/></svg>`,
-            shutterSpeed: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /><path d="M2.5 17.5l5-5M16.5 6l5 5"/></svg>`,
-            iso: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><circle cx="12" cy="12" r="4"/><path d="M10 2h4M7 22l3-5"/></svg>`,
-            focalLength: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 4.2a2 2 0 0 0-2.8 0L3 8.4a2 2 0 0 0 0 2.8l4.2 4.2a2 2 0 0 0 2.8 0l4.2-4.2a2 2 0 0 0 0-2.8L10 4.2z"/><circle cx="12" cy="12" r="7"/><path d="M12 5v2.5M12 16.5v2.5M5 12h2.5M16.5 12h2.5"/></svg>`,
+            // New ISO Icon: A simple photo-sensor/chip
+            iso: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6"/><path d="M4 12h16"/><rect x="4" y="12" width="16" height="8" rx="2" ry="2"/><circle cx="12" cy="16" r="2"/></svg>`,
+            // New Speech/Description Icon: Speech Bubble/Note
             description: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
-            cameraMakeModel: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 8h-1a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2z" /><circle cx="12" cy="14" r="4" /></svg>`,
-            lensModel: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M18.8 9.2a3 3 0 0 0-3-3H12V3a1 1 0 0 0-2 0v3H5.2a3 3 0 0 0-3 3v5.6a3 3 0 0 0 3 3h5.8V21a1 1 0 0 0 2 0v-3h3.6a3 3 0 0 0 3-3V9.2z" /></svg>`,
+            // New Camera Make/Model Icon
+            cameraMakeModel: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3L14.5 4z"/><circle cx="12" cy="13" r="3"/></svg>`,
+            // New Lens Model Icon
+            lensModel: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4v2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-4V6a4 4 0 0 0-4-4zM12 2v20"/><path d="M12 10l5-5M12 10l-5-5"/></svg>`,
+            // Focal Length Icon: Focus/Ruler
+            focalLength: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M16 16.5V10l6-6M8 8V2h8"/><path d="M10 10v4a2 2 0 0 0 2 2h4"/></svg>`,
+            // Exposure (Shutter Speed) Icon: Shutter Blade
+            shutterSpeed: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v10l-6 6M12 12l6 6M12 12l-6-6M12 12l6-6M12 22l-6-6M12 22l6-6"/></svg>`,
+            // Aperture Icon: F-Stop blades
+            aperture: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M4.9 4.9l14.1 14.1M4.9 19.1l14.1-14.1M2 12h20M7.5 16.5l9-9M7.5 7.5l9 9"/></svg>`,
+            // Copyright Icon (Unchanged)
             copyright: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M14.5 9.5a3.5 3.5 0 1 0 0 5H12" /></svg>`,
         };
     </script>
@@ -275,6 +328,13 @@
         const prevImage = document.getElementById('prevImage');
         const nextImage = document.getElementById('nextImage');
         const imageCounter = document.getElementById('imageCounter');
+        const clearImagesButton = document.getElementById('clearImagesButton');
+        const separator = document.getElementById('separator');
+
+        // Custom Alert/Message Box elements
+        const customAlert = document.getElementById('customAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertClose = document.getElementById('alertClose');
         
         const ctx = hiddenCanvas.getContext('2d');
 
@@ -317,6 +377,20 @@
             toggleCopyright: document.getElementById('toggleCopyright'),
         };
 
+        // --- Custom Alert Implementation (Replacing alert()) ---
+        const showCustomAlert = (message) => {
+            alertMessage.textContent = message;
+            customAlert.classList.add('active');
+            alertClose.focus();
+        };
+
+        const hideCustomAlert = () => {
+            customAlert.classList.remove('active');
+        };
+
+        alertClose.addEventListener('click', hideCustomAlert);
+
+
         // --- Local Storage Functions ---
 
         /**
@@ -331,7 +405,7 @@
         };
 
         /**
-         * Loads global adjustment settings from localStorage.
+         * Loads global adjustment settings from localStorage and updates DOM.
          */
         const loadAdjustments = () => {
             try {
@@ -339,11 +413,15 @@
                 if (saved) {
                     const loaded = JSON.parse(saved);
                     Object.assign(globalAdjustments, loaded);
-                    // Update DOM elements
-                    controls.blurAmount.value = globalAdjustments.blur;
-                    controls.overlayOpacity.value = globalAdjustments.opacity;
-                    controls.textScale.value = globalAdjustments.scale;
                 }
+                
+                // Update DOM elements for visibility even if no image is loaded
+                controls.blurAmount.value = globalAdjustments.blur;
+                controls.overlayOpacity.value = globalAdjustments.opacity;
+                controls.textScale.value = globalAdjustments.scale;
+                controls.blurValue.textContent = globalAdjustments.blur;
+                controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
+
             } catch (e) {
                 console.error("Could not load settings from localStorage.", e);
             }
@@ -361,7 +439,7 @@
 
         const formatShutterSpeed = (value) => {
             if (value === 0) return '';
-            if (value >= 1.0) return `${value.toFixed(1)} sec`;
+            if (value >= 1.0) return `${value.toFixed(1).replace(/\.0$/, '')} sec`;
             const reciprocal = 1 / value;
             const roundedReciprocal = Math.round(reciprocal);
             return `1/${roundedReciprocal} sec`;
@@ -408,6 +486,8 @@
                 toggleControls.style.display = 'none';
                 downloadCurrentButton.disabled = true;
                 downloadAllButton.disabled = true;
+                clearImagesButton.disabled = true;
+                separator.style.display = 'none'; // Hide separator when no image
                 return;
             }
 
@@ -422,7 +502,7 @@
             const ratio = project.image.naturalWidth / project.image.naturalHeight;
             document.getElementById('previewContainerWrapper').style.aspectRatio = ratio;
 
-            // 2. Adjustments
+            // 2. Adjustments (Update DOM elements with saved values)
             controls.blurValue.textContent = globalAdjustments.blur;
             controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
             darkOverlay.style.backgroundColor = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
@@ -432,7 +512,7 @@
             controls.toggleDescription.checked = data.showDescription;
             controls.toggleCopyright.checked = data.showCopyright;
 
-            // 4. Update Navigation
+            // 4. Update Navigation & Buttons
             imageCounter.textContent = `Image ${currentImageIndex + 1} of ${imageProjects.length}`;
             prevImage.disabled = currentImageIndex === 0;
             nextImage.disabled = currentImageIndex === imageProjects.length - 1;
@@ -440,8 +520,10 @@
             toggleControls.style.display = 'block';
             downloadCurrentButton.disabled = false;
             downloadAllButton.disabled = false;
+            clearImagesButton.disabled = false;
             previewContainer.style.display = 'block';
             uploadPrompt.style.display = 'none';
+            separator.style.display = 'block'; // Always show separator if image is loaded
 
             // 5. Build HTML Overlay Content
             settingsList.innerHTML = '';
@@ -465,40 +547,39 @@
             });
 
             // Info Settings (Optional Fields)
-            if (data.showDescription) {
-                 infoList.innerHTML += `
-                    <div class="flex items-center space-x-4 overlay-text-item" data-field="description">
-                        ${ICONS.description.replace('icon-svg', 'icon-svg h-6 w-6')}
-                        <span data-display="description">${data.description}</span>
-                    </div>
-                `;
-            }
+            
+            // Description
+            infoList.innerHTML += `
+                <div class="flex items-center space-x-4 overlay-text-item ${data.showDescription ? '' : 'hidden'}" data-field="description">
+                    ${ICONS.description.replace('icon-svg', 'icon-svg h-6 w-6')}
+                    <span data-display="description">${data.description}</span>
+                </div>
+            `;
+            
+            // Camera Make/Model (Always shown if image loaded)
             infoList.innerHTML += `
                 <div class="flex items-center space-x-4 overlay-text-item" data-field="cameraMakeModel">
                     ${ICONS.cameraMakeModel.replace('icon-svg', 'icon-svg h-6 w-6')}
                     <span data-display="cameraMakeModel">${data.cameraMakeModel}</span>
                 </div>
             `;
-            if (data.showLensModel) {
-                infoList.innerHTML += `
-                    <div class="flex items-center space-x-4 overlay-text-item" data-field="lensModel">
-                        ${ICONS.lensModel.replace('icon-svg', 'icon-svg h-6 w-6')}
-                        <span data-display="lensModel">${data.lensModel}</span>
-                    </div>
-                `;
-            }
             
-            // Separator visibility
-            document.getElementById('separator').style.display = (data.showDescription || data.showLensModel || data.showCopyright) ? 'block' : 'none';
+            // Lens Model
+            infoList.innerHTML += `
+                <div class="flex items-center space-x-4 overlay-text-item ${data.showLensModel ? '' : 'hidden'}" data-field="lensModel">
+                    ${ICONS.lensModel.replace('icon-svg', 'icon-svg h-6 w-6')}
+                    <span data-display="lensModel">${data.lensModel}</span>
+                </div>
+            `;
+            
+            // Copyright
+            infoList.innerHTML += `
+                <div class="flex items-center space-x-4 overlay-text-item ${data.showCopyright ? '' : 'hidden'}" data-field="copyright">
+                    ${ICONS.copyright.replace('icon-svg', 'icon-svg h-6 w-6')}
+                    <span data-display="copyright">${data.copyright}</span>
+                </div>
+            `;
 
-            if (data.showCopyright) {
-                infoList.innerHTML += `
-                    <div class="flex items-center space-x-4 overlay-text-item" data-field="copyright">
-                        ${ICONS.copyright.replace('icon-svg', 'icon-svg h-6 w-6')}
-                        <span data-display="copyright">${data.copyright}</span>
-                    </div>
-                `;
-            }
 
             // Apply text scale
             overlayContent.style.transform = `scale(${globalAdjustments.scale})`;
@@ -522,12 +603,15 @@
                 const project = imageProjects[index];
                 const data = project.data;
                 const image = project.image;
+                const mimeType = project.mimeType; // Use original MIME type for download
+                const extension = mimeType.split('/')[1];
+                const quality = (mimeType === 'image/jpeg') ? 0.9 : 1.0;
 
                 // Set canvas dimensions to match the original image size
                 hiddenCanvas.width = image.naturalWidth;
                 hiddenCanvas.height = image.naturalHeight;
                 
-                // --- 1. Draw Blurred Image (No native Canvas blur, just dark overlay for clarity) ---
+                // --- 1. Draw Original Image (No blur needed for final download) ---
                 ctx.clearRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
                 ctx.drawImage(image, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
                 
@@ -547,69 +631,67 @@
 
                 let currentY = padding;
 
-                // Helper function to draw text lines with icons
-                const drawCanvasTextLine = (iconSvg, text, fontStyle = 'Bold', customFontSizeMultiplier = 1) => {
+                // Helper function to draw text lines with a colored square icon placeholder
+                const drawCanvasTextLine = (text, fontStyle = 'Bold', customFontSizeMultiplier = 1) => {
                     if (!text) return; // Skip if text is empty
                     
                     const textDisplay = String(text);
                     const currentFontSize = fontSize * customFontSizeMultiplier;
                     const iconSize = currentFontSize * 1.2;
                     
-                    // Icon placeholder drawing (simplified) - We use a square placeholder since drawing SVG paths is overly complex for a single-file implementation.
-                    ctx.fillStyle = 'var(--accent)';
-                    ctx.fillRect(padding, currentY, iconSize * 0.9, iconSize * 0.9); // Simple square
+                    // Icon Placeholder: Draw a square in the accent color
+                    ctx.fillStyle = 'var(--accent)'; 
+                    ctx.fillRect(padding, currentY + (currentFontSize * 0.5 - iconSize * 0.45), iconSize * 0.9, iconSize * 0.9);
                     
                     // Draw Text
                     ctx.fillStyle = 'var(--text-light)';
-                    ctx.font = `${fontStyle} ${currentFontSize}px 'Aptos Bold', sans-serif`; // Use Aptos Bold for the strong look
+                    ctx.font = `${fontStyle} ${currentFontSize}px 'Aptos Bold', sans-serif`; 
                     ctx.fillText(textDisplay, padding + iconSize * 1.5, currentY + currentFontSize * 0.5);
 
                     currentY += lineHeight * customFontSizeMultiplier;
                 };
-
-                // Technical Settings
-                drawCanvasTextLine(ICONS.aperture, data.aperture);
-                drawCanvasTextLine(ICONS.shutterSpeed, data.shutterSpeed);
-                drawCanvasTextLine(ICONS.iso, data.iso);
-                drawCanvasTextLine(ICONS.focalLength, data.focalLength);
+                
+                // Technical Settings (Using only the text since drawing SVGs on canvas is complex)
+                drawCanvasTextLine(data.aperture);
+                drawCanvasTextLine(data.shutterSpeed);
+                drawCanvasTextLine(data.iso);
+                drawCanvasTextLine(data.focalLength);
 
                 currentY += lineHeight / 2;
 
-                // Description (Smaller, light weight)
-                if (data.showDescription && data.description) {
-                    drawCanvasTextLine(ICONS.description, data.description, 'Normal', 0.8);
-                }
-
                 // Separator Line
-                if (data.showDescription || data.showLensModel || data.showCopyright) {
-                    ctx.strokeStyle = 'rgba(148, 253, 248, 0.5)';
-                    ctx.lineWidth = hiddenCanvas.height / 300; 
-                    ctx.beginPath();
-                    ctx.moveTo(padding, currentY);
-                    ctx.lineTo(hiddenCanvas.width - padding, currentY);
-                    ctx.stroke();
-                    currentY += lineHeight / 2;
+                ctx.strokeStyle = 'rgba(148, 253, 248, 0.5)';
+                ctx.lineWidth = hiddenCanvas.height / 300; 
+                ctx.beginPath();
+                ctx.moveTo(padding, currentY);
+                ctx.lineTo(hiddenCanvas.width - padding, currentY);
+                ctx.stroke();
+                currentY += lineHeight / 2;
+
+                // Info Settings
+                if (data.showDescription && data.description) {
+                    drawCanvasTextLine(data.description, 'Normal', 0.9);
                 }
 
                 // Camera Model
-                drawCanvasTextLine(ICONS.cameraMakeModel, data.cameraMakeModel, 'Normal', 0.9);
+                drawCanvasTextLine(data.cameraMakeModel, 'Normal', 0.9);
 
                 // Lens Model
                 if (data.showLensModel && data.lensModel) {
-                    drawCanvasTextLine(ICONS.lensModel, data.lensModel, 'Normal', 0.9);
+                    drawCanvasTextLine(data.lensModel, 'Normal', 0.9);
                 }
 
                 // Copyright
                 if (data.showCopyright && data.copyright) {
-                    drawCanvasTextLine(ICONS.copyright, data.copyright, 'Normal', 0.9);
+                    drawCanvasTextLine(data.copyright, 'Normal', 0.9);
                 }
 
 
                 // --- 3. Trigger Download ---
-                const dataURL = hiddenCanvas.toDataURL('image/png');
+                const dataURL = hiddenCanvas.toDataURL(mimeType, quality);
                 const a = document.createElement('a');
                 a.href = dataURL;
-                a.download = `fusedframe-${index + 1}-${image.name}.png`;
+                a.download = `fusedframe-${index + 1}-${project.image.name}.${extension}`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -697,6 +779,8 @@
             imageProjects = [];
             currentImageIndex = 0;
 
+            let filesProcessed = 0;
+
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -706,6 +790,7 @@
                         const newProject = {
                             src: event.target.result,
                             image: img,
+                            mimeType: file.type, // Store original MIME type
                             data: { ...DEFAULT_SETTINGS }, // Initialize with defaults
                         };
                         
@@ -716,8 +801,9 @@
                             }
                             
                             imageProjects.push(newProject);
+                            filesProcessed++;
                             // Only render if it's the first image or if all images are loaded
-                            if (imageProjects.length === files.length) {
+                            if (filesProcessed === files.length) {
                                 renderCurrentProject();
                             }
                         });
@@ -726,9 +812,20 @@
                 };
                 reader.readAsDataURL(file);
             });
+            // Clear the input value so the same files can be re-uploaded if needed
+            e.target.value = '';
+        });
+        
+        // 3. Clear Images Handler
+        clearImagesButton.addEventListener('click', () => {
+            handleTextEditEnd();
+            imageProjects = [];
+            currentImageIndex = 0;
+            renderCurrentProject();
+            showCustomAlert('All loaded images have been cleared from the generator.');
         });
 
-        // 3. Global Adjustment Change (Live Update & Save)
+        // 4. Global Adjustment Change (Live Update & Save)
         document.querySelectorAll('input[type="range"]').forEach(input => {
             input.addEventListener('input', () => {
                 globalAdjustments.blur = parseInt(controls.blurAmount.value);
@@ -739,7 +836,7 @@
             });
         });
 
-        // 4. Toggle Visibility
+        // 5. Toggle Visibility
         document.querySelectorAll('#toggleControls input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 if (imageProjects.length === 0) return;
@@ -750,7 +847,7 @@
             });
         });
 
-        // 5. Navigation
+        // 6. Navigation
         prevImage.addEventListener('click', () => {
             handleTextEditEnd(); // End any current editing session
             if (currentImageIndex > 0) {
@@ -767,7 +864,7 @@
             }
         });
 
-        // 6. Direct Edit Input
+        // 7. Direct Edit Input
         editInput.addEventListener('input', () => {
             // Live update the actual DOM span while typing (before saving)
             if (activeEditElement) {
@@ -786,7 +883,7 @@
             }
         });
         
-        // 7. Download Single
+        // 8. Download Single
         downloadCurrentButton.addEventListener('click', async () => {
             handleTextEditEnd();
             if (imageProjects.length === 0) return;
@@ -802,11 +899,11 @@
             downloadAllButton.disabled = false;
         });
 
-        // 8. Download All
+        // 9. Download All
         downloadAllButton.addEventListener('click', async () => {
             handleTextEditEnd();
             if (imageProjects.length < 2) {
-                alert('Please upload more than one image to use batch download.');
+                showCustomAlert('Batch download requires uploading more than one image.');
                 return;
             }
             downloadMessage.textContent = `Starting batch download of ${imageProjects.length} images. Please wait and check your downloads folder.`;
