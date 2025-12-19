@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay Generator</title>
+    <!-- Favicon -->
+    <link rel="icon" href="https://cdn.fusedframe.co.uk/main-logos/png/Square%20Favicon%20(No%20Circle).png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #111827;
+            --bg-medium: #1e374d;
+            --accent: #94fdf8;
+            --text-light: #e5e7eb;
+        }
+
+        @font-face {
+            font-family: 'Aptos Regular';
+            src: url('https://cdn.fusedframe.co.uk/fonts/aptos/aptos-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Aptos Bold';
+            src: url('https://cdn.fusedframe.co.uk/fonts/aptos/aptos-bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Aptos Regular', sans-serif;
+            color: var(--text-light);
+        }
+
+        h1, h2, h3, .header-text {
+            font-family: 'Aptos Bold', sans-serif;
+            color: var(--accent);
+        }
+
+        .container-bg {
+            background-color: var(--bg-medium);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: var(--bg-dark);
+            border-radius: 4px;
+            height: 8px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -5px; 
+        }
+
+        .icon-img {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background-color: var(--accent);
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            transition: background-color 0.1s;
+        }
+
+        .overlay-text-item {
+            cursor: pointer;
+            transition: background-color 0.1s;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: fit-content;
+        }
+        
+        .align-right .overlay-text-item {
+            flex-direction: row-reverse;
+            text-align: right;
+        }
+        .align-center .overlay-text-item {
+            flex-direction: column; 
+            justify-content: center;
+        }
+
+        .overlay-text-item:hover {
+            background-color: rgba(148, 253, 248, 0.1);
+        }
+
+        #editInput {
+            position: fixed;
+            z-index: 50;
+            opacity: 0;
+            padding: 4px;
+            margin: 0;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            resize: none;
+            background: var(--bg-medium);
+            color: var(--text-light);
+            font-family: 'Aptos Bold', sans-serif;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        #customAlert {
+            z-index: 60;
+            background-color: var(--bg-medium);
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.2s ease-out;
+            pointer-events: none;
+        }
+        #customAlert.active {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-dark': 'var(--bg-dark)',
+                        'bg-medium': 'var(--bg-medium)',
+                        'accent': 'var(--accent)',
+                        'text-light': 'var(--text-light)',
+                    },
+                    fontFamily: {
+                        'aptos-regular': ['Aptos Regular', 'sans-serif'],
+                        'aptos-bold': ['Aptos Bold', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col">
+
+    <div id="customAlert" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-xl max-w-sm text-center">
+        <p id="alertMessage" class="mb-4 text-text-light font-semibold"></p>
+        <button id="alertClose" class="py-2 px-4 bg-accent text-bg-dark rounded-lg font-bold hover:opacity-90">OK</button>
+    </div>
+
+    <div class="max-w-7xl mx-auto flex-grow w-full">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl mb-2">Overlay Generator</h1>
+            <p class="text-lg md:text-xl text-text-light font-light opacity-80">Blurred backgrounds with high-res photography meta-data.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div id="settingsPanel" class="lg:col-span-1 container-bg p-6 rounded-xl space-y-6 lg:h-fit lg:sticky lg:top-8 order-2 lg:order-1">
+                <h3 class="header-text text-2xl mb-4">Settings</h3>
+                
+                <div class="space-y-3">
+                    <label class="block text-text-light font-bold">Upload Images</label>
+                    <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/webp" multiple class="w-full text-text-light text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-bg-dark hover:file:bg-opacity-90">
+                </div>
+
+                <div class="pt-2">
+                    <button id="clearImagesButton" class="w-full py-2 bg-red-800 text-white font-semibold rounded-xl shadow-lg hover:bg-red-700 transition disabled:opacity-50" disabled>
+                        Clear All Loaded Images
+                    </button>
+                </div>
+
+                <div id="navContainer" class="flex items-center justify-between mt-4 py-2 border-y border-bg-dark" style="display: none;">
+                    <button id="prevImage" class="p-2 rounded-full bg-bg-dark text-accent hover:bg-bg-medium disabled:opacity-30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span id="imageCounter" class="text-text-light font-bold"></span>
+                    <button id="nextImage" class="p-2 rounded-full bg-bg-dark text-accent hover:bg-bg-medium disabled:opacity-30">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="header-text text-xl pt-4">Adjustments</h4>
+                    
+                    <div>
+                        <label for="overlayPosition" class="block text-text-light mb-1">Layout Position</label>
+                        <select id="overlayPosition" class="w-full bg-bg-dark text-text-light border border-accent rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-accent">
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-right">Bottom Right</option>
+                            <option value="top-left">Top Left</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="center">Center</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="blurAmount" class="block text-text-light">Blur Strength (<span id="blurValue">10</span>px)</label>
+                        <input type="range" id="blurAmount" min="0" max="60" value="10" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="overlayOpacity" class="block text-text-light">Overlay Darkening</label>
+                        <input type="range" id="overlayOpacity" min="0.0" max="0.8" value="0.2" step="0.05" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="textScale" class="block text-text-light">Text Scale (<span id="scaleValue">1.0</span>x)</label>
+                        <input type="range" id="textScale" min="0.5" max="3.0" value="1.0" step="0.1" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="pt-4 space-y-2">
+                    <button id="downloadCurrentButton" class="w-full py-3 bg-accent text-bg-dark font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition disabled:opacity-50" disabled>
+                        Download Image
+                    </button>
+                    <button id="downloadAllButton" class="w-full py-2 bg-bg-dark border border-accent text-accent font-semibold rounded-xl shadow-lg hover:bg-bg-medium transition disabled:opacity-50" disabled>
+                        Download All
+                    </button>
+                    <p id="downloadMessage" class="text-sm text-center text-accent mt-2 hidden animate-pulse"></p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 order-1 lg:order-2">
+                
+                <div id="toggleControls" class="container-bg p-4 rounded-xl mb-4" style="display: none;">
+                    <div class="flex flex-wrap gap-4 text-sm justify-center md:justify-start">
+                        <label class="flex items-center space-x-2 cursor-pointer select-none">
+                            <input type="checkbox" id="toggleLensModel" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
+                            <span class="text-text-light">Lens Model</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer select-none">
+                            <input type="checkbox" id="toggleDescription" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
+                            <span class="text-text-light">Description</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer select-none">
+                            <input type="checkbox" id="toggleCopyright" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
+                            <span class="text-text-light">Copyright</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="previewContainerWrapper" class="relative w-full aspect-video rounded-xl shadow-2xl overflow-hidden bg-bg-medium flex items-center justify-center min-h-[300px]">
+                    <p id="uploadPrompt" class="text-center p-8 text-text-light opacity-70">Upload images to start.</p>
+                    
+                    <div id="previewContainer" class="absolute inset-0 w-full h-full" style="display: none;">
+                        <img id="displayImage" class="absolute inset-0 w-full h-full object-cover" alt="Preview Image">
+                        <div id="darkOverlay" class="absolute inset-0 w-full h-full"></div>
+                        <textarea id="editInput" rows="1"></textarea>
+                        <div id="overlayFlexWrapper" class="absolute inset-0 p-8 md:p-12 flex flex-col transition-all duration-300">
+                            <div id="overlayContent" class="space-y-6 max-w-2xl" style="font-family: 'Aptos Bold', sans-serif;">
+                                <div id="settingsList" class="space-y-2 text-text-light text-2xl md:text-3xl"></div>
+                                <div id="separator" class="h-0.5 w-full bg-accent opacity-50"></div>
+                                <div id="infoList" class="space-y-2 text-text-light text-xl md:text-2xl opacity-90"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <canvas id="hiddenCanvas" style="display: none;"></canvas>
+            </div>
+        </main>
+        
+        <footer class="mt-12 text-center text-sm text-text-light opacity-70 border-t border-bg-medium pt-4">
+            <p>Made by Adlai Dyson | Fused Frame Photography</p>
+        </footer>
+    </div>
+
+    <script>
+        const ICONS = {
+            iso: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/iso.png',
+            description: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/speech.png',
+            cameraMakeModel: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/camera.png',
+            lensModel: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/lens.png',
+            focalLength: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/focal-length.png',
+            shutterSpeed: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/exposure.png',
+            aperture: 'https://cdn.fusedframe.co.uk/exif-overlay-generator/icons/aperture.png',
+            copyright: null
+        };
+
+        const loadedIcons = {};
+        const imageUpload = document.getElementById('imageUpload');
+        const displayImage = document.getElementById('displayImage');
+        const overlayFlexWrapper = document.getElementById('overlayFlexWrapper');
+        const overlayContent = document.getElementById('overlayContent');
+        const downloadCurrentButton = document.getElementById('downloadCurrentButton');
+        const downloadAllButton = document.getElementById('downloadAllButton');
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
+        const downloadMessage = document.getElementById('downloadMessage');
+        const darkOverlay = document.getElementById('darkOverlay');
+        const settingsList = document.getElementById('settingsList');
+        const infoList = document.getElementById('infoList');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const previewContainer = document.getElementById('previewContainer');
+        const editInput = document.getElementById('editInput');
+        const toggleControls = document.getElementById('toggleControls');
+        const navContainer = document.getElementById('navContainer');
+        const prevImage = document.getElementById('prevImage');
+        const nextImage = document.getElementById('nextImage');
+        const imageCounter = document.getElementById('imageCounter');
+        const clearImagesButton = document.getElementById('clearImagesButton');
+        const separator = document.getElementById('separator');
+        const customAlert = document.getElementById('customAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertClose = document.getElementById('alertClose');
+        const ctx = hiddenCanvas.getContext('2d');
+
+        let imageProjects = [];
+        let currentImageIndex = 0;
+        let activeEditElement = null;
+
+        const DEFAULT_SETTINGS = {
+            aperture: 'f/2', shutterSpeed: '1/800 sec', iso: 'ISO 160',
+            focalLength: '90.0mm (135.0mm FF)', cameraMakeModel: 'FUJIFILM X-T3',
+            lensModel: 'FUJIFILM XF90mmF2 R LM WR', description: 'Natural light photography',
+            copyright: '© Adlai Dyson | Fused Frame Photography',
+            showLensModel: true, showDescription: true, showCopyright: true,
+        };
+        
+        const globalAdjustments = { blur: 10, opacity: 0.2, scale: 1.0, position: 'bottom-left' };
+
+        const controls = {
+            blurAmount: document.getElementById('blurAmount'),
+            overlayOpacity: document.getElementById('overlayOpacity'),
+            textScale: document.getElementById('textScale'),
+            overlayPosition: document.getElementById('overlayPosition'),
+            blurValue: document.getElementById('blurValue'),
+            scaleValue: document.getElementById('scaleValue'),
+            toggleLensModel: document.getElementById('toggleLensModel'),
+            toggleDescription: document.getElementById('toggleDescription'),
+            toggleCopyright: document.getElementById('toggleCopyright'),
+        };
+
+        const preloadIcons = async () => {
+            const promises = Object.entries(ICONS).map(([key, url]) => {
+                if (!url) return Promise.resolve();
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => { loadedIcons[key] = img; resolve(); };
+                    img.onerror = () => { resolve(); };
+                    img.src = url;
+                });
+            });
+            await Promise.all(promises);
+        };
+
+        const saveAdjustments = () => { localStorage.setItem('overlaySettingsV4.5', JSON.stringify(globalAdjustments)); };
+        const loadAdjustments = () => {
+            const saved = localStorage.getItem('overlaySettingsV4.5');
+            if (saved) Object.assign(globalAdjustments, JSON.parse(saved));
+            controls.blurAmount.value = globalAdjustments.blur;
+            controls.overlayOpacity.value = globalAdjustments.opacity;
+            controls.textScale.value = globalAdjustments.scale;
+            controls.overlayPosition.value = globalAdjustments.position;
+            controls.blurValue.textContent = globalAdjustments.blur;
+            controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
+        };
+
+        const extractExifData = (tags) => {
+            const data = { ...DEFAULT_SETTINGS };
+            const getVal = (v) => Array.isArray(v) && v[1] ? v[0]/v[1] : v;
+            
+            const ap = getVal(tags.FNumber);
+            if (ap) data.aperture = `f/${ap.toFixed(1).replace('.0','')}`;
+            
+            const et = getVal(tags.ExposureTime);
+            if (et) data.shutterSpeed = et >= 1 ? `${et.toFixed(1).replace('.0','')} sec` : `1/${Math.round(1/et)} sec`;
+            
+            if (tags.ISOSpeedRatings) data.iso = `ISO ${tags.ISOSpeedRatings}`;
+            
+            const fl = getVal(tags.FocalLength);
+            if (fl) {
+                data.focalLength = `${fl.toFixed(1).replace('.0','')}mm`;
+                if (tags.FocalLengthIn35mmFilm) data.focalLength += ` (${tags.FocalLengthIn35mmFilm}mm FF)`;
+            }
+            
+            data.cameraMakeModel = tags.Make && tags.Model ? `${tags.Make} ${tags.Model}`.trim() : 'Unknown Camera';
+            data.lensModel = tags.LensModel || DEFAULT_SETTINGS.lensModel;
+            data.description = tags.ImageDescription || DEFAULT_SETTINGS.description;
+            data.copyright = tags.Copyright || DEFAULT_SETTINGS.copyright;
+            return data;
+        };
+
+        const renderCurrentProject = () => {
+            if (imageProjects.length === 0) {
+                previewContainer.style.display = 'none';
+                uploadPrompt.style.display = 'block';
+                navContainer.style.display = 'none';
+                return;
+            }
+
+            const project = imageProjects[currentImageIndex];
+            const data = project.data;
+            
+            displayImage.src = project.src;
+            displayImage.style.filter = `blur(${globalAdjustments.blur}px)`;
+            document.getElementById('previewContainerWrapper').style.aspectRatio = project.image.naturalWidth / project.image.naturalHeight;
+            darkOverlay.style.backgroundColor = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
+
+            imageCounter.textContent = `Image ${currentImageIndex + 1} of ${imageProjects.length}`;
+            prevImage.disabled = currentImageIndex === 0;
+            nextImage.disabled = currentImageIndex === imageProjects.length - 1;
+            navContainer.style.display = imageProjects.length > 1 ? 'flex' : 'none';
+            toggleControls.style.display = 'block';
+            downloadCurrentButton.disabled = false;
+            downloadAllButton.disabled = false;
+            clearImagesButton.disabled = false;
+            previewContainer.style.display = 'block';
+            uploadPrompt.style.display = 'none';
+
+            const pos = globalAdjustments.position;
+            overlayFlexWrapper.className = `absolute inset-0 p-8 md:p-12 flex flex-col transition-all duration-300 ${
+                pos === 'bottom-left' ? 'justify-end items-start text-left' :
+                pos === 'bottom-right' ? 'justify-end items-end text-right' :
+                pos === 'top-left' ? 'justify-start items-start text-left' :
+                pos === 'top-right' ? 'justify-start items-end text-right' : 'justify-center items-center text-center'
+            }`;
+            
+            const align = pos.includes('right') ? 'align-right' : (pos === 'center' ? 'align-center' : '');
+            const buildItem = (k, t, i) => `
+                <div class="overlay-text-item ${align}" data-field="${k}">
+                    ${i ? `<div class="icon-img" style="-webkit-mask-image: url('${i}'); mask-image: url('${i}');"></div>` : ''}
+                    <span data-display="${k}">${t}</span>
+                </div>`;
+
+            settingsList.innerHTML = buildItem('aperture', data.aperture, ICONS.aperture) + buildItem('shutterSpeed', data.shutterSpeed, ICONS.shutterSpeed) + buildItem('iso', data.iso, ICONS.iso) + buildItem('focalLength', data.focalLength, ICONS.focalLength);
+            
+            infoList.innerHTML = (data.showDescription ? buildItem('description', data.description, ICONS.description) : '') + 
+                buildItem('cameraMakeModel', data.cameraMakeModel, ICONS.cameraMakeModel) + 
+                (data.showLensModel ? buildItem('lensModel', data.lensModel, ICONS.lensModel) : '') + 
+                (data.showCopyright ? buildItem('copyright', data.copyright, ICONS.copyright) : '');
+
+            overlayContent.style.transform = `scale(${globalAdjustments.scale})`;
+            overlayContent.style.transformOrigin = pos.replace('-', ' ');
+
+            document.querySelectorAll('.overlay-text-item').forEach(item => item.onclick = handleTextEditStart);
+        };
+
+        const drawAndDownloadImage = (index) => {
+            return new Promise(resolve => {
+                const project = imageProjects[index];
+                const data = project.data;
+                const img = project.image;
+                const w = img.naturalWidth;
+                const h = img.naturalHeight;
+                hiddenCanvas.width = w;
+                hiddenCanvas.height = h;
+
+                // 1. Background
+                const blurStrength = (globalAdjustments.blur / 100) * (w / 12);
+                ctx.filter = `blur(${blurStrength}px)`;
+                // Draw slightly larger to avoid edge artifacts from blur
+                ctx.drawImage(img, -blurStrength * 2, -blurStrength * 2, w + blurStrength * 4, h + blurStrength * 4);
+                ctx.filter = 'none';
+                ctx.fillStyle = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
+                ctx.fillRect(0, 0, w, h);
+
+                // 2. Proportional Scaling Logic (Fixed)
+                // We use a reference height of 2000px to define our "unit"
+                // This makes the scale feel consistent across different resolutions
+                const refH = 2000;
+                const scaleFactor = (h / refH) * globalAdjustments.scale;
+                
+                const techFS = 48 * scaleFactor;
+                const infoFS = 34 * scaleFactor;
+                const padding = w * 0.05;
+                const lineGap = 1.35; // Line height multiplier
+                const sectionGap = 32 * scaleFactor;
+
+                const techLines = [
+                    { t: data.aperture, i: loadedIcons.aperture },
+                    { t: data.shutterSpeed, i: loadedIcons.shutterSpeed },
+                    { t: data.iso, i: loadedIcons.iso },
+                    { t: data.focalLength, i: loadedIcons.focalLength }
+                ];
+
+                const infoLines = [
+                    ...(data.showDescription ? [{ t: data.description, i: loadedIcons.description }] : []),
+                    { t: data.cameraMakeModel, i: loadedIcons.cameraMakeModel },
+                    ...(data.showLensModel ? [{ t: data.lensModel, i: loadedIcons.lensModel }] : []),
+                    ...(data.showCopyright ? [{ t: data.copyright, i: null }] : [])
+                ];
+
+                // Calculate total height for alignment
+                const totalTechH = techLines.length * (techFS * lineGap);
+                const totalInfoH = infoLines.length * (infoFS * lineGap);
+                const totalBlockH = totalTechH + sectionGap + totalInfoH;
+
+                const pos = globalAdjustments.position;
+                let startY;
+                if (pos.includes('top')) startY = padding + techFS;
+                else if (pos.includes('bottom')) startY = h - padding - totalBlockH + techFS;
+                else startY = (h / 2) - (totalBlockH / 2) + techFS;
+
+                let align = 'left';
+                let startX = padding;
+                if (pos.includes('right')) { align = 'right'; startX = w - padding; }
+                else if (pos === 'center') { align = 'center'; startX = w / 2; }
+
+                ctx.textAlign = align;
+                ctx.textBaseline = 'alphabetic';
+                
+                // Shadow for visibility
+                ctx.shadowColor = "rgba(0,0,0,0.3)";
+                ctx.shadowBlur = 10 * scaleFactor;
+
+                let curY = startY;
+                let maxLineWidth = 0;
+
+                // Helper to draw a text line with icon
+                const drawLine = (text, icon, fontSize, isBold = true) => {
+                    ctx.font = `${isBold ? '700' : '400'} ${fontSize}px 'Aptos Bold', sans-serif`;
+                    ctx.fillStyle = '#e5e7eb';
+                    
+                    const textWidth = ctx.measureText(text).width;
+                    const iconSize = fontSize * 1.1;
+                    const iconPadding = fontSize * 0.45;
+                    const fullWidth = icon ? textWidth + iconSize + iconPadding : textWidth;
+                    
+                    if (fullWidth > maxLineWidth) maxLineWidth = fullWidth;
+
+                    let textX = startX;
+                    if (icon) {
+                        let iconX;
+                        if (align === 'left') {
+                            iconX = startX;
+                            textX = startX + iconSize + iconPadding;
+                        } else if (align === 'right') {
+                            iconX = startX - iconSize;
+                            textX = startX - iconSize - iconPadding;
+                        } else {
+                            iconX = startX - (fullWidth / 2);
+                            textX = iconX + iconSize + iconPadding;
+                            ctx.textAlign = 'left';
+                        }
+                        // Vertically center icon with text (roughly 0.75 up from baseline)
+                        drawIcon(ctx, icon, iconX, curY - (fontSize * 0.78), iconSize);
+                    }
+                    
+                    ctx.fillText(text, textX, curY);
+                    ctx.textAlign = align; // Reset alignment
+                    return fontSize * lineGap;
+                };
+
+                // Draw Tech Section
+                techLines.forEach(l => { curY += drawLine(l.t, l.i, techFS); });
+
+                // Draw Separator
+                const sepY = curY - (techFS * (lineGap - 1)) + (sectionGap / 2);
+                ctx.beginPath();
+                ctx.strokeStyle = '#94fdf8';
+                ctx.lineWidth = Math.max(3, 4 * scaleFactor);
+                ctx.globalAlpha = 0.5;
+                let sepX1, sepX2;
+                if (align === 'left') { sepX1 = startX; sepX2 = startX + maxLineWidth; }
+                else if (align === 'right') { sepX1 = startX - maxLineWidth; sepX2 = startX; }
+                else { sepX1 = startX - (maxLineWidth / 2); sepX2 = startX + (maxLineWidth / 2); }
+                ctx.moveTo(sepX1, sepY);
+                ctx.lineTo(sepX2, sepY);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+
+                curY = sepY + (sectionGap / 2) + infoFS;
+
+                // Draw Info Section
+                infoLines.forEach(l => { curY += drawLine(l.t, l.i, infoFS, false); });
+
+                const a = document.createElement('a');
+                a.href = hiddenCanvas.toDataURL(project.mimeType, 0.92);
+                a.download = `${project.image.name} (Overlay).jpg`;
+                a.click();
+                resolve();
+            });
+        };
+
+        const drawIcon = (c, i, x, y, s) => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = tempCanvas.height = s;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(i, 0, 0, s, s);
+            tCtx.globalCompositeOperation = 'source-in';
+            tCtx.fillStyle = '#94fdf8';
+            tCtx.fillRect(0, 0, s, s);
+            c.drawImage(tempCanvas, x, y);
+        };
+
+        const handleTextEditStart = (e) => {
+            const span = e.currentTarget.querySelector('span');
+            const field = e.currentTarget.dataset.field;
+            activeEditElement = span;
+            const rect = span.getBoundingClientRect();
+            editInput.value = imageProjects[currentImageIndex].data[field];
+            editInput.dataset.field = field;
+            Object.assign(editInput.style, { 
+                opacity: 1, pointerEvents: 'auto', top: rect.top+'px', left: rect.left+'px', 
+                width: rect.width+40+'px', height: rect.height+'px', fontSize: getComputedStyle(span).fontSize 
+            });
+            editInput.focus(); editInput.select();
+        };
+
+        const handleTextEditEnd = () => {
+            if(!activeEditElement) return;
+            imageProjects[currentImageIndex].data[editInput.dataset.field] = editInput.value;
+            editInput.style.opacity = 0; editInput.style.pointerEvents = 'none';
+            activeEditElement = null; renderCurrentProject();
+        };
+
+        preloadIcons(); loadAdjustments();
+        imageUpload.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            let count = 0;
+            imageProjects = [];
+            files.forEach(f => {
+                const r = new FileReader();
+                r.onload = (ev) => {
+                    const i = new Image();
+                    i.name = f.name.replace(/\.[^/.]+$/, "");
+                    i.onload = () => {
+                        const p = { src: ev.target.result, image: i, mimeType: f.type, data: {...DEFAULT_SETTINGS} };
+                        EXIF.getData(i, function() {
+                            const tags = EXIF.getAllTags(this);
+                            if(Object.keys(tags).length) p.data = extractExifData(tags);
+                            imageProjects.push(p);
+                            if(++count === files.length) { currentImageIndex = 0; renderCurrentProject(); }
+                        });
+                    };
+                    i.src = ev.target.result;
+                };
+                r.readAsDataURL(f);
+            });
+        };
+
+        controls.blurAmount.oninput = controls.overlayOpacity.oninput = controls.textScale.oninput = controls.overlayPosition.onchange = () => {
+            globalAdjustments.blur = +controls.blurAmount.value;
+            globalAdjustments.opacity = +controls.overlayOpacity.value;
+            globalAdjustments.scale = +controls.textScale.value;
+            globalAdjustments.position = controls.overlayPosition.value;
+            controls.blurValue.textContent = globalAdjustments.blur;
+            controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
+            renderCurrentProject(); saveAdjustments();
+        };
+
+        prevImage.onclick = () => { currentImageIndex--; renderCurrentProject(); };
+        nextImage.onclick = () => { currentImageIndex++; renderCurrentProject(); };
+        clearImagesButton.onclick = () => { imageProjects = []; renderCurrentProject(); };
+        editInput.onblur = handleTextEditEnd;
+        editInput.onkeydown = (e) => e.key === 'Enter' && handleTextEditEnd();
+        
+        downloadCurrentButton.onclick = async () => {
+            downloadMessage.textContent = 'Generating...'; downloadMessage.classList.remove('hidden');
+            await drawAndDownloadImage(currentImageIndex);
+            downloadMessage.classList.add('hidden');
+        };
+
+        downloadAllButton.onclick = async () => {
+            downloadMessage.classList.remove('hidden');
+            for(let i=0; i<imageProjects.length; i++) {
+                downloadMessage.textContent = `Processing ${i+1}/${imageProjects.length}...`;
+                await drawAndDownloadImage(i);
+                await new Promise(r => setTimeout(r, 600));
+            }
+            downloadMessage.textContent = 'Complete!';
+            setTimeout(() => downloadMessage.classList.add('hidden'), 2000);
+        };
+
+        alertClose.onclick = () => customAlert.classList.remove('active');
+    </script>
+</body>
+</html>
