@@ -1,682 +1,983 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overlay Generator</title>
-    <!-- Favicon -->
-    <link rel="icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" type="image/jpeg">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <meta charset="UTF-8" />
+  <title>EXIF Overlay Generator | Adlai Dyson | Fused Frame Photography</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Free tool to overlay camera settings (EXIF) onto images with custom branding.">
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94fdf8; }
+
+    /* Range Input Styling */
+    input[type=range] { -webkit-appearance: none; background: transparent; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+      background: #94fdf8; cursor: pointer; margin-top: -6px; border: 2px solid #1e293b;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
+    }
     
-    <style>
-        :root {
-            --bg-dark: #111827;
-            --bg-medium: #1e374d;
-            --accent: #94fdf8;
-            --text-light: #e5e7eb;
-        }
+    /* Loader */
+    .loader {
+      border: 4px solid #1e293b; border-radius: 50%; border-top: 4px solid #94fdf8;
+      width: 24px; height: 24px; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @font-face {
-            font-family: 'Aptos Regular';
-            src: url('https://cdn-eu.fusedframe.co.uk/fonts/aptos/aptos-regular.woff2') format('woff2');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Aptos Bold';
-            src: url('https://cdn-eu.fusedframe.co.uk/fonts/aptos/aptos-bold.woff2') format('woff2');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            font-family: 'Aptos Regular', sans-serif;
-            color: var(--text-light);
-        }
-
-        h1, h2, h3, .header-text {
-            font-family: 'Aptos Bold', sans-serif;
-            color: var(--accent);
-        }
-
-        .container-bg {
-            background-color: var(--bg-medium);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        }
-        
-        input[type="range"]::-webkit-slider-runnable-track {
-            background: var(--bg-dark);
-            border-radius: 4px;
-            height: 8px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 18px;
-            width: 18px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            margin-top: -5px; 
-        }
-
-        .icon-img {
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            background-color: var(--accent);
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-            transition: background-color 0.1s;
-        }
-
-        .overlay-text-item {
-            cursor: pointer;
-            transition: background-color 0.1s;
-            padding: 4px 8px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: fit-content;
-        }
-        
-        .align-right .overlay-text-item {
-            flex-direction: row-reverse;
-            text-align: right;
-        }
-        .align-center .overlay-text-item {
-            flex-direction: column; 
-            justify-content: center;
-        }
-
-        .overlay-text-item:hover {
-            background-color: rgba(148, 253, 248, 0.1);
-        }
-
-        #editInput {
-            position: fixed;
-            z-index: 50;
-            opacity: 0;
-            padding: 4px;
-            margin: 0;
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            resize: none;
-            background: var(--bg-medium);
-            color: var(--text-light);
-            font-family: 'Aptos Bold', sans-serif;
-            pointer-events: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            overflow: hidden;
-        }
-
-        #customAlert {
-            z-index: 60;
-            background-color: var(--bg-medium);
-            border: 1px solid var(--accent);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.5);
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.2s ease-out;
-            pointer-events: none;
-        }
-        #customAlert.active {
-            transform: scale(1);
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'bg-dark': 'var(--bg-dark)',
-                        'bg-medium': 'var(--bg-medium)',
-                        'accent': 'var(--accent)',
-                        'text-light': 'var(--text-light)',
-                    },
-                    fontFamily: {
-                        'aptos-regular': ['Aptos Regular', 'sans-serif'],
-                        'aptos-bold': ['Aptos Bold', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    /* Checkerboard Pattern for transparent areas */
+    .checkerboard {
+        background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), linear-gradient(-45deg, #1e293b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e293b 75%), linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+  </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen flex flex-col">
 
-    <div id="customAlert" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-xl max-w-sm text-center">
-        <p id="alertMessage" class="mb-4 text-text-light font-semibold"></p>
-        <button id="alertClose" class="py-2 px-4 bg-accent text-bg-dark rounded-lg font-bold hover:opacity-90">OK</button>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col font-sans overflow-hidden">
+
+  <!-- Header -->
+  <header class="py-3 px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16">
+    <div class="flex items-center gap-4">
+      <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition">
+        <img src="https://cdn-eu.fusedframe.co.uk/main-logos/png/squarelogo-light-crop.png" alt="Fused Frame Photography" class="h-8 w-auto" />
+        <span class="text-xs text-slate-400 border-l border-slate-700 pl-3 hidden sm:block">Return to Main Site</span>
+      </a>
+      <h1 class="text-lg font-bold text-slate-100 hidden md:block border-l border-slate-700 pl-3">EXIF Overlay Generator</h1>
     </div>
+    <div class="flex gap-3">
+        <button onclick="document.getElementById('fileInput').click()" class="bg-[#94fdf8] text-slate-950 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] transition flex items-center gap-2">
+            <i data-lucide="upload" class="w-4 h-4"></i> Upload Images
+        </button>
+        <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+    </div>
+  </header>
 
-    <div class="max-w-7xl mx-auto flex-grow w-full">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl mb-2">Overlay Generator</h1>
-            <p class="text-lg md:text-xl text-text-light font-light opacity-80">Blurred backgrounds with high-res photography meta-data.</p>
-        </header>
+  <!-- Main Workspace -->
+  <div class="flex-grow flex flex-row overflow-hidden relative">
+    
+    <!-- LEFT SIDEBAR: Controls (Full Height) -->
+    <aside class="w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-y-auto custom-scrollbar h-full">
+      <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 flex justify-between items-center shadow-sm">
+        <h2 class="font-bold text-[#94fdf8]">Editor</h2>
+        <button onclick="applyStyleToAll()" class="text-xs text-slate-400 hover:text-white underline" title="Apply visual settings (blur, color, size) to all images">
+            Sync Style to All
+        </button>
+      </div>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- No Image Selected State -->
+      <div id="no-image-msg" class="p-8 text-center text-slate-500 mt-10">
+        <i data-lucide="image" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+        <p>Upload images to start.</p>
+      </div>
+
+      <!-- Controls Container -->
+      <div id="controls-container" class="hidden p-4 space-y-6 pb-20">
+        
+        <!-- Section: Content -->
+        <div class="space-y-3">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Overlay Data</h3>
             
-            <div id="settingsPanel" class="lg:col-span-1 container-bg p-6 rounded-xl space-y-6 lg:h-fit lg:sticky lg:top-8 order-2 lg:order-1">
-                <h3 class="header-text text-2xl mb-4">Settings</h3>
-                
-                <div class="space-y-3">
-                    <label class="block text-text-light font-bold">Upload Images</label>
-                    <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/webp" multiple class="w-full text-text-light text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-bg-dark hover:file:bg-opacity-90">
-                </div>
-
-                <div class="pt-2">
-                    <button id="clearImagesButton" class="w-full py-2 bg-red-800 text-white font-semibold rounded-xl shadow-lg hover:bg-red-700 transition disabled:opacity-50" disabled>
-                        Clear All Loaded Images
-                    </button>
-                </div>
-
-                <div id="navContainer" class="flex items-center justify-between mt-4 py-2 border-y border-bg-dark" style="display: none;">
-                    <button id="prevImage" class="p-2 rounded-full bg-bg-dark text-accent hover:bg-bg-medium disabled:opacity-30">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
-                    <span id="imageCounter" class="text-text-light font-bold"></span>
-                    <button id="nextImage" class="p-2 rounded-full bg-bg-dark text-accent hover:bg-bg-medium disabled:opacity-30">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                </div>
-
-                <div class="space-y-4">
-                    <h4 class="header-text text-xl pt-4">Adjustments</h4>
-                    
-                    <div>
-                        <label for="overlayPosition" class="block text-text-light mb-1">Layout Position</label>
-                        <select id="overlayPosition" class="w-full bg-bg-dark text-text-light border border-accent rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-accent">
-                            <option value="bottom-left">Bottom Left</option>
-                            <option value="bottom-right">Bottom Right</option>
-                            <option value="top-left">Top Left</option>
-                            <option value="top-right">Top Right</option>
-                            <option value="center">Center</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="blurAmount" class="block text-text-light">Blur Strength (<span id="blurValue">10</span>px)</label>
-                        <input type="range" id="blurAmount" min="0" max="60" value="10" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
-                    </div>
-                    <div>
-                        <label for="overlayOpacity" class="block text-text-light">Overlay Darkening</label>
-                        <input type="range" id="overlayOpacity" min="0.0" max="0.8" value="0.2" step="0.05" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
-                    </div>
-                    <div>
-                        <label for="textScale" class="block text-text-light">Text Scale (<span id="scaleValue">1.0</span>x)</label>
-                        <input type="range" id="textScale" min="0.5" max="3.0" value="1.0" step="0.1" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
-                    </div>
-                </div>
-
-                <div class="pt-4 space-y-2">
-                    <button id="downloadCurrentButton" class="w-full py-3 bg-accent text-bg-dark font-bold text-lg rounded-xl shadow-lg hover:opacity-90 transition disabled:opacity-50" disabled>
-                        Download Image
-                    </button>
-                    <button id="downloadAllButton" class="w-full py-2 bg-bg-dark border border-accent text-accent font-semibold rounded-xl shadow-lg hover:bg-bg-medium transition disabled:opacity-50" disabled>
-                        Download All
-                    </button>
-                    <p id="downloadMessage" class="text-sm text-center text-accent mt-2 hidden animate-pulse"></p>
-                </div>
+            <!-- Helper function to generate row HTML -->
+            <div id="content-rows" class="space-y-3">
+                <!-- Rows injected via JS for cleaner code -->
             </div>
 
-            <div class="lg:col-span-2 order-1 lg:order-2">
-                
-                <div id="toggleControls" class="container-bg p-4 rounded-xl mb-4" style="display: none;">
-                    <div class="flex flex-wrap gap-4 text-sm justify-center md:justify-start">
-                        <label class="flex items-center space-x-2 cursor-pointer select-none">
-                            <input type="checkbox" id="toggleLensModel" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
-                            <span class="text-text-light">Lens Model</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer select-none">
-                            <input type="checkbox" id="toggleDescription" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
-                            <span class="text-text-light">Description</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer select-none">
-                            <input type="checkbox" id="toggleCopyright" class="form-checkbox text-accent bg-bg-dark border-bg-dark rounded" checked>
-                            <span class="text-text-light">Copyright</span>
-                        </label>
-                    </div>
+            <div class="pt-2 border-t border-slate-800 mt-2">
+                 <div class="flex items-center gap-3 mb-2">
+                    <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('showCopyright', this.checked)">
+                    <span class="text-xs font-bold text-slate-300 w-20 shrink-0">Copyright</span>
+                    <input type="text" id="input-copyright" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" oninput="updateCurrent('copyright', this.value)">
                 </div>
-                
-                <div id="previewContainerWrapper" class="relative w-full aspect-video rounded-xl shadow-2xl overflow-hidden bg-bg-medium flex items-center justify-center min-h-[300px]">
-                    <p id="uploadPrompt" class="text-center p-8 text-text-light opacity-70">Upload images to start.</p>
-                    
-                    <div id="previewContainer" class="absolute inset-0 w-full h-full" style="display: none;">
-                        <img id="displayImage" class="absolute inset-0 w-full h-full object-cover" alt="Preview Image">
-                        <div id="darkOverlay" class="absolute inset-0 w-full h-full"></div>
-                        <textarea id="editInput" rows="1"></textarea>
-                        <div id="overlayFlexWrapper" class="absolute inset-0 p-8 md:p-12 flex flex-col transition-all duration-300">
-                            <div id="overlayContent" class="space-y-6 max-w-2xl" style="font-family: 'Aptos Bold', sans-serif;">
-                                <div id="settingsList" class="space-y-2 text-text-light text-2xl md:text-3xl"></div>
-                                <div id="separator" class="h-0.5 w-full bg-accent opacity-50"></div>
-                                <div id="infoList" class="space-y-2 text-text-light text-xl md:text-2xl opacity-90"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </div>
 
-                <canvas id="hiddenCanvas" style="display: none;"></canvas>
+        <hr class="border-slate-800">
+
+        <!-- Section: Layout -->
+        <div class="space-y-3">
+             <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Position</h3>
+             <div class="grid grid-cols-2 gap-2 max-w-[120px]">
+                 <button onclick="updateCurrent('position', 'top-left')" id="btn-pos-top-left" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-start justify-start p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'top-right')" id="btn-pos-top-right" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-start justify-end p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'bottom-left')" id="btn-pos-bottom-left" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-end justify-start p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'bottom-right')" id="btn-pos-bottom-right" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-end justify-end p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+             </div>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- Section: Appearance -->
+        <div class="space-y-4">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Style</h3>
+            
+            <div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Card Opacity</span><span id="val-card-opacity" class="text-[#94fdf8]">70%</span></div>
+                <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full" oninput="updateCurrent('cardOpacity', this.value)">
+            </div>
+            
+             <div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Corner Radius</span><span id="val-rounding" class="text-[#94fdf8]">10</span></div>
+                <input type="range" id="range-rounding" min="0" max="100" step="1" class="w-full" oninput="updateCurrent('cardRounding', this.value)">
+            </div>
+            
+            <div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Font Scale</span><span id="val-font" class="text-[#94fdf8]">1.0x</span></div>
+                <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" oninput="updateCurrent('fontScale', this.value)">
+            </div>
+
+            <div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Background Blur</span><span id="val-blur" class="text-[#94fdf8]">0px</span></div>
+                <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full" oninput="updateCurrent('blur', this.value)">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Text Color</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="color-text" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('textColor', this.value)">
+                        <input type="text" id="hex-text" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('textColor', this.value)">
+                    </div>
+                </div>
+                <div>
+                     <label class="text-xs text-slate-400 block mb-1">Accent</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="color-accent" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('accentColor', this.value)">
+                        <input type="text" id="hex-accent" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('accentColor', this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT COLUMN: Canvas & Filmstrip -->
+    <div class="flex-grow flex flex-col min-w-0 bg-slate-950 h-full relative">
+        
+        <!-- CENTER: Canvas Preview -->
+        <main class="flex-grow flex flex-col relative overflow-hidden bg-[#0b1120] checkerboard z-0">
+            <!-- Toolbar -->
+            <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-slate-900/90 backdrop-blur rounded-full px-2 py-1.5 border border-slate-700 shadow-xl">
+                 <button onclick="changeZoom(-0.1)" class="p-1.5 hover:text-[#94fdf8] transition" title="Zoom Out"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                 <span class="text-xs font-mono w-12 text-center py-1.5" id="zoom-display">Fit</span>
+                 <button onclick="changeZoom(0.1)" class="p-1.5 hover:text-[#94fdf8] transition" title="Zoom In"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                 <div class="w-px h-4 bg-slate-700 my-auto mx-1"></div>
+                 <button onclick="resetZoom()" class="p-1.5 hover:text-[#94fdf8] transition" title="Fit to Screen"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="absolute top-4 right-4 z-20 flex gap-2">
+                <button onclick="downloadCurrent()" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition">
+                    <i data-lucide="download" class="w-4 h-4"></i> Save
+                </button>
+                 <button onclick="downloadAll()" class="bg-[#94fdf8] text-slate-950 px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] shadow-lg flex items-center gap-2 transition">
+                    <i data-lucide="archive" class="w-4 h-4"></i> ZIP All
+                </button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="w-full h-full flex items-center justify-center p-8 overflow-hidden" id="canvas-wrapper">
+                <canvas id="previewCanvas" class="shadow-2xl border border-slate-700 rounded-sm hidden transition-transform duration-200 ease-out origin-center" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
+                <div id="empty-state" class="text-center text-slate-600 select-none">
+                    <i data-lucide="camera" class="w-24 h-24 mx-auto mb-4 opacity-20"></i>
+                    <h2 class="text-xl font-bold opacity-50">Ready to Create</h2>
+                    <p class="text-sm opacity-40">Drag & drop or click Upload to begin</p>
+                </div>
+            </div>
+            
+            <!-- Processing Overlay -->
+            <div id="processing-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+                 <div class="loader mb-4"></div>
+                 <p class="text-[#94fdf8] font-bold animate-pulse" id="processing-text">Processing...</p>
             </div>
         </main>
-        
-        <footer class="mt-12 text-center text-sm text-text-light opacity-70 border-t border-bg-medium pt-4">
-            <p>Made by Adlai Dyson | Fused Frame Photography</p>
+
+        <!-- BOTTOM: Filmstrip -->
+        <footer class="h-36 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+            <div class="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                <span class="text-xs text-slate-400 font-mono" id="status-counter">0 images loaded</span>
+                <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 uppercase tracking-wide font-bold">
+                    <i data-lucide="trash-2" class="w-3 h-3"></i> Clear
+                </button>
+            </div>
+            <div class="flex-grow overflow-x-auto overflow-y-hidden p-3 flex gap-3 items-center whitespace-nowrap min-h-0 custom-scrollbar" id="filmstrip">
+                <!-- Thumbnails injected here -->
+            </div>
         </footer>
     </div>
+  </div>
 
-    <script>
-        const ICONS = {
-            iso: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/iso.png',
-            description: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/speech.png',
-            cameraMakeModel: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/camera.png',
-            lensModel: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/lens.png',
-            focalLength: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/focal-length.png',
-            shutterSpeed: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/exposure.png',
-            aperture: 'https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/aperture.png',
-            copyright: null
-        };
+<script>
+    // --- ICONS ---
+    const ICONS = {
+        aperture: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/aperture.png",
+        shutter: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/exposure.png",
+        iso: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/iso.png",
+        focal: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/focal-length.png",
+        camera: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/camera.png",
+        lens: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/lens.png",
+    };
+    const loadedIcons = {};
 
-        const loadedIcons = {};
-        const imageUpload = document.getElementById('imageUpload');
-        const displayImage = document.getElementById('displayImage');
-        const overlayFlexWrapper = document.getElementById('overlayFlexWrapper');
-        const overlayContent = document.getElementById('overlayContent');
-        const downloadCurrentButton = document.getElementById('downloadCurrentButton');
-        const downloadAllButton = document.getElementById('downloadAllButton');
-        const hiddenCanvas = document.getElementById('hiddenCanvas');
-        const downloadMessage = document.getElementById('downloadMessage');
-        const darkOverlay = document.getElementById('darkOverlay');
-        const settingsList = document.getElementById('settingsList');
-        const infoList = document.getElementById('infoList');
-        const uploadPrompt = document.getElementById('uploadPrompt');
-        const previewContainer = document.getElementById('previewContainer');
-        const editInput = document.getElementById('editInput');
-        const toggleControls = document.getElementById('toggleControls');
-        const navContainer = document.getElementById('navContainer');
-        const prevImage = document.getElementById('prevImage');
-        const nextImage = document.getElementById('nextImage');
-        const imageCounter = document.getElementById('imageCounter');
-        const clearImagesButton = document.getElementById('clearImagesButton');
-        const separator = document.getElementById('separator');
-        const customAlert = document.getElementById('customAlert');
-        const alertMessage = document.getElementById('alertMessage');
-        const alertClose = document.getElementById('alertClose');
-        const ctx = hiddenCanvas.getContext('2d');
+    // --- APP STATE ---
+    let images = []; 
+    let selectedId = null;
+    let currentZoom = 1.0;
+    
+    // Default Settings
+    let userDefaults = {
+        blur: 0,
+        cardOpacity: 80,
+        cardRounding: 15,
+        fontScale: 1.0,
+        textColor: '#ffffff',
+        accentColor: '#94fdf8',
+        position: 'bottom-left',
+        // Toggles
+        showAperture: true,
+        showShutter: true,
+        showIso: true,
+        showFocal: true,
+        showDesc: true,
+        showDate: true,
+        showCamera: true,
+        showLens: true,
+        showCopyright: true,
+        // Text Content
+        txtAperture: '',
+        txtShutter: '',
+        txtIso: '',
+        txtFocal: '',
+        txtDesc: '',
+        txtDate: '',
+        txtCamera: '',
+        txtLens: '',
+        copyright: '© Adlai Dyson | Fused Frame Photography'
+    };
 
-        let imageProjects = [];
-        let currentImageIndex = 0;
-        let activeEditElement = null;
+    // Load defaults
+    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v2');
+    if(savedDefaults) {
+        try {
+            userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) };
+        } catch(e) { console.error("Failed to load settings", e); }
+    }
 
-        const DEFAULT_SETTINGS = {
-            aperture: 'f/2', shutterSpeed: '1/800 sec', iso: 'ISO 160',
-            focalLength: '90.0mm (135.0mm FF)', cameraMakeModel: 'FUJIFILM X-T3',
-            lensModel: 'FUJIFILM XF90mmF2 R LM WR', description: 'Natural light photography',
-            copyright: '© Adlai Dyson | Fused Frame Photography',
-            showLensModel: true, showDescription: true, showCopyright: true,
-        };
-        
-        const globalAdjustments = { blur: 10, opacity: 0.2, scale: 1.0, position: 'bottom-left' };
+    // --- DOM ELEMENTS ---
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const filmstrip = document.getElementById('filmstrip');
+    const controlsContainer = document.getElementById('controls-container');
+    const noImageMsg = document.getElementById('no-image-msg');
+    const emptyState = document.getElementById('empty-state');
+    const statusCounter = document.getElementById('status-counter');
+    const processingOverlay = document.getElementById('processing-overlay');
+    const processingText = document.getElementById('processing-text');
+    const contentRows = document.getElementById('content-rows');
 
-        const controls = {
-            blurAmount: document.getElementById('blurAmount'),
-            overlayOpacity: document.getElementById('overlayOpacity'),
-            textScale: document.getElementById('textScale'),
-            overlayPosition: document.getElementById('overlayPosition'),
-            blurValue: document.getElementById('blurValue'),
-            scaleValue: document.getElementById('scaleValue'),
-            toggleLensModel: document.getElementById('toggleLensModel'),
-            toggleDescription: document.getElementById('toggleDescription'),
-            toggleCopyright: document.getElementById('toggleCopyright'),
-        };
+    // Init
+    lucide.createIcons();
+    preloadIcons();
+    buildSidebarUI();
 
-        const preloadIcons = async () => {
-            const promises = Object.entries(ICONS).map(([key, url]) => {
-                if (!url) return Promise.resolve();
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = 'Anonymous';
-                    img.onload = () => { loadedIcons[key] = img; resolve(); };
-                    img.onerror = () => { resolve(); };
-                    img.src = url;
-                });
-            });
-            await Promise.all(promises);
-        };
+    function preloadIcons() {
+        Object.keys(ICONS).forEach(key => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.src = ICONS[key];
+            loadedIcons[key] = img;
+        });
+    }
 
-        const saveAdjustments = () => { localStorage.setItem('overlaySettingsV4.5', JSON.stringify(globalAdjustments)); };
-        const loadAdjustments = () => {
-            const saved = localStorage.getItem('overlaySettingsV4.5');
-            if (saved) Object.assign(globalAdjustments, JSON.parse(saved));
-            controls.blurAmount.value = globalAdjustments.blur;
-            controls.overlayOpacity.value = globalAdjustments.opacity;
-            controls.textScale.value = globalAdjustments.scale;
-            controls.overlayPosition.value = globalAdjustments.position;
-            controls.blurValue.textContent = globalAdjustments.blur;
-            controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
-        };
+    function buildSidebarUI() {
+        const rows = [
+            { id: 'Aperture', label: 'Aperture', icon: 'aperture' },
+            { id: 'Shutter', label: 'Exposure', icon: 'shutter' },
+            { id: 'Iso', label: 'ISO', icon: 'iso' },
+            { id: 'Focal', label: 'Focal Length', icon: 'focal' },
+            { id: 'Divider', label: 'Divider Line', isDivider: true },
+            { id: 'Desc', label: 'Description', placeholder: 'Short description...' },
+            { id: 'Date', label: 'Time & Date', icon: 'clock' },
+            { id: 'Camera', label: 'Camera', icon: 'camera' },
+            { id: 'Lens', label: 'Lens', icon: 'lens' }
+        ];
 
-        const extractExifData = (tags) => {
-            const data = { ...DEFAULT_SETTINGS };
-            const getVal = (v) => Array.isArray(v) && v[1] ? v[0]/v[1] : v;
-            
-            const ap = getVal(tags.FNumber);
-            if (ap) data.aperture = `f/${ap.toFixed(1).replace('.0','')}`;
-            
-            const et = getVal(tags.ExposureTime);
-            if (et) data.shutterSpeed = et >= 1 ? `${et.toFixed(1).replace('.0','')} sec` : `1/${Math.round(1/et)} sec`;
-            
-            if (tags.ISOSpeedRatings) data.iso = `ISO ${tags.ISOSpeedRatings}`;
-            
-            const fl = getVal(tags.FocalLength);
-            if (fl) {
-                data.focalLength = `${fl.toFixed(1).replace('.0','')}mm`;
-                if (tags.FocalLengthIn35mmFilm) data.focalLength += ` (${tags.FocalLengthIn35mmFilm}mm FF)`;
-            }
-            
-            data.cameraMakeModel = tags.Make && tags.Model ? `${tags.Make} ${tags.Model}`.trim() : 'Unknown Camera';
-            data.lensModel = tags.LensModel || DEFAULT_SETTINGS.lensModel;
-            data.description = tags.ImageDescription || DEFAULT_SETTINGS.description;
-            data.copyright = tags.Copyright || DEFAULT_SETTINGS.copyright;
-            return data;
-        };
-
-        const renderCurrentProject = () => {
-            if (imageProjects.length === 0) {
-                previewContainer.style.display = 'none';
-                uploadPrompt.style.display = 'block';
-                navContainer.style.display = 'none';
+        let html = '';
+        rows.forEach(r => {
+            if(r.isDivider) {
+                html += `
+                <div class="flex items-center gap-3 py-1 opacity-70">
+                    <div class="w-4 h-4"></div>
+                    <div class="flex-grow h-px bg-slate-600"></div>
+                    <span class="text-[10px] text-slate-500 uppercase">Accent Divider</span>
+                    <div class="flex-grow h-px bg-slate-600"></div>
+                </div>`;
                 return;
             }
 
-            const project = imageProjects[currentImageIndex];
-            const data = project.data;
+            const keyShow = `show${r.id}`;
+            const keyTxt = `txt${r.id}`;
             
-            displayImage.src = project.src;
-            displayImage.style.filter = `blur(${globalAdjustments.blur}px)`;
-            document.getElementById('previewContainerWrapper').style.aspectRatio = project.image.naturalWidth / project.image.naturalHeight;
-            darkOverlay.style.backgroundColor = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
+            html += `
+            <div class="flex items-center gap-3">
+                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)">
+                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate" title="${r.label}">${r.label}</span>
+                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="${r.placeholder || r.label}" oninput="updateCurrent('${keyTxt}', this.value)">
+            </div>`;
+        });
+        contentRows.innerHTML = html;
+    }
 
-            imageCounter.textContent = `Image ${currentImageIndex + 1} of ${imageProjects.length}`;
-            prevImage.disabled = currentImageIndex === 0;
-            nextImage.disabled = currentImageIndex === imageProjects.length - 1;
-            navContainer.style.display = imageProjects.length > 1 ? 'flex' : 'none';
-            toggleControls.style.display = 'block';
-            downloadCurrentButton.disabled = false;
-            downloadAllButton.disabled = false;
-            clearImagesButton.disabled = false;
-            previewContainer.style.display = 'block';
-            uploadPrompt.style.display = 'none';
-
-            const pos = globalAdjustments.position;
-            overlayFlexWrapper.className = `absolute inset-0 p-8 md:p-12 flex flex-col transition-all duration-300 ${
-                pos === 'bottom-left' ? 'justify-end items-start text-left' :
-                pos === 'bottom-right' ? 'justify-end items-end text-right' :
-                pos === 'top-left' ? 'justify-start items-start text-left' :
-                pos === 'top-right' ? 'justify-start items-end text-right' : 'justify-center items-center text-center'
-            }`;
-            
-            const align = pos.includes('right') ? 'align-right' : (pos === 'center' ? 'align-center' : '');
-            const buildItem = (k, t, i) => `
-                <div class="overlay-text-item ${align}" data-field="${k}">
-                    ${i ? `<div class="icon-img" style="-webkit-mask-image: url('${i}'); mask-image: url('${i}');"></div>` : ''}
-                    <span data-display="${k}">${t}</span>
-                </div>`;
-
-            settingsList.innerHTML = buildItem('aperture', data.aperture, ICONS.aperture) + buildItem('shutterSpeed', data.shutterSpeed, ICONS.shutterSpeed) + buildItem('iso', data.iso, ICONS.iso) + buildItem('focalLength', data.focalLength, ICONS.focalLength);
-            
-            infoList.innerHTML = (data.showDescription ? buildItem('description', data.description, ICONS.description) : '') + 
-                buildItem('cameraMakeModel', data.cameraMakeModel, ICONS.cameraMakeModel) + 
-                (data.showLensModel ? buildItem('lensModel', data.lensModel, ICONS.lensModel) : '') + 
-                (data.showCopyright ? buildItem('copyright', data.copyright, ICONS.copyright) : '');
-
-            overlayContent.style.transform = `scale(${globalAdjustments.scale})`;
-            overlayContent.style.transformOrigin = pos.replace('-', ' ');
-
-            document.querySelectorAll('.overlay-text-item').forEach(item => item.onclick = handleTextEditStart);
-        };
-
-        const drawAndDownloadImage = (index) => {
-            return new Promise(resolve => {
-                const project = imageProjects[index];
-                const data = project.data;
-                const img = project.image;
-                const w = img.naturalWidth;
-                const h = img.naturalHeight;
-                hiddenCanvas.width = w;
-                hiddenCanvas.height = h;
-
-                // 1. Background
-                const blurStrength = (globalAdjustments.blur / 100) * (w / 12);
-                ctx.filter = `blur(${blurStrength}px)`;
-                // Draw slightly larger to avoid edge artifacts from blur
-                ctx.drawImage(img, -blurStrength * 2, -blurStrength * 2, w + blurStrength * 4, h + blurStrength * 4);
-                ctx.filter = 'none';
-                ctx.fillStyle = `rgba(17, 24, 39, ${globalAdjustments.opacity})`;
-                ctx.fillRect(0, 0, w, h);
-
-                // 2. Proportional Scaling Logic (Fixed)
-                // We use a reference height of 2000px to define our "unit"
-                // This makes the scale feel consistent across different resolutions
-                const refH = 2000;
-                const scaleFactor = (h / refH) * globalAdjustments.scale;
-                
-                const techFS = 48 * scaleFactor;
-                const infoFS = 34 * scaleFactor;
-                const padding = w * 0.05;
-                const lineGap = 1.35; // Line height multiplier
-                const sectionGap = 32 * scaleFactor;
-
-                const techLines = [
-                    { t: data.aperture, i: loadedIcons.aperture },
-                    { t: data.shutterSpeed, i: loadedIcons.shutterSpeed },
-                    { t: data.iso, i: loadedIcons.iso },
-                    { t: data.focalLength, i: loadedIcons.focalLength }
-                ];
-
-                const infoLines = [
-                    ...(data.showDescription ? [{ t: data.description, i: loadedIcons.description }] : []),
-                    { t: data.cameraMakeModel, i: loadedIcons.cameraMakeModel },
-                    ...(data.showLensModel ? [{ t: data.lensModel, i: loadedIcons.lensModel }] : []),
-                    ...(data.showCopyright ? [{ t: data.copyright, i: null }] : [])
-                ];
-
-                // Calculate total height for alignment
-                const totalTechH = techLines.length * (techFS * lineGap);
-                const totalInfoH = infoLines.length * (infoFS * lineGap);
-                const totalBlockH = totalTechH + sectionGap + totalInfoH;
-
-                const pos = globalAdjustments.position;
-                let startY;
-                if (pos.includes('top')) startY = padding + techFS;
-                else if (pos.includes('bottom')) startY = h - padding - totalBlockH + techFS;
-                else startY = (h / 2) - (totalBlockH / 2) + techFS;
-
-                let align = 'left';
-                let startX = padding;
-                if (pos.includes('right')) { align = 'right'; startX = w - padding; }
-                else if (pos === 'center') { align = 'center'; startX = w / 2; }
-
-                ctx.textAlign = align;
-                ctx.textBaseline = 'alphabetic';
-                
-                // Shadow for visibility
-                ctx.shadowColor = "rgba(0,0,0,0.3)";
-                ctx.shadowBlur = 10 * scaleFactor;
-
-                let curY = startY;
-                let maxLineWidth = 0;
-
-                // Helper to draw a text line with icon
-                const drawLine = (text, icon, fontSize, isBold = true) => {
-                    ctx.font = `${isBold ? '700' : '400'} ${fontSize}px 'Aptos Bold', sans-serif`;
-                    ctx.fillStyle = '#e5e7eb';
-                    
-                    const textWidth = ctx.measureText(text).width;
-                    const iconSize = fontSize * 1.1;
-                    const iconPadding = fontSize * 0.45;
-                    const fullWidth = icon ? textWidth + iconSize + iconPadding : textWidth;
-                    
-                    if (fullWidth > maxLineWidth) maxLineWidth = fullWidth;
-
-                    let textX = startX;
-                    if (icon) {
-                        let iconX;
-                        if (align === 'left') {
-                            iconX = startX;
-                            textX = startX + iconSize + iconPadding;
-                        } else if (align === 'right') {
-                            iconX = startX - iconSize;
-                            textX = startX - iconSize - iconPadding;
-                        } else {
-                            iconX = startX - (fullWidth / 2);
-                            textX = iconX + iconSize + iconPadding;
-                            ctx.textAlign = 'left';
-                        }
-                        // Vertically center icon with text (roughly 0.75 up from baseline)
-                        drawIcon(ctx, icon, iconX, curY - (fontSize * 0.78), iconSize);
-                    }
-                    
-                    ctx.fillText(text, textX, curY);
-                    ctx.textAlign = align; // Reset alignment
-                    return fontSize * lineGap;
-                };
-
-                // Draw Tech Section
-                techLines.forEach(l => { curY += drawLine(l.t, l.i, techFS); });
-
-                // Draw Separator
-                const sepY = curY - (techFS * (lineGap - 1)) + (sectionGap / 2);
-                ctx.beginPath();
-                ctx.strokeStyle = '#94fdf8';
-                ctx.lineWidth = Math.max(3, 4 * scaleFactor);
-                ctx.globalAlpha = 0.5;
-                let sepX1, sepX2;
-                if (align === 'left') { sepX1 = startX; sepX2 = startX + maxLineWidth; }
-                else if (align === 'right') { sepX1 = startX - maxLineWidth; sepX2 = startX; }
-                else { sepX1 = startX - (maxLineWidth / 2); sepX2 = startX + (maxLineWidth / 2); }
-                ctx.moveTo(sepX1, sepY);
-                ctx.lineTo(sepX2, sepY);
-                ctx.stroke();
-                ctx.globalAlpha = 1.0;
-
-                curY = sepY + (sectionGap / 2) + infoFS;
-
-                // Draw Info Section
-                infoLines.forEach(l => { curY += drawLine(l.t, l.i, infoFS, false); });
-
-                const a = document.createElement('a');
-                a.href = hiddenCanvas.toDataURL(project.mimeType, 0.92);
-                a.download = `${project.image.name} (Overlay).jpg`;
-                a.click();
-                resolve();
-            });
-        };
-
-        const drawIcon = (c, i, x, y, s) => {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = tempCanvas.height = s;
-            const tCtx = tempCanvas.getContext('2d');
-            tCtx.drawImage(i, 0, 0, s, s);
-            tCtx.globalCompositeOperation = 'source-in';
-            tCtx.fillStyle = '#94fdf8';
-            tCtx.fillRect(0, 0, s, s);
-            c.drawImage(tempCanvas, x, y);
-        };
-
-        const handleTextEditStart = (e) => {
-            const span = e.currentTarget.querySelector('span');
-            const field = e.currentTarget.dataset.field;
-            activeEditElement = span;
-            const rect = span.getBoundingClientRect();
-            editInput.value = imageProjects[currentImageIndex].data[field];
-            editInput.dataset.field = field;
-            Object.assign(editInput.style, { 
-                opacity: 1, pointerEvents: 'auto', top: rect.top+'px', left: rect.left+'px', 
-                width: rect.width+40+'px', height: rect.height+'px', fontSize: getComputedStyle(span).fontSize 
-            });
-            editInput.focus(); editInput.select();
-        };
-
-        const handleTextEditEnd = () => {
-            if(!activeEditElement) return;
-            imageProjects[currentImageIndex].data[editInput.dataset.field] = editInput.value;
-            editInput.style.opacity = 0; editInput.style.pointerEvents = 'none';
-            activeEditElement = null; renderCurrentProject();
-        };
-
-        preloadIcons(); loadAdjustments();
-        imageUpload.onchange = (e) => {
-            const files = Array.from(e.target.files);
-            let count = 0;
-            imageProjects = [];
-            files.forEach(f => {
-                const r = new FileReader();
-                r.onload = (ev) => {
-                    const i = new Image();
-                    i.name = f.name.replace(/\.[^/.]+$/, "");
-                    i.onload = () => {
-                        const p = { src: ev.target.result, image: i, mimeType: f.type, data: {...DEFAULT_SETTINGS} };
-                        EXIF.getData(i, function() {
-                            const tags = EXIF.getAllTags(this);
-                            if(Object.keys(tags).length) p.data = extractExifData(tags);
-                            imageProjects.push(p);
-                            if(++count === files.length) { currentImageIndex = 0; renderCurrentProject(); }
-                        });
-                    };
-                    i.src = ev.target.result;
-                };
-                r.readAsDataURL(f);
-            });
-        };
-
-        controls.blurAmount.oninput = controls.overlayOpacity.oninput = controls.textScale.oninput = controls.overlayPosition.onchange = () => {
-            globalAdjustments.blur = +controls.blurAmount.value;
-            globalAdjustments.opacity = +controls.overlayOpacity.value;
-            globalAdjustments.scale = +controls.textScale.value;
-            globalAdjustments.position = controls.overlayPosition.value;
-            controls.blurValue.textContent = globalAdjustments.blur;
-            controls.scaleValue.textContent = globalAdjustments.scale.toFixed(1);
-            renderCurrentProject(); saveAdjustments();
-        };
-
-        prevImage.onclick = () => { currentImageIndex--; renderCurrentProject(); };
-        nextImage.onclick = () => { currentImageIndex++; renderCurrentProject(); };
-        clearImagesButton.onclick = () => { imageProjects = []; renderCurrentProject(); };
-        editInput.onblur = handleTextEditEnd;
-        editInput.onkeydown = (e) => e.key === 'Enter' && handleTextEditEnd();
+    // --- FILE HANDLING ---
+    function handleFiles(files) {
+        if (!files.length) return;
         
-        downloadCurrentButton.onclick = async () => {
-            downloadMessage.textContent = 'Generating...'; downloadMessage.classList.remove('hidden');
-            await drawAndDownloadImage(currentImageIndex);
-            downloadMessage.classList.add('hidden');
+        processingOverlay.classList.remove('hidden');
+        processingText.innerText = `Loading ${files.length} images...`;
+
+        let loadedCount = 0;
+        const total = files.length;
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    EXIF.getData(img, function() {
+                        addContentImage(file, img, this);
+                        loadedCount++;
+                        if (loadedCount === total) {
+                            processingOverlay.classList.add('hidden');
+                            if (selectedId === null && images.length > 0) {
+                                selectImage(images[0].id);
+                            }
+                        }
+                    });
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function addContentImage(file, imgElement, exifData) {
+        const id = Date.now() + Math.random().toString(16).slice(2);
+        const extracted = parseExif(exifData);
+        
+        // Use current userDefaults for new image, but populate text fields with EXIF
+        const settings = { 
+            ...userDefaults,
+            txtAperture: extracted.aperture,
+            txtShutter: extracted.shutter,
+            txtIso: extracted.iso,
+            txtFocal: extracted.focal,
+            txtCamera: extracted.camera,
+            txtLens: extracted.lens,
+            txtDate: extracted.date,
+            txtDesc: userDefaults.txtDesc // Keep desc empty or default
         };
 
-        downloadAllButton.onclick = async () => {
-            downloadMessage.classList.remove('hidden');
-            for(let i=0; i<imageProjects.length; i++) {
-                downloadMessage.textContent = `Processing ${i+1}/${imageProjects.length}...`;
-                await drawAndDownloadImage(i);
-                await new Promise(r => setTimeout(r, 600));
+        const imageObj = { id, file, imgElement, settings };
+        images.push(imageObj);
+        createThumbnail(imageObj);
+        updateCounter();
+    }
+
+    function parseExif(exif) {
+        const getTag = (tag) => exif.exifdata ? exif.exifdata[tag] : null;
+        let camera = getTag('Model') || 'Unknown Camera';
+        camera = camera.replace(/NIKON/i, 'Nikon').replace(/CANON/i, 'Canon').replace(/SONY/i, 'Sony').replace(/CORPORATION/i, '').replace(/DIGITAL CAMERA/i, '');
+        
+        let lens = getTag('LensModel') || '';
+        
+        let iso = getTag('ISOSpeedRatings') || '--';
+        let aperture = getTag('FNumber') ? `f/${getTag('FNumber')}` : 'f/--';
+        let focal = getTag('FocalLength') ? `${Math.round(getTag('FocalLength'))}mm` : '--mm';
+        
+        let shutter = getTag('ExposureTime');
+        if (shutter) {
+            shutter = (shutter < 1) ? `1/${Math.round(1/shutter)}s` : `${shutter}s`;
+        } else {
+            shutter = '--';
+        }
+
+        let date = getTag('DateTimeOriginal') || '';
+        if(date) {
+            // Exif format is YYYY:MM:DD HH:MM:SS
+            const parts = date.split(' ');
+            if(parts.length > 1) {
+                // Formatting to DD/MM/YYYY HH:MM
+                const d = parts[0].split(':');
+                const t = parts[1].split(':');
+                date = `${d[2]}/${d[1]}/${d[0]} ${t[0]}:${t[1]}`;
             }
-            downloadMessage.textContent = 'Complete!';
-            setTimeout(() => downloadMessage.classList.add('hidden'), 2000);
-        };
+        }
 
-        alertClose.onclick = () => customAlert.classList.remove('active');
-    </script>
+        return { camera, iso, aperture, focal, shutter, lens, date };
+    }
+
+    // --- THUMBNAIL UI ---
+    function createThumbnail(imgObj) {
+        const div = document.createElement('div');
+        div.className = `relative w-24 h-24 shrink-0 cursor-pointer border-4 border-slate-800 rounded-lg overflow-hidden group hover:border-slate-600 transition shadow-md`;
+        div.id = `thumb-${imgObj.id}`;
+        div.onclick = () => selectImage(imgObj.id);
+
+        const img = document.createElement('img');
+        img.src = imgObj.imgElement.src;
+        img.className = "w-full h-full object-cover opacity-70 group-hover:opacity-100 transition";
+        
+        div.appendChild(img);
+        filmstrip.appendChild(div);
+        
+        // Auto scroll to new item
+        filmstrip.scrollLeft = filmstrip.scrollWidth;
+    }
+
+    // --- SELECTION LOGIC ---
+    function selectImage(id) {
+        selectedId = id;
+        
+        document.querySelectorAll('#filmstrip > div').forEach(d => {
+            d.classList.remove('border-[#94fdf8]', 'ring-2', 'ring-[#94fdf8]', 'ring-offset-2', 'ring-offset-slate-900');
+            d.classList.add('border-slate-800');
+            d.querySelector('img').classList.add('opacity-70');
+        });
+        const activeThumb = document.getElementById(`thumb-${id}`);
+        if (activeThumb) {
+            activeThumb.classList.remove('border-slate-800');
+            activeThumb.classList.add('border-[#94fdf8]', 'ring-2', 'ring-[#94fdf8]', 'ring-offset-2', 'ring-offset-slate-900');
+            activeThumb.querySelector('img').classList.remove('opacity-70');
+            activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+
+        controlsContainer.classList.remove('hidden');
+        noImageMsg.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        canvas.classList.remove('hidden');
+
+        syncInputsToState();
+        renderCanvas();
+    }
+
+    function syncInputsToState() {
+        const img = images.find(i => i.id === selectedId);
+        if (!img) return;
+        const s = img.settings;
+
+        // Loop through keys to populate
+        ['Aperture', 'Shutter', 'Iso', 'Focal', 'Desc', 'Date', 'Camera', 'Lens'].forEach(k => {
+            const elTxt = document.getElementById(`input-txt${k}`);
+            if(elTxt) elTxt.value = s[`txt${k}`];
+            
+            const elChk = document.getElementById(`check-show${k}`);
+            if(elChk) elChk.checked = s[`show${k}`];
+        });
+
+        document.getElementById('input-copyright').value = s.copyright;
+        document.getElementById('check-show-copyright').checked = s.showCopyright;
+
+        document.getElementById('range-blur').value = s.blur;
+        document.getElementById('val-blur').innerText = s.blur + 'px';
+        
+        document.getElementById('range-card-opacity').value = s.cardOpacity;
+        document.getElementById('val-card-opacity').innerText = s.cardOpacity + '%';
+
+        document.getElementById('range-rounding').value = s.cardRounding;
+        document.getElementById('val-rounding').innerText = s.cardRounding;
+        
+        document.getElementById('range-font').value = s.fontScale;
+        document.getElementById('val-font').innerText = s.fontScale + 'x';
+
+        document.getElementById('color-text').value = s.textColor;
+        document.getElementById('hex-text').value = s.textColor;
+        document.getElementById('color-accent').value = s.accentColor;
+        document.getElementById('hex-accent').value = s.accentColor;
+
+        // Position Buttons
+        ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(pos => {
+            const btn = document.getElementById(`btn-pos-${pos}`);
+            if(s.position === pos) {
+                btn.classList.add('bg-[#94fdf8]', 'border-[#94fdf8]', 'text-slate-900');
+                btn.classList.remove('bg-slate-800', 'border-slate-600');
+            } else {
+                btn.classList.remove('bg-[#94fdf8]', 'border-[#94fdf8]', 'text-slate-900');
+                btn.classList.add('bg-slate-800', 'border-slate-600');
+            }
+        });
+    }
+
+    // --- UPDATE & PERSISTENCE ---
+    function updateCurrent(key, value) {
+        if (!selectedId) return;
+        const img = images.find(i => i.id === selectedId);
+        if (!img) return;
+
+        // Type conversion
+        if (['blur', 'cardOpacity', 'cardRounding'].includes(key)) value = parseInt(value);
+        if (key === 'fontScale') value = parseFloat(value);
+
+        img.settings[key] = value;
+        userDefaults[key] = value; // Update defaults for next image
+        saveDefaults();
+
+        // UI Feedback for ranges
+        if (key === 'blur') document.getElementById('val-blur').innerText = value + 'px';
+        if (key === 'cardOpacity') document.getElementById('val-card-opacity').innerText = value + '%';
+        if (key === 'cardRounding') document.getElementById('val-rounding').innerText = value;
+        if (key === 'fontScale') document.getElementById('val-font').innerText = value + 'x';
+        if (key === 'textColor') { document.getElementById('color-text').value = value; document.getElementById('hex-text').value = value; }
+        if (key === 'accentColor') { document.getElementById('color-accent').value = value; document.getElementById('hex-accent').value = value; }
+        if (key === 'position') syncInputsToState();
+
+        renderCanvas();
+    }
+    
+    let saveTimeout;
+    function saveDefaults() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            localStorage.setItem('adffp_exif_defaults_v2', JSON.stringify(userDefaults));
+        }, 500);
+    }
+
+    function applyStyleToAll() {
+        if (!selectedId) return;
+        const source = images.find(i => i.id === selectedId).settings;
+        if(!confirm("Apply current Style (Blur, Opacity, Position, Colors, Toggles) to all images? Content (Text) will be preserved.")) return;
+
+        images.forEach(img => {
+            if(img.id === selectedId) return;
+            // Copy style props only
+            const s = img.settings;
+            s.blur = source.blur;
+            s.cardOpacity = source.cardOpacity;
+            s.cardRounding = source.cardRounding;
+            s.fontScale = source.fontScale;
+            s.textColor = source.textColor;
+            s.accentColor = source.accentColor;
+            s.position = source.position;
+            s.showAperture = source.showAperture;
+            s.showShutter = source.showShutter;
+            s.showIso = source.showIso;
+            s.showFocal = source.showFocal;
+            s.showDesc = source.showDesc;
+            s.showDate = source.showDate;
+            s.showCamera = source.showCamera;
+            s.showLens = source.showLens;
+            s.showCopyright = source.showCopyright;
+        });
+        alert("Synced!");
+        renderCanvas();
+    }
+
+    // --- ZOOM ---
+    function changeZoom(delta) {
+        currentZoom = Math.max(0.1, currentZoom + delta);
+        applyZoom();
+    }
+    function resetZoom() {
+        currentZoom = 1.0;
+        // Check if image is bigger than container? For "Fit", we usually just reset transforms and let CSS handle contain.
+        // Actually, CSS object-fit: contain handles "Fit". 
+        // To Zoom, we need to scale the element.
+        applyZoom();
+    }
+    function applyZoom() {
+        canvas.style.transform = `scale(${currentZoom})`;
+        document.getElementById('zoom-display').innerText = Math.round(currentZoom * 100) + '%';
+    }
+
+
+    // --- RENDER LOGIC (VERTICAL LIST) ---
+    function renderCanvas() {
+        if (!selectedId) return;
+        const imgObj = images.find(i => i.id === selectedId);
+        const s = imgObj.settings;
+        const baseImg = imgObj.imgElement;
+        
+        canvas.width = baseImg.naturalWidth;
+        canvas.height = baseImg.naturalHeight;
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // 1. Draw Background
+        ctx.save();
+        if (s.blur > 0) ctx.filter = `blur(${s.blur * 2}px)`;
+        ctx.drawImage(baseImg, 0, 0);
+        ctx.restore();
+
+        // 2. Setup Dimensions
+        const baseScale = w * 0.001 * s.fontScale;
+        const fontSize = 28 * baseScale; 
+        const rowHeight = 45 * baseScale;
+        const iconSize = 32 * baseScale;
+        const padding = 40 * baseScale;
+        const gap = 20 * baseScale;
+
+        // Define Items to Render
+        const items = [];
+        if(s.showAperture) items.push({ type: 'row', iconKey: 'aperture', text: s.txtAperture });
+        if(s.showShutter) items.push({ type: 'row', iconKey: 'shutter', text: s.txtShutter });
+        if(s.showIso) items.push({ type: 'row', iconKey: 'iso', text: s.txtIso });
+        if(s.showFocal) items.push({ type: 'row', iconKey: 'focal', text: s.txtFocal });
+        
+        // Divider Check (Only show if items above AND below exist)
+        const hasTop = items.length > 0;
+        const bottomItems = [];
+        if(s.showDesc && s.txtDesc) bottomItems.push({ type: 'text', text: s.txtDesc, bold: true });
+        if(s.showDate) bottomItems.push({ type: 'row', iconKey: 'clock', text: s.txtDate });
+        if(s.showCamera) bottomItems.push({ type: 'row', iconKey: 'camera', text: s.txtCamera });
+        if(s.showLens) bottomItems.push({ type: 'row', iconKey: 'lens', text: s.txtLens });
+        
+        if(hasTop && bottomItems.length > 0) items.push({ type: 'divider' });
+        items.push(...bottomItems);
+
+        if(s.showCopyright) {
+            // Add a small spacer before copyright if needed, or just append
+            if(items.length > 0) items.push({ type: 'spacer', height: rowHeight * 0.5 });
+            items.push({ type: 'copyright', text: s.copyright });
+        }
+
+        if(items.length === 0) return; // Nothing to draw
+
+        // 3. Calculate Card Dimensions
+        ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
+        let maxTextWidth = 0;
+        let contentHeight = padding * 2; // Top & Bottom Padding
+
+        items.forEach(item => {
+            if(item.type === 'row') {
+                const tw = ctx.measureText(item.text).width;
+                maxTextWidth = Math.max(maxTextWidth, iconSize + gap + tw);
+                contentHeight += rowHeight;
+            } else if (item.type === 'text') {
+                 ctx.save();
+                 if(item.bold) ctx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
+                 const tw = ctx.measureText(item.text).width;
+                 maxTextWidth = Math.max(maxTextWidth, tw);
+                 ctx.restore();
+                 contentHeight += rowHeight;
+            } else if (item.type === 'divider') {
+                contentHeight += rowHeight; // Space for divider
+            } else if (item.type === 'spacer') {
+                contentHeight += item.height;
+            } else if (item.type === 'copyright') {
+                 ctx.save();
+                 ctx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
+                 const tw = ctx.measureText(item.text).width;
+                 maxTextWidth = Math.max(maxTextWidth, tw);
+                 ctx.restore();
+                 contentHeight += (rowHeight * 0.8);
+            }
+        });
+
+        const cardWidth = Math.max(w * 0.15, maxTextWidth + (padding * 2)); // Min width 15% of image
+        
+        // 4. Position Calculation
+        const margin = w * 0.03;
+        let startX, startY;
+
+        switch(s.position) {
+            case 'top-left': startX = margin; startY = margin; break;
+            case 'top-right': startX = w - cardWidth - margin; startY = margin; break;
+            case 'bottom-right': startX = w - cardWidth - margin; startY = h - contentHeight - margin; break;
+            case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
+            default: startX = margin; startY = h - contentHeight - margin;
+        }
+
+        // 5. Draw Card
+        ctx.save();
+        ctx.fillStyle = `rgba(0, 0, 0, ${s.cardOpacity / 100})`;
+        const r = s.cardRounding * 2 * baseScale;
+        ctx.beginPath();
+        ctx.roundRect(startX, startY, cardWidth, contentHeight, r);
+        ctx.fill();
+        ctx.restore();
+
+        // 6. Draw Items
+        let currentY = startY + padding + (rowHeight/2);
+        
+        ctx.fillStyle = s.textColor;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        items.forEach(item => {
+            const x = startX + padding;
+            
+            if(item.type === 'row') {
+                // Draw Icon
+                if(item.iconKey === 'clock') {
+                     // Draw Generic Clock
+                     ctx.strokeStyle = s.textColor;
+                     ctx.lineWidth = 2 * baseScale;
+                     ctx.beginPath();
+                     ctx.arc(x + iconSize/2, currentY, iconSize/2 - (2*baseScale), 0, Math.PI * 2);
+                     ctx.stroke();
+                     // Hands
+                     ctx.beginPath();
+                     ctx.moveTo(x + iconSize/2, currentY);
+                     ctx.lineTo(x + iconSize/2, currentY - (iconSize/3));
+                     ctx.moveTo(x + iconSize/2, currentY);
+                     ctx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
+                     ctx.stroke();
+                } else if (loadedIcons[item.iconKey]) {
+                    try {
+                        // Colorize logic is hard in canvas without composite operations or offscreen canvas.
+                        // Assuming icons are white or transparent. We draw them directly.
+                        // If user wants them colored, we'd need a tinted offscreen canvas.
+                        // For now, draw clean.
+                        ctx.drawImage(loadedIcons[item.iconKey], x, currentY - iconSize/2, iconSize, iconSize);
+                    } catch(e) {}
+                }
+                
+                // Draw Text
+                ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
+                ctx.fillText(item.text, x + iconSize + gap, currentY);
+                currentY += rowHeight;
+
+            } else if (item.type === 'text') {
+                if(item.bold) ctx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
+                else ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
+                
+                ctx.fillText(item.text, x, currentY);
+                currentY += rowHeight;
+
+            } else if (item.type === 'divider') {
+                ctx.strokeStyle = s.accentColor;
+                ctx.lineWidth = 3 * baseScale;
+                ctx.beginPath();
+                ctx.moveTo(x, currentY);
+                ctx.lineTo(x + cardWidth - (padding*2), currentY);
+                ctx.stroke();
+                currentY += rowHeight;
+
+            } else if (item.type === 'spacer') {
+                currentY += item.height;
+            } else if (item.type === 'copyright') {
+                ctx.save();
+                ctx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
+                ctx.globalAlpha = 0.8;
+                ctx.fillText(item.text, x, currentY);
+                ctx.restore();
+                currentY += (rowHeight * 0.8);
+            }
+        });
+    }
+
+    // --- EXPORT LOGIC ---
+    function downloadCurrent() {
+        if (!selectedId) return;
+        const imgObj = images.find(i => i.id === selectedId);
+        // Reset transform before exporting? No, canvas data is separate from CSS transform.
+        canvas.toBlob((blob) => {
+            saveAs(blob, `fusedframe-${imgObj.settings.txtDesc.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.jpg`);
+        }, 'image/jpeg', 0.95);
+    }
+
+    async function downloadAll() {
+        if (images.length === 0) return;
+        processingOverlay.classList.remove('hidden');
+        processingText.innerText = "Starting batch process...";
+        const zip = new JSZip();
+        
+        const tempCanvas = document.createElement('canvas');
+        const tCtx = tempCanvas.getContext('2d');
+
+        for (let i = 0; i < images.length; i++) {
+            const imgObj = images[i];
+            const s = imgObj.settings;
+            const baseImg = imgObj.imgElement;
+            
+            processingText.innerText = `Rendering ${i+1}/${images.length}...`;
+
+            // --- REPLICATE RENDER LOGIC ---
+            tempCanvas.width = baseImg.naturalWidth;
+            tempCanvas.height = baseImg.naturalHeight;
+            const w = tempCanvas.width;
+            const h = tempCanvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+
+            // 1. BG
+            tCtx.save();
+            if (s.blur > 0) tCtx.filter = `blur(${s.blur * 2}px)`;
+            tCtx.drawImage(baseImg, 0, 0);
+            tCtx.restore();
+
+            const baseScale = w * 0.001 * s.fontScale;
+            const fontSize = 28 * baseScale; 
+            const rowHeight = 45 * baseScale;
+            const iconSize = 32 * baseScale;
+            const padding = 40 * baseScale;
+            const gap = 20 * baseScale;
+
+            const items = [];
+            if(s.showAperture) items.push({ type: 'row', iconKey: 'aperture', text: s.txtAperture });
+            if(s.showShutter) items.push({ type: 'row', iconKey: 'shutter', text: s.txtShutter });
+            if(s.showIso) items.push({ type: 'row', iconKey: 'iso', text: s.txtIso });
+            if(s.showFocal) items.push({ type: 'row', iconKey: 'focal', text: s.txtFocal });
+            
+            const hasTop = items.length > 0;
+            const bottomItems = [];
+            if(s.showDesc && s.txtDesc) bottomItems.push({ type: 'text', text: s.txtDesc, bold: true });
+            if(s.showDate) bottomItems.push({ type: 'row', iconKey: 'clock', text: s.txtDate });
+            if(s.showCamera) bottomItems.push({ type: 'row', iconKey: 'camera', text: s.txtCamera });
+            if(s.showLens) bottomItems.push({ type: 'row', iconKey: 'lens', text: s.txtLens });
+            
+            if(hasTop && bottomItems.length > 0) items.push({ type: 'divider' });
+            items.push(...bottomItems);
+
+            if(s.showCopyright) {
+                if(items.length > 0) items.push({ type: 'spacer', height: rowHeight * 0.5 });
+                items.push({ type: 'copyright', text: s.copyright });
+            }
+
+            if(items.length > 0) {
+                tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
+                let maxTextWidth = 0;
+                let contentHeight = padding * 2;
+
+                items.forEach(item => {
+                    if(item.type === 'row') {
+                        const tw = tCtx.measureText(item.text).width;
+                        maxTextWidth = Math.max(maxTextWidth, iconSize + gap + tw);
+                        contentHeight += rowHeight;
+                    } else if (item.type === 'text') {
+                        tCtx.save();
+                        if(item.bold) tCtx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
+                        const tw = tCtx.measureText(item.text).width;
+                        maxTextWidth = Math.max(maxTextWidth, tw);
+                        tCtx.restore();
+                        contentHeight += rowHeight;
+                    } else if (item.type === 'divider') {
+                        contentHeight += rowHeight;
+                    } else if (item.type === 'spacer') {
+                        contentHeight += item.height;
+                    } else if (item.type === 'copyright') {
+                        tCtx.save();
+                        tCtx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
+                        const tw = tCtx.measureText(item.text).width;
+                        maxTextWidth = Math.max(maxTextWidth, tw);
+                        tCtx.restore();
+                        contentHeight += (rowHeight * 0.8);
+                    }
+                });
+
+                const cardWidth = Math.max(w * 0.15, maxTextWidth + (padding * 2));
+                const margin = w * 0.03;
+                let startX, startY;
+
+                switch(s.position) {
+                    case 'top-left': startX = margin; startY = margin; break;
+                    case 'top-right': startX = w - cardWidth - margin; startY = margin; break;
+                    case 'bottom-right': startX = w - cardWidth - margin; startY = h - contentHeight - margin; break;
+                    case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
+                    default: startX = margin; startY = h - contentHeight - margin;
+                }
+
+                tCtx.save();
+                tCtx.fillStyle = `rgba(0, 0, 0, ${s.cardOpacity / 100})`;
+                const r = s.cardRounding * 2 * baseScale;
+                tCtx.beginPath();
+                tCtx.roundRect(startX, startY, cardWidth, contentHeight, r);
+                tCtx.fill();
+                tCtx.restore();
+
+                let currentY = startY + padding + (rowHeight/2);
+                tCtx.fillStyle = s.textColor;
+                tCtx.textAlign = 'left';
+                tCtx.textBaseline = 'middle';
+
+                items.forEach(item => {
+                    const x = startX + padding;
+                    if(item.type === 'row') {
+                        if(item.iconKey === 'clock') {
+                             tCtx.strokeStyle = s.textColor;
+                             tCtx.lineWidth = 2 * baseScale;
+                             tCtx.beginPath();
+                             tCtx.arc(x + iconSize/2, currentY, iconSize/2 - (2*baseScale), 0, Math.PI * 2);
+                             tCtx.stroke();
+                             tCtx.beginPath();
+                             tCtx.moveTo(x + iconSize/2, currentY);
+                             tCtx.lineTo(x + iconSize/2, currentY - (iconSize/3));
+                             tCtx.moveTo(x + iconSize/2, currentY);
+                             tCtx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
+                             tCtx.stroke();
+                        } else if (loadedIcons[item.iconKey]) {
+                            try { tCtx.drawImage(loadedIcons[item.iconKey], x, currentY - iconSize/2, iconSize, iconSize); } catch(e) {}
+                        }
+                        tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
+                        tCtx.fillText(item.text, x + iconSize + gap, currentY);
+                        currentY += rowHeight;
+                    } else if (item.type === 'text') {
+                        if(item.bold) tCtx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
+                        else tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
+                        tCtx.fillText(item.text, x, currentY);
+                        currentY += rowHeight;
+                    } else if (item.type === 'divider') {
+                        tCtx.strokeStyle = s.accentColor;
+                        tCtx.lineWidth = 3 * baseScale;
+                        tCtx.beginPath();
+                        tCtx.moveTo(x, currentY);
+                        tCtx.lineTo(x + cardWidth - (padding*2), currentY);
+                        tCtx.stroke();
+                        currentY += rowHeight;
+                    } else if (item.type === 'spacer') {
+                        currentY += item.height;
+                    } else if (item.type === 'copyright') {
+                        tCtx.save();
+                        tCtx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
+                        tCtx.globalAlpha = 0.8;
+                        tCtx.fillText(item.text, x, currentY);
+                        tCtx.restore();
+                        currentY += (rowHeight * 0.8);
+                    }
+                });
+            }
+
+            const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg', 0.90));
+            zip.file(`fusedframe-${i+1}.jpg`, blob);
+            await new Promise(r => setTimeout(r, 10));
+        }
+
+        processingText.innerText = "Zipping...";
+        const content = await zip.generateAsync({type:"blob"});
+        saveAs(content, "fusedframe-overlays.zip");
+        processingOverlay.classList.add('hidden');
+    }
+
+    function clearAll() {
+        if(!confirm("Remove all images?")) return;
+        images = [];
+        selectedId = null;
+        filmstrip.innerHTML = '';
+        controlsContainer.classList.add('hidden');
+        canvas.classList.add('hidden');
+        noImageMsg.classList.remove('hidden');
+        emptyState.classList.remove('hidden');
+        updateCounter();
+    }
+
+    function updateCounter() {
+        statusCounter.innerText = `${images.length} images`;
+    }
+
+</script>
 </body>
 </html>
