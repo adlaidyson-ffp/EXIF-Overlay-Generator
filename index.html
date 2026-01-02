@@ -75,10 +75,17 @@
     
     <!-- LEFT SIDEBAR: Controls (Full Height) -->
     <aside class="w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-y-auto custom-scrollbar h-full">
-      <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 flex justify-between items-center shadow-sm">
-        <h2 class="font-bold text-[#94fdf8]">Editor</h2>
-        <button onclick="applyStyleToAll()" class="text-xs text-slate-400 hover:text-white underline" title="Apply visual settings (blur, color, size) to all images">
-            Sync Style to All
+      <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 space-y-2 shadow-sm">
+        <div class="flex justify-between items-center">
+             <h2 class="font-bold text-[#94fdf8]">Editor</h2>
+             <div class="flex gap-2">
+                 <button onclick="exportSettings()" title="Export Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8]"><i data-lucide="save" class="w-4 h-4"></i></button>
+                 <button onclick="document.getElementById('importInput').click()" title="Import Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8]"><i data-lucide="file-up" class="w-4 h-4"></i></button>
+                 <input type="file" id="importInput" accept=".json" class="hidden" onchange="importSettings(this.files)">
+             </div>
+        </div>
+        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded transition border border-slate-700" title="Apply visual settings (blur, color, size) to all images">
+            Sync Style to All Images
         </button>
       </div>
 
@@ -128,9 +135,21 @@
         <div class="space-y-4">
             <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Style</h3>
             
-            <div>
-                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Card Opacity</span><span id="val-card-opacity" class="text-[#94fdf8]">70%</span></div>
-                <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full" oninput="updateCurrent('cardOpacity', this.value)">
+            <div class="grid grid-cols-2 gap-4">
+                 <div>
+                    <label class="text-xs text-slate-400 block mb-1">Card Color</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="color-card" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('cardColor', this.value)">
+                        <input type="text" id="hex-card" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('cardColor', this.value)">
+                    </div>
+                </div>
+                <div>
+                     <label class="text-xs text-slate-400 block mb-1">Card Opacity</label>
+                     <div class="flex items-center justify-between">
+                         <span id="val-card-opacity" class="text-[#94fdf8] text-xs">60%</span>
+                     </div>
+                     <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full mt-1" oninput="updateCurrent('cardOpacity', this.value)">
+                </div>
             </div>
             
              <div>
@@ -139,12 +158,12 @@
             </div>
             
             <div>
-                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Font Scale</span><span id="val-font" class="text-[#94fdf8]">1.0x</span></div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Scale</span><span id="val-font" class="text-[#94fdf8]">1.0x</span></div>
                 <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" oninput="updateCurrent('fontScale', this.value)">
             </div>
 
             <div>
-                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Background Blur</span><span id="val-blur" class="text-[#94fdf8]">0px</span></div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Background Blur</span><span id="val-blur" class="text-[#94fdf8]">6px</span></div>
                 <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full" oninput="updateCurrent('blur', this.value)">
             </div>
 
@@ -242,9 +261,10 @@
     
     // Default Settings
     let userDefaults = {
-        blur: 0,
-        cardOpacity: 80,
-        cardRounding: 15,
+        blur: 6,
+        cardOpacity: 60,
+        cardRounding: 10,
+        cardColor: '#1e374d',
         fontScale: 1.0,
         textColor: '#ffffff',
         accentColor: '#94fdf8',
@@ -272,7 +292,7 @@
     };
 
     // Load defaults
-    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v2');
+    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v3');
     if(savedDefaults) {
         try {
             userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) };
@@ -509,6 +529,8 @@
         document.getElementById('hex-text').value = s.textColor;
         document.getElementById('color-accent').value = s.accentColor;
         document.getElementById('hex-accent').value = s.accentColor;
+        document.getElementById('color-card').value = s.cardColor;
+        document.getElementById('hex-card').value = s.cardColor;
 
         // Position Buttons
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(pos => {
@@ -544,6 +566,7 @@
         if (key === 'fontScale') document.getElementById('val-font').innerText = value + 'x';
         if (key === 'textColor') { document.getElementById('color-text').value = value; document.getElementById('hex-text').value = value; }
         if (key === 'accentColor') { document.getElementById('color-accent').value = value; document.getElementById('hex-accent').value = value; }
+        if (key === 'cardColor') { document.getElementById('color-card').value = value; document.getElementById('hex-card').value = value; }
         if (key === 'position') syncInputsToState();
 
         renderCanvas();
@@ -553,8 +576,42 @@
     function saveDefaults() {
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => {
-            localStorage.setItem('adffp_exif_defaults_v2', JSON.stringify(userDefaults));
+            localStorage.setItem('adffp_exif_defaults_v3', JSON.stringify(userDefaults));
         }, 500);
+    }
+    
+    function exportSettings() {
+        const json = JSON.stringify(userDefaults, null, 2);
+        const blob = new Blob([json], {type: "application/json"});
+        saveAs(blob, "fusedframe-settings.json");
+    }
+    
+    function importSettings(files) {
+        if(!files.length) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const loaded = JSON.parse(e.target.result);
+                // Merge loaded into userDefaults, overwriting existing
+                userDefaults = { ...userDefaults, ...loaded };
+                saveDefaults(); // Persist
+                // Apply to current image if one is selected
+                if(selectedId) {
+                    const img = images.find(i => i.id === selectedId);
+                    // We only want to apply STYLE keys, not CONTENT keys if imported
+                    const styleKeys = ['blur', 'cardOpacity', 'cardRounding', 'cardColor', 'fontScale', 'textColor', 'accentColor', 'position'];
+                    styleKeys.forEach(k => {
+                       if(loaded[k] !== undefined) img.settings[k] = loaded[k]; 
+                    });
+                    syncInputsToState();
+                    renderCanvas();
+                }
+                alert("Settings imported!");
+            } catch(err) {
+                alert("Invalid JSON file");
+            }
+        };
+        reader.readAsText(files[0]);
     }
 
     function applyStyleToAll() {
@@ -569,6 +626,7 @@
             s.blur = source.blur;
             s.cardOpacity = source.cardOpacity;
             s.cardRounding = source.cardRounding;
+            s.cardColor = source.cardColor;
             s.fontScale = source.fontScale;
             s.textColor = source.textColor;
             s.accentColor = source.accentColor;
@@ -614,6 +672,11 @@
         
         canvas.width = baseImg.naturalWidth;
         canvas.height = baseImg.naturalHeight;
+        
+        // Improve downsampling/upsampling quality for icons and canvas
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
         const w = canvas.width;
         const h = canvas.height;
 
@@ -624,7 +687,10 @@
         ctx.restore();
 
         // 2. Setup Dimensions
-        const baseScale = w * 0.001 * s.fontScale;
+        // Use Min Dimension to ensure scaling is consistent across Portrait/Landscape
+        const minDim = Math.min(w, h);
+        const baseScale = minDim * 0.0016 * s.fontScale; // Adjusted multiplier for minDim
+        
         const fontSize = 28 * baseScale; 
         const rowHeight = 45 * baseScale;
         const iconSize = 32 * baseScale;
@@ -688,10 +754,10 @@
             }
         });
 
-        const cardWidth = Math.max(w * 0.15, maxTextWidth + (padding * 2)); // Min width 15% of image
+        const cardWidth = Math.max(minDim * 0.35, maxTextWidth + (padding * 2)); // Dynamic Min Width
         
         // 4. Position Calculation
-        const margin = w * 0.03;
+        const margin = minDim * 0.04;
         let startX, startY;
 
         switch(s.position) {
@@ -704,7 +770,8 @@
 
         // 5. Draw Card
         ctx.save();
-        ctx.fillStyle = `rgba(0, 0, 0, ${s.cardOpacity / 100})`;
+        ctx.fillStyle = s.cardColor; // Custom card color
+        ctx.globalAlpha = s.cardOpacity / 100;
         const r = s.cardRounding * 2 * baseScale;
         ctx.beginPath();
         ctx.roundRect(startX, startY, cardWidth, contentHeight, r);
@@ -725,7 +792,7 @@
                 // Draw Icon
                 if(item.iconKey === 'clock') {
                      // Draw Generic Clock
-                     ctx.strokeStyle = s.textColor;
+                     ctx.strokeStyle = s.accentColor; // Use accent color
                      ctx.lineWidth = 2 * baseScale;
                      ctx.beginPath();
                      ctx.arc(x + iconSize/2, currentY, iconSize/2 - (2*baseScale), 0, Math.PI * 2);
@@ -739,11 +806,17 @@
                      ctx.stroke();
                 } else if (loadedIcons[item.iconKey]) {
                     try {
-                        // Colorize logic is hard in canvas without composite operations or offscreen canvas.
-                        // Assuming icons are white or transparent. We draw them directly.
-                        // If user wants them colored, we'd need a tinted offscreen canvas.
-                        // For now, draw clean.
-                        ctx.drawImage(loadedIcons[item.iconKey], x, currentY - iconSize/2, iconSize, iconSize);
+                        // Tint Icon Logic
+                        const tCanvas = document.createElement('canvas');
+                        tCanvas.width = iconSize;
+                        tCanvas.height = iconSize;
+                        const tCtx = tCanvas.getContext('2d');
+                        tCtx.drawImage(loadedIcons[item.iconKey], 0, 0, iconSize, iconSize);
+                        tCtx.globalCompositeOperation = 'source-in';
+                        tCtx.fillStyle = s.accentColor;
+                        tCtx.fillRect(0, 0, iconSize, iconSize);
+                        
+                        ctx.drawImage(tCanvas, x, currentY - iconSize/2);
                     } catch(e) {}
                 }
                 
@@ -813,6 +886,9 @@
             const w = tempCanvas.width;
             const h = tempCanvas.height;
             const tCtx = tempCanvas.getContext('2d');
+            
+            tCtx.imageSmoothingEnabled = true;
+            tCtx.imageSmoothingQuality = 'high';
 
             // 1. BG
             tCtx.save();
@@ -820,7 +896,9 @@
             tCtx.drawImage(baseImg, 0, 0);
             tCtx.restore();
 
-            const baseScale = w * 0.001 * s.fontScale;
+            const minDim = Math.min(w, h);
+            const baseScale = minDim * 0.0016 * s.fontScale;
+            
             const fontSize = 28 * baseScale; 
             const rowHeight = 45 * baseScale;
             const iconSize = 32 * baseScale;
@@ -879,8 +957,8 @@
                     }
                 });
 
-                const cardWidth = Math.max(w * 0.15, maxTextWidth + (padding * 2));
-                const margin = w * 0.03;
+                const cardWidth = Math.max(minDim * 0.35, maxTextWidth + (padding * 2));
+                const margin = minDim * 0.04;
                 let startX, startY;
 
                 switch(s.position) {
@@ -892,7 +970,8 @@
                 }
 
                 tCtx.save();
-                tCtx.fillStyle = `rgba(0, 0, 0, ${s.cardOpacity / 100})`;
+                tCtx.fillStyle = s.cardColor;
+                tCtx.globalAlpha = s.cardOpacity / 100;
                 const r = s.cardRounding * 2 * baseScale;
                 tCtx.beginPath();
                 tCtx.roundRect(startX, startY, cardWidth, contentHeight, r);
@@ -908,7 +987,7 @@
                     const x = startX + padding;
                     if(item.type === 'row') {
                         if(item.iconKey === 'clock') {
-                             tCtx.strokeStyle = s.textColor;
+                             tCtx.strokeStyle = s.accentColor;
                              tCtx.lineWidth = 2 * baseScale;
                              tCtx.beginPath();
                              tCtx.arc(x + iconSize/2, currentY, iconSize/2 - (2*baseScale), 0, Math.PI * 2);
@@ -920,7 +999,17 @@
                              tCtx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
                              tCtx.stroke();
                         } else if (loadedIcons[item.iconKey]) {
-                            try { tCtx.drawImage(loadedIcons[item.iconKey], x, currentY - iconSize/2, iconSize, iconSize); } catch(e) {}
+                            try { 
+                                const tCanvas = document.createElement('canvas');
+                                tCanvas.width = iconSize;
+                                tCanvas.height = iconSize;
+                                const tCtxIcon = tCanvas.getContext('2d');
+                                tCtxIcon.drawImage(loadedIcons[item.iconKey], 0, 0, iconSize, iconSize);
+                                tCtxIcon.globalCompositeOperation = 'source-in';
+                                tCtxIcon.fillStyle = s.accentColor;
+                                tCtxIcon.fillRect(0, 0, iconSize, iconSize);
+                                tCtx.drawImage(tCanvas, x, currentY - iconSize/2);
+                            } catch(e) {}
                         }
                         tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
                         tCtx.fillText(item.text, x + iconSize + gap, currentY);
