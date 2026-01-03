@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>EXIF Overlay Generator | Adlai Dyson | Fused Frame Photography</title>
+  <title>EXIF Overlay | Adlai Dyson | Fused Frame Photography</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Free tool to overlay camera settings (EXIF) onto images with custom branding.">
 
   <!-- Favicon -->
   <link rel="icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" />
+
+  <!-- Google Fonts: Noto Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -48,22 +53,27 @@
         background-size: 20px 20px;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
+    
+    body { font-family: 'Noto Sans', sans-serif; }
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col font-sans overflow-hidden">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col overflow-hidden">
 
   <!-- Header -->
   <header class="py-3 px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16">
     <div class="flex items-center gap-4">
-      <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition">
-        <img src="https://cdn-eu.fusedframe.co.uk/main-logos/png/squarelogo-light-crop.png" alt="Fused Frame Photography" class="h-8 w-auto" />
-        <span class="text-xs text-slate-400 border-l border-slate-700 pl-3 hidden sm:block">Return to Main Site</span>
+      <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition group">
+        <img src="https://cdn-eu.fusedframe.co.uk/main-logos/png/squarelogo-light-crop.png" alt="Fused Frame Photography" class="h-9 w-auto" />
+        <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 hidden sm:block group-hover:text-slate-300 transition">Return to Main Site</span>
       </a>
-      <h1 class="text-lg font-bold text-slate-100 hidden md:block border-l border-slate-700 pl-3">EXIF Overlay Generator</h1>
+      <div class="border-l border-slate-700 pl-4 hidden md:flex flex-col justify-center">
+        <h1 class="text-lg font-bold text-slate-100 leading-tight">EXIF Overlay</h1>
+        <span class="text-[10px] text-[#94fdf8] font-medium tracking-wide uppercase">Clean Summaries for Every Shot!</span>
+      </div>
     </div>
     <div class="flex gap-3">
-        <button onclick="document.getElementById('fileInput').click()" class="bg-[#94fdf8] text-slate-950 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] transition flex items-center gap-2">
+        <button onclick="document.getElementById('fileInput').click()" class="bg-[#94fdf8] text-slate-950 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] transition flex items-center gap-2 shadow-lg shadow-cyan-900/20">
             <i data-lucide="upload" class="w-4 h-4"></i> Upload Images
         </button>
         <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
@@ -79,12 +89,12 @@
         <div class="flex justify-between items-center">
              <h2 class="font-bold text-[#94fdf8]">Editor</h2>
              <div class="flex gap-2">
-                 <button onclick="exportSettings()" title="Export Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8]"><i data-lucide="save" class="w-4 h-4"></i></button>
-                 <button onclick="document.getElementById('importInput').click()" title="Import Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8]"><i data-lucide="file-up" class="w-4 h-4"></i></button>
+                 <button onclick="exportSettings()" title="Export Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="save" class="w-4 h-4"></i></button>
+                 <button onclick="document.getElementById('importInput').click()" title="Import Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="file-up" class="w-4 h-4"></i></button>
                  <input type="file" id="importInput" accept=".json" class="hidden" onchange="importSettings(this.files)">
              </div>
         </div>
-        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded transition border border-slate-700" title="Apply visual settings (blur, color, size) to all images">
+        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition border border-slate-700 font-medium" title="Apply visual settings (blur, color, size) to all images">
             Sync Style to All Images
         </button>
       </div>
@@ -228,7 +238,7 @@
         </main>
 
         <!-- BOTTOM: Filmstrip -->
-        <footer class="h-36 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+        <div class="h-36 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
             <div class="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                 <span class="text-xs text-slate-400 font-mono" id="status-counter">0 images loaded</span>
                 <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 uppercase tracking-wide font-bold">
@@ -237,6 +247,18 @@
             </div>
             <div class="flex-grow overflow-x-auto overflow-y-hidden p-3 flex gap-3 items-center whitespace-nowrap min-h-0 custom-scrollbar" id="filmstrip">
                 <!-- Thumbnails injected here -->
+            </div>
+        </div>
+        
+        <!-- FOOTER BANNER -->
+        <footer class="h-8 bg-slate-950 border-t border-slate-800 flex justify-between items-center px-4 text-[10px] text-slate-500 shrink-0 z-50">
+            <div>
+                © Adlai Dyson | Fused Frame Photography
+            </div>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-[#94fdf8] transition">FAQs & Downloads</a>
+                <span class="text-slate-700">|</span>
+                <a href="#" class="hover:text-[#94fdf8] transition">Privacy Notice</a>
             </div>
         </footer>
     </div>
@@ -412,8 +434,13 @@
             txtDate: extracted.date,
             txtDesc: userDefaults.txtDesc // Keep desc empty or default
         };
+        
+        // Store Original Filename (without extension) for export
+        const nameParts = file.name.split('.');
+        const ext = nameParts.length > 1 ? nameParts.pop() : 'jpg';
+        const rawName = nameParts.join('.');
 
-        const imageObj = { id, file, imgElement, settings };
+        const imageObj = { id, file, rawName, imgElement, settings };
         images.push(imageObj);
         createThumbnail(imageObj);
         updateCounter();
@@ -583,7 +610,8 @@
     function exportSettings() {
         const json = JSON.stringify(userDefaults, null, 2);
         const blob = new Blob([json], {type: "application/json"});
-        saveAs(blob, "fusedframe-settings.json");
+        // New Filename
+        saveAs(blob, "ADFFP-EXIF-Settings.json");
     }
     
     function importSettings(files) {
@@ -652,9 +680,6 @@
     }
     function resetZoom() {
         currentZoom = 1.0;
-        // Check if image is bigger than container? For "Fit", we usually just reset transforms and let CSS handle contain.
-        // Actually, CSS object-fit: contain handles "Fit". 
-        // To Zoom, we need to scale the element.
         applyZoom();
     }
     function applyZoom() {
@@ -673,7 +698,8 @@
         canvas.width = baseImg.naturalWidth;
         canvas.height = baseImg.naturalHeight;
         
-        // Improve downsampling/upsampling quality for icons and canvas
+        // --- SHARPNESS FIX ---
+        // 1. Image smoothing high
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
@@ -689,13 +715,15 @@
         // 2. Setup Dimensions
         // Use Min Dimension to ensure scaling is consistent across Portrait/Landscape
         const minDim = Math.min(w, h);
-        const baseScale = minDim * 0.0016 * s.fontScale; // Adjusted multiplier for minDim
+        const baseScale = minDim * 0.0016 * s.fontScale; 
         
-        const fontSize = 28 * baseScale; 
-        const rowHeight = 45 * baseScale;
-        const iconSize = 32 * baseScale;
-        const padding = 40 * baseScale;
-        const gap = 20 * baseScale;
+        // --- SHARPNESS FIX 2 ---
+        // Force integer values for fonts and drawing coordinates to prevent sub-pixel blurring
+        const fontSize = Math.round(28 * baseScale); 
+        const rowHeight = Math.round(45 * baseScale);
+        const iconSize = Math.round(32 * baseScale);
+        const padding = Math.round(40 * baseScale);
+        const gap = Math.round(20 * baseScale);
 
         // Define Items to Render
         const items = [];
@@ -716,7 +744,6 @@
         items.push(...bottomItems);
 
         if(s.showCopyright) {
-            // Add a small spacer before copyright if needed, or just append
             if(items.length > 0) items.push({ type: 'spacer', height: rowHeight * 0.5 });
             items.push({ type: 'copyright', text: s.copyright });
         }
@@ -754,10 +781,11 @@
             }
         });
 
-        const cardWidth = Math.max(minDim * 0.35, maxTextWidth + (padding * 2)); // Dynamic Min Width
-        
+        const cardWidth = Math.round(Math.max(minDim * 0.35, maxTextWidth + (padding * 2))); // Dynamic Min Width, Integer
+        contentHeight = Math.round(contentHeight); // Integer height
+
         // 4. Position Calculation
-        const margin = minDim * 0.04;
+        const margin = Math.round(minDim * 0.04);
         let startX, startY;
 
         switch(s.position) {
@@ -767,35 +795,38 @@
             case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
             default: startX = margin; startY = h - contentHeight - margin;
         }
+        
+        // Ensure coordinates are integers
+        startX = Math.round(startX);
+        startY = Math.round(startY);
 
         // 5. Draw Card
         ctx.save();
         ctx.fillStyle = s.cardColor; // Custom card color
         ctx.globalAlpha = s.cardOpacity / 100;
-        const r = s.cardRounding * 2 * baseScale;
+        const r = Math.round(s.cardRounding * 2 * baseScale);
         ctx.beginPath();
         ctx.roundRect(startX, startY, cardWidth, contentHeight, r);
         ctx.fill();
         ctx.restore();
 
         // 6. Draw Items
-        let currentY = startY + padding + (rowHeight/2);
+        let currentY = Math.round(startY + padding + (rowHeight/2));
         
         ctx.fillStyle = s.textColor;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
 
         items.forEach(item => {
-            const x = startX + padding;
+            const x = Math.round(startX + padding);
             
             if(item.type === 'row') {
                 // Draw Icon
                 if(item.iconKey === 'clock') {
-                     // Draw Generic Clock
-                     ctx.strokeStyle = s.accentColor; // Use accent color
-                     ctx.lineWidth = 2 * baseScale;
+                     ctx.strokeStyle = s.accentColor;
+                     ctx.lineWidth = Math.max(1, Math.round(2 * baseScale));
                      ctx.beginPath();
-                     ctx.arc(x + iconSize/2, currentY, iconSize/2 - (2*baseScale), 0, Math.PI * 2);
+                     ctx.arc(x + iconSize/2, currentY, iconSize/2 - ctx.lineWidth, 0, Math.PI * 2);
                      ctx.stroke();
                      // Hands
                      ctx.beginPath();
@@ -806,7 +837,6 @@
                      ctx.stroke();
                 } else if (loadedIcons[item.iconKey]) {
                     try {
-                        // Tint Icon Logic
                         const tCanvas = document.createElement('canvas');
                         tCanvas.width = iconSize;
                         tCanvas.height = iconSize;
@@ -822,7 +852,7 @@
                 
                 // Draw Text
                 ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                ctx.fillText(item.text, x + iconSize + gap, currentY);
+                ctx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
                 currentY += rowHeight;
 
             } else if (item.type === 'text') {
@@ -834,7 +864,7 @@
 
             } else if (item.type === 'divider') {
                 ctx.strokeStyle = s.accentColor;
-                ctx.lineWidth = 3 * baseScale;
+                ctx.lineWidth = Math.max(1, Math.round(3 * baseScale));
                 ctx.beginPath();
                 ctx.moveTo(x, currentY);
                 ctx.lineTo(x + cardWidth - (padding*2), currentY);
@@ -842,14 +872,14 @@
                 currentY += rowHeight;
 
             } else if (item.type === 'spacer') {
-                currentY += item.height;
+                currentY += Math.round(item.height);
             } else if (item.type === 'copyright') {
                 ctx.save();
-                ctx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
+                ctx.font = `${Math.round(fontSize * 0.7)}px "Noto Sans", sans-serif`;
                 ctx.globalAlpha = 0.8;
                 ctx.fillText(item.text, x, currentY);
                 ctx.restore();
-                currentY += (rowHeight * 0.8);
+                currentY += Math.round(rowHeight * 0.8);
             }
         });
     }
@@ -858,9 +888,9 @@
     function downloadCurrent() {
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
-        // Reset transform before exporting? No, canvas data is separate from CSS transform.
         canvas.toBlob((blob) => {
-            saveAs(blob, `fusedframe-${imgObj.settings.txtDesc.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.jpg`);
+            // New Filename Format: {OriginalName}-Overlay.jpg
+            saveAs(blob, `${imgObj.rawName}-Overlay.jpg`);
         }, 'image/jpeg', 0.95);
     }
 
@@ -899,11 +929,11 @@
             const minDim = Math.min(w, h);
             const baseScale = minDim * 0.0016 * s.fontScale;
             
-            const fontSize = 28 * baseScale; 
-            const rowHeight = 45 * baseScale;
-            const iconSize = 32 * baseScale;
-            const padding = 40 * baseScale;
-            const gap = 20 * baseScale;
+            const fontSize = Math.round(28 * baseScale); 
+            const rowHeight = Math.round(45 * baseScale);
+            const iconSize = Math.round(32 * baseScale);
+            const padding = Math.round(40 * baseScale);
+            const gap = Math.round(20 * baseScale);
 
             const items = [];
             if(s.showAperture) items.push({ type: 'row', iconKey: 'aperture', text: s.txtAperture });
@@ -949,16 +979,17 @@
                         contentHeight += item.height;
                     } else if (item.type === 'copyright') {
                         tCtx.save();
-                        tCtx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
+                        tCtx.font = `${Math.round(fontSize * 0.7)}px "Noto Sans", sans-serif`;
                         const tw = tCtx.measureText(item.text).width;
                         maxTextWidth = Math.max(maxTextWidth, tw);
                         tCtx.restore();
-                        contentHeight += (rowHeight * 0.8);
+                        contentHeight += Math.round(rowHeight * 0.8);
                     }
                 });
 
-                const cardWidth = Math.max(minDim * 0.35, maxTextWidth + (padding * 2));
-                const margin = minDim * 0.04;
+                const cardWidth = Math.round(Math.max(minDim * 0.35, maxTextWidth + (padding * 2)));
+                contentHeight = Math.round(contentHeight);
+                const margin = Math.round(minDim * 0.04);
                 let startX, startY;
 
                 switch(s.position) {
@@ -968,29 +999,31 @@
                     case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
                     default: startX = margin; startY = h - contentHeight - margin;
                 }
+                startX = Math.round(startX);
+                startY = Math.round(startY);
 
                 tCtx.save();
                 tCtx.fillStyle = s.cardColor;
                 tCtx.globalAlpha = s.cardOpacity / 100;
-                const r = s.cardRounding * 2 * baseScale;
+                const r = Math.round(s.cardRounding * 2 * baseScale);
                 tCtx.beginPath();
                 tCtx.roundRect(startX, startY, cardWidth, contentHeight, r);
                 tCtx.fill();
                 tCtx.restore();
 
-                let currentY = startY + padding + (rowHeight/2);
+                let currentY = Math.round(startY + padding + (rowHeight/2));
                 tCtx.fillStyle = s.textColor;
                 tCtx.textAlign = 'left';
                 tCtx.textBaseline = 'middle';
 
                 items.forEach(item => {
-                    const x = startX + padding;
+                    const x = Math.round(startX + padding);
                     if(item.type === 'row') {
                         if(item.iconKey === 'clock') {
                              tCtx.strokeStyle = s.accentColor;
-                             tCtx.lineWidth = 2 * baseScale;
+                             tCtx.lineWidth = Math.max(1, Math.round(2 * baseScale));
                              tCtx.beginPath();
-                             tCtx.arc(x + iconSize/2, currentY, iconSize/2 - (2*baseScale), 0, Math.PI * 2);
+                             tCtx.arc(x + iconSize/2, currentY, iconSize/2 - tCtx.lineWidth, 0, Math.PI * 2);
                              tCtx.stroke();
                              tCtx.beginPath();
                              tCtx.moveTo(x + iconSize/2, currentY);
@@ -1012,7 +1045,7 @@
                             } catch(e) {}
                         }
                         tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                        tCtx.fillText(item.text, x + iconSize + gap, currentY);
+                        tCtx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
                         currentY += rowHeight;
                     } else if (item.type === 'text') {
                         if(item.bold) tCtx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
@@ -1021,27 +1054,27 @@
                         currentY += rowHeight;
                     } else if (item.type === 'divider') {
                         tCtx.strokeStyle = s.accentColor;
-                        tCtx.lineWidth = 3 * baseScale;
+                        tCtx.lineWidth = Math.max(1, Math.round(3 * baseScale));
                         tCtx.beginPath();
                         tCtx.moveTo(x, currentY);
                         tCtx.lineTo(x + cardWidth - (padding*2), currentY);
                         tCtx.stroke();
                         currentY += rowHeight;
                     } else if (item.type === 'spacer') {
-                        currentY += item.height;
+                        currentY += Math.round(item.height);
                     } else if (item.type === 'copyright') {
                         tCtx.save();
-                        tCtx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
-                        tCtx.globalAlpha = 0.8;
-                        tCtx.fillText(item.text, x, currentY);
+                        tCtx.font = `${Math.round(fontSize * 0.7)}px "Noto Sans", sans-serif`;
+                        const tw = tCtx.measureText(item.text).width;
+                        maxTextWidth = Math.max(maxTextWidth, tw);
                         tCtx.restore();
-                        currentY += (rowHeight * 0.8);
+                        contentHeight += Math.round(rowHeight * 0.8);
                     }
                 });
             }
 
             const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg', 0.90));
-            zip.file(`fusedframe-${i+1}.jpg`, blob);
+            zip.file(`${imgObj.rawName}-Overlay.jpg`, blob);
             await new Promise(r => setTimeout(r, 10));
         }
 
