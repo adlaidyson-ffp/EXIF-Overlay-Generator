@@ -116,7 +116,16 @@
             <div id="content-rows" class="space-y-3">
                 <!-- Rows injected via JS for cleaner code -->
             </div>
+            
+            <!-- Socials (Generated in JS) -->
+             <div class="pt-2 border-t border-slate-800 mt-2">
+                 <h4 class="text-[10px] text-slate-500 uppercase font-bold mb-2">Social Handles</h4>
+                 <div id="social-rows" class="space-y-3">
+                    <!-- Social rows injected -->
+                 </div>
+            </div>
 
+            <!-- Copyright -->
             <div class="pt-2 border-t border-slate-800 mt-2">
                  <div class="flex items-center gap-3 mb-2">
                     <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('showCopyright', this.checked)">
@@ -175,6 +184,11 @@
             <div>
                 <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Background Blur</span><span id="val-blur" class="text-[#94fdf8]">6px</span></div>
                 <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full" oninput="updateCurrent('blur', this.value)">
+            </div>
+            
+             <div>
+                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Image Brightness</span><span id="val-brightness" class="text-[#94fdf8]">100%</span></div>
+                <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full" oninput="updateCurrent('brightness', this.value)">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -273,6 +287,14 @@
         focal: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/focal-length.png",
         camera: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/camera.png",
         lens: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/lens.png",
+        // Socials - Using SimpleIcons from CDN for easy tinting
+        facebook: "https://cdn.simpleicons.org/facebook/ffffff",
+        instagram: "https://cdn.simpleicons.org/instagram/ffffff",
+        x: "https://cdn.simpleicons.org/x/ffffff",
+        mastodon: "https://cdn.simpleicons.org/mastodon/ffffff",
+        linkedin: "https://cdn.simpleicons.org/linkedin/ffffff",
+        tiktok: "https://cdn.simpleicons.org/tiktok/ffffff",
+        snapchat: "https://cdn.simpleicons.org/snapchat/ffffff",
     };
     const loadedIcons = {};
 
@@ -284,6 +306,7 @@
     // Default Settings
     let userDefaults = {
         blur: 6,
+        brightness: 100, // New
         cardOpacity: 60,
         cardRounding: 10,
         cardColor: '#1e374d',
@@ -301,6 +324,14 @@
         showCamera: true,
         showLens: true,
         showCopyright: true,
+        // Social Toggles (Default Off)
+        showFacebook: false,
+        showInstagram: false,
+        showX: false,
+        showMastodon: false,
+        showLinkedin: false,
+        showTiktok: false,
+        showSnapchat: false,
         // Text Content
         txtAperture: '',
         txtShutter: '',
@@ -310,11 +341,20 @@
         txtDate: '',
         txtCamera: '',
         txtLens: '',
-        copyright: '© Adlai Dyson | Fused Frame Photography'
+        // Social Content
+        txtFacebook: '',
+        txtInstagram: '',
+        txtX: '',
+        txtMastodon: '',
+        txtLinkedin: '',
+        txtTiktok: '',
+        txtSnapchat: '',
+        
+        copyright: 'Adlai Dyson | Fused Frame Photography' // Removed © from default string as it is now an icon
     };
 
     // Load defaults
-    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v3');
+    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v4'); // V4
     if(savedDefaults) {
         try {
             userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) };
@@ -332,6 +372,7 @@
     const processingOverlay = document.getElementById('processing-overlay');
     const processingText = document.getElementById('processing-text');
     const contentRows = document.getElementById('content-rows');
+    const socialRows = document.getElementById('social-rows');
 
     // Init
     lucide.createIcons();
@@ -348,6 +389,7 @@
     }
 
     function buildSidebarUI() {
+        // Main Data
         const rows = [
             { id: 'Aperture', label: 'Aperture', icon: 'aperture' },
             { id: 'Shutter', label: 'Exposure', icon: 'shutter' },
@@ -384,18 +426,39 @@
             </div>`;
         });
         contentRows.innerHTML = html;
+
+        // Socials
+        const socials = [
+            { id: 'Facebook', label: 'Facebook' },
+            { id: 'Instagram', label: 'Instagram' },
+            { id: 'X', label: 'X (Twitter)' },
+            { id: 'Mastodon', label: 'Mastodon' },
+            { id: 'Linkedin', label: 'LinkedIn' },
+            { id: 'Tiktok', label: 'TikTok' },
+            { id: 'Snapchat', label: 'Snapchat' },
+        ];
+        
+        let socialHtml = '';
+        socials.forEach(s => {
+             const keyShow = `show${s.id}`;
+             const keyTxt = `txt${s.id}`;
+             socialHtml += `
+            <div class="flex items-center gap-3">
+                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)">
+                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate" title="${s.label}">${s.label}</span>
+                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="@username" oninput="updateCurrent('${keyTxt}', this.value)">
+            </div>`;
+        });
+        socialRows.innerHTML = socialHtml;
     }
 
     // --- FILE HANDLING ---
     function handleFiles(files) {
         if (!files.length) return;
-        
         processingOverlay.classList.remove('hidden');
         processingText.innerText = `Loading ${files.length} images...`;
-
         let loadedCount = 0;
         const total = files.length;
-
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -406,9 +469,7 @@
                         loadedCount++;
                         if (loadedCount === total) {
                             processingOverlay.classList.add('hidden');
-                            if (selectedId === null && images.length > 0) {
-                                selectImage(images[0].id);
-                            }
+                            if (selectedId === null && images.length > 0) selectImage(images[0].id);
                         }
                     });
                 };
@@ -421,8 +482,6 @@
     function addContentImage(file, imgElement, exifData) {
         const id = Date.now() + Math.random().toString(16).slice(2);
         const extracted = parseExif(exifData);
-        
-        // Use current userDefaults for new image, but populate text fields with EXIF
         const settings = { 
             ...userDefaults,
             txtAperture: extracted.aperture,
@@ -432,14 +491,11 @@
             txtCamera: extracted.camera,
             txtLens: extracted.lens,
             txtDate: extracted.date,
-            txtDesc: userDefaults.txtDesc // Keep desc empty or default
+            txtDesc: userDefaults.txtDesc
         };
-        
-        // Store Original Filename (without extension) for export
         const nameParts = file.name.split('.');
         const ext = nameParts.length > 1 ? nameParts.pop() : 'jpg';
         const rawName = nameParts.join('.');
-
         const imageObj = { id, file, rawName, imgElement, settings };
         images.push(imageObj);
         createThumbnail(imageObj);
@@ -450,32 +506,25 @@
         const getTag = (tag) => exif.exifdata ? exif.exifdata[tag] : null;
         let camera = getTag('Model') || 'Unknown Camera';
         camera = camera.replace(/NIKON/i, 'Nikon').replace(/CANON/i, 'Canon').replace(/SONY/i, 'Sony').replace(/CORPORATION/i, '').replace(/DIGITAL CAMERA/i, '');
-        
         let lens = getTag('LensModel') || '';
-        
         let iso = getTag('ISOSpeedRatings') || '--';
         let aperture = getTag('FNumber') ? `f/${getTag('FNumber')}` : 'f/--';
         let focal = getTag('FocalLength') ? `${Math.round(getTag('FocalLength'))}mm` : '--mm';
-        
         let shutter = getTag('ExposureTime');
         if (shutter) {
             shutter = (shutter < 1) ? `1/${Math.round(1/shutter)}s` : `${shutter}s`;
         } else {
             shutter = '--';
         }
-
         let date = getTag('DateTimeOriginal') || '';
         if(date) {
-            // Exif format is YYYY:MM:DD HH:MM:SS
             const parts = date.split(' ');
             if(parts.length > 1) {
-                // Formatting to DD/MM/YYYY HH:MM
                 const d = parts[0].split(':');
                 const t = parts[1].split(':');
                 date = `${d[2]}/${d[1]}/${d[0]} ${t[0]}:${t[1]}`;
             }
         }
-
         return { camera, iso, aperture, focal, shutter, lens, date };
     }
 
@@ -485,22 +534,17 @@
         div.className = `relative w-24 h-24 shrink-0 cursor-pointer border-4 border-slate-800 rounded-lg overflow-hidden group hover:border-slate-600 transition shadow-md`;
         div.id = `thumb-${imgObj.id}`;
         div.onclick = () => selectImage(imgObj.id);
-
         const img = document.createElement('img');
         img.src = imgObj.imgElement.src;
         img.className = "w-full h-full object-cover opacity-70 group-hover:opacity-100 transition";
-        
         div.appendChild(img);
         filmstrip.appendChild(div);
-        
-        // Auto scroll to new item
         filmstrip.scrollLeft = filmstrip.scrollWidth;
     }
 
     // --- SELECTION LOGIC ---
     function selectImage(id) {
         selectedId = id;
-        
         document.querySelectorAll('#filmstrip > div').forEach(d => {
             d.classList.remove('border-[#94fdf8]', 'ring-2', 'ring-[#94fdf8]', 'ring-offset-2', 'ring-offset-slate-900');
             d.classList.add('border-slate-800');
@@ -513,12 +557,10 @@
             activeThumb.querySelector('img').classList.remove('opacity-70');
             activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
-
         controlsContainer.classList.remove('hidden');
         noImageMsg.classList.add('hidden');
         emptyState.classList.add('hidden');
         canvas.classList.remove('hidden');
-
         syncInputsToState();
         renderCanvas();
     }
@@ -527,14 +569,21 @@
         const img = images.find(i => i.id === selectedId);
         if (!img) return;
         const s = img.settings;
-
-        // Loop through keys to populate
+        
+        // Main Fields
         ['Aperture', 'Shutter', 'Iso', 'Focal', 'Desc', 'Date', 'Camera', 'Lens'].forEach(k => {
             const elTxt = document.getElementById(`input-txt${k}`);
             if(elTxt) elTxt.value = s[`txt${k}`];
-            
             const elChk = document.getElementById(`check-show${k}`);
             if(elChk) elChk.checked = s[`show${k}`];
+        });
+
+        // Social Fields
+        ['Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'].forEach(k => {
+            const elTxt = document.getElementById(`input-txt${k}`);
+            if(elTxt) elTxt.value = s[`txt${k}`] || '';
+            const elChk = document.getElementById(`check-show${k}`);
+            if(elChk) elChk.checked = s[`show${k}`] || false;
         });
 
         document.getElementById('input-copyright').value = s.copyright;
@@ -543,6 +592,9 @@
         document.getElementById('range-blur').value = s.blur;
         document.getElementById('val-blur').innerText = s.blur + 'px';
         
+        document.getElementById('range-brightness').value = s.brightness;
+        document.getElementById('val-brightness').innerText = s.brightness + '%';
+
         document.getElementById('range-card-opacity').value = s.cardOpacity;
         document.getElementById('val-card-opacity').innerText = s.cardOpacity + '%';
 
@@ -559,7 +611,6 @@
         document.getElementById('color-card').value = s.cardColor;
         document.getElementById('hex-card').value = s.cardColor;
 
-        // Position Buttons
         ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(pos => {
             const btn = document.getElementById(`btn-pos-${pos}`);
             if(s.position === pos) {
@@ -578,16 +629,15 @@
         const img = images.find(i => i.id === selectedId);
         if (!img) return;
 
-        // Type conversion
-        if (['blur', 'cardOpacity', 'cardRounding'].includes(key)) value = parseInt(value);
+        if (['blur', 'brightness', 'cardOpacity', 'cardRounding'].includes(key)) value = parseInt(value);
         if (key === 'fontScale') value = parseFloat(value);
 
         img.settings[key] = value;
-        userDefaults[key] = value; // Update defaults for next image
+        userDefaults[key] = value;
         saveDefaults();
 
-        // UI Feedback for ranges
         if (key === 'blur') document.getElementById('val-blur').innerText = value + 'px';
+        if (key === 'brightness') document.getElementById('val-brightness').innerText = value + '%';
         if (key === 'cardOpacity') document.getElementById('val-card-opacity').innerText = value + '%';
         if (key === 'cardRounding') document.getElementById('val-rounding').innerText = value;
         if (key === 'fontScale') document.getElementById('val-font').innerText = value + 'x';
@@ -603,14 +653,13 @@
     function saveDefaults() {
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => {
-            localStorage.setItem('adffp_exif_defaults_v3', JSON.stringify(userDefaults));
+            localStorage.setItem('adffp_exif_defaults_v4', JSON.stringify(userDefaults));
         }, 500);
     }
     
     function exportSettings() {
         const json = JSON.stringify(userDefaults, null, 2);
         const blob = new Blob([json], {type: "application/json"});
-        // New Filename
         saveAs(blob, "ADFFP-EXIF-Settings.json");
     }
     
@@ -620,14 +669,11 @@
         reader.onload = (e) => {
             try {
                 const loaded = JSON.parse(e.target.result);
-                // Merge loaded into userDefaults, overwriting existing
                 userDefaults = { ...userDefaults, ...loaded };
-                saveDefaults(); // Persist
-                // Apply to current image if one is selected
+                saveDefaults();
                 if(selectedId) {
                     const img = images.find(i => i.id === selectedId);
-                    // We only want to apply STYLE keys, not CONTENT keys if imported
-                    const styleKeys = ['blur', 'cardOpacity', 'cardRounding', 'cardColor', 'fontScale', 'textColor', 'accentColor', 'position'];
+                    const styleKeys = ['blur', 'brightness', 'cardOpacity', 'cardRounding', 'cardColor', 'fontScale', 'textColor', 'accentColor', 'position'];
                     styleKeys.forEach(k => {
                        if(loaded[k] !== undefined) img.settings[k] = loaded[k]; 
                     });
@@ -645,13 +691,13 @@
     function applyStyleToAll() {
         if (!selectedId) return;
         const source = images.find(i => i.id === selectedId).settings;
-        if(!confirm("Apply current Style (Blur, Opacity, Position, Colors, Toggles) to all images? Content (Text) will be preserved.")) return;
-
+        if(!confirm("Apply current Style (Blur, Brightness, Opacity, Position, Colors, Toggles) to all images? Content (Text) will be preserved.")) return;
         images.forEach(img => {
             if(img.id === selectedId) return;
-            // Copy style props only
             const s = img.settings;
+            // Style
             s.blur = source.blur;
+            s.brightness = source.brightness;
             s.cardOpacity = source.cardOpacity;
             s.cardRounding = source.cardRounding;
             s.cardColor = source.cardColor;
@@ -659,6 +705,7 @@
             s.textColor = source.textColor;
             s.accentColor = source.accentColor;
             s.position = source.position;
+            // Toggles
             s.showAperture = source.showAperture;
             s.showShutter = source.showShutter;
             s.showIso = source.showIso;
@@ -668,12 +715,18 @@
             s.showCamera = source.showCamera;
             s.showLens = source.showLens;
             s.showCopyright = source.showCopyright;
+            s.showFacebook = source.showFacebook;
+            s.showInstagram = source.showInstagram;
+            s.showX = source.showX;
+            s.showMastodon = source.showMastodon;
+            s.showLinkedin = source.showLinkedin;
+            s.showTiktok = source.showTiktok;
+            s.showSnapchat = source.showSnapchat;
         });
         alert("Synced!");
         renderCanvas();
     }
 
-    // --- ZOOM ---
     function changeZoom(delta) {
         currentZoom = Math.max(0.1, currentZoom + delta);
         applyZoom();
@@ -688,7 +741,7 @@
     }
 
 
-    // --- RENDER LOGIC (VERTICAL LIST) ---
+    // --- RENDER LOGIC ---
     function renderCanvas() {
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
@@ -698,27 +751,25 @@
         canvas.width = baseImg.naturalWidth;
         canvas.height = baseImg.naturalHeight;
         
-        // --- SHARPNESS FIX ---
-        // 1. Image smoothing high
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
         const w = canvas.width;
         const h = canvas.height;
 
-        // 1. Draw Background
+        // 1. Draw Background (Blur + Brightness)
         ctx.save();
-        if (s.blur > 0) ctx.filter = `blur(${s.blur * 2}px)`;
+        let filterStr = '';
+        if (s.blur > 0) filterStr += `blur(${s.blur * 2}px) `;
+        if (s.brightness !== 100) filterStr += `brightness(${s.brightness}%) `;
+        if (filterStr) ctx.filter = filterStr.trim();
         ctx.drawImage(baseImg, 0, 0);
         ctx.restore();
 
         // 2. Setup Dimensions
-        // Use Min Dimension to ensure scaling is consistent across Portrait/Landscape
         const minDim = Math.min(w, h);
         const baseScale = minDim * 0.0016 * s.fontScale; 
         
-        // --- SHARPNESS FIX 2 ---
-        // Force integer values for fonts and drawing coordinates to prevent sub-pixel blurring
         const fontSize = Math.round(28 * baseScale); 
         const rowHeight = Math.round(45 * baseScale);
         const iconSize = Math.round(32 * baseScale);
@@ -727,36 +778,49 @@
 
         // Define Items to Render
         const items = [];
+        // Technicals
         if(s.showAperture) items.push({ type: 'row', iconKey: 'aperture', text: s.txtAperture });
         if(s.showShutter) items.push({ type: 'row', iconKey: 'shutter', text: s.txtShutter });
         if(s.showIso) items.push({ type: 'row', iconKey: 'iso', text: s.txtIso });
         if(s.showFocal) items.push({ type: 'row', iconKey: 'focal', text: s.txtFocal });
         
-        // Divider Check (Only show if items above AND below exist)
+        // Splitter logic
         const hasTop = items.length > 0;
         const bottomItems = [];
+        
         if(s.showDesc && s.txtDesc) bottomItems.push({ type: 'text', text: s.txtDesc, bold: true });
         if(s.showDate) bottomItems.push({ type: 'row', iconKey: 'clock', text: s.txtDate });
         if(s.showCamera) bottomItems.push({ type: 'row', iconKey: 'camera', text: s.txtCamera });
         if(s.showLens) bottomItems.push({ type: 'row', iconKey: 'lens', text: s.txtLens });
         
+        // Socials
+        if(s.showFacebook) bottomItems.push({ type: 'row', iconKey: 'facebook', text: s.txtFacebook });
+        if(s.showInstagram) bottomItems.push({ type: 'row', iconKey: 'instagram', text: s.txtInstagram });
+        if(s.showX) bottomItems.push({ type: 'row', iconKey: 'x', text: s.txtX });
+        if(s.showMastodon) bottomItems.push({ type: 'row', iconKey: 'mastodon', text: s.txtMastodon });
+        if(s.showLinkedin) bottomItems.push({ type: 'row', iconKey: 'linkedin', text: s.txtLinkedin });
+        if(s.showTiktok) bottomItems.push({ type: 'row', iconKey: 'tiktok', text: s.txtTiktok });
+        if(s.showSnapchat) bottomItems.push({ type: 'row', iconKey: 'snapchat', text: s.txtSnapchat });
+        
         if(hasTop && bottomItems.length > 0) items.push({ type: 'divider' });
         items.push(...bottomItems);
 
+        // Copyright (Always Last)
         if(s.showCopyright) {
             if(items.length > 0) items.push({ type: 'spacer', height: rowHeight * 0.5 });
+            // Now rendered as a row with a manual © icon
             items.push({ type: 'copyright', text: s.copyright });
         }
 
-        if(items.length === 0) return; // Nothing to draw
+        if(items.length === 0) return;
 
         // 3. Calculate Card Dimensions
         ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
         let maxTextWidth = 0;
-        let contentHeight = padding * 2; // Top & Bottom Padding
+        let contentHeight = padding * 2;
 
         items.forEach(item => {
-            if(item.type === 'row') {
+            if(item.type === 'row' || item.type === 'copyright') { // Treat copyright like row for width
                 const tw = ctx.measureText(item.text).width;
                 maxTextWidth = Math.max(maxTextWidth, iconSize + gap + tw);
                 contentHeight += rowHeight;
@@ -768,21 +832,14 @@
                  ctx.restore();
                  contentHeight += rowHeight;
             } else if (item.type === 'divider') {
-                contentHeight += rowHeight; // Space for divider
+                contentHeight += rowHeight; 
             } else if (item.type === 'spacer') {
                 contentHeight += item.height;
-            } else if (item.type === 'copyright') {
-                 ctx.save();
-                 ctx.font = `${fontSize * 0.7}px "Noto Sans", sans-serif`;
-                 const tw = ctx.measureText(item.text).width;
-                 maxTextWidth = Math.max(maxTextWidth, tw);
-                 ctx.restore();
-                 contentHeight += (rowHeight * 0.8);
             }
         });
 
-        const cardWidth = Math.round(Math.max(minDim * 0.35, maxTextWidth + (padding * 2))); // Dynamic Min Width, Integer
-        contentHeight = Math.round(contentHeight); // Integer height
+        const cardWidth = Math.round(Math.max(minDim * 0.35, maxTextWidth + (padding * 2)));
+        contentHeight = Math.round(contentHeight);
 
         // 4. Position Calculation
         const margin = Math.round(minDim * 0.04);
@@ -795,14 +852,12 @@
             case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
             default: startX = margin; startY = h - contentHeight - margin;
         }
-        
-        // Ensure coordinates are integers
         startX = Math.round(startX);
         startY = Math.round(startY);
 
         // 5. Draw Card
         ctx.save();
-        ctx.fillStyle = s.cardColor; // Custom card color
+        ctx.fillStyle = s.cardColor;
         ctx.globalAlpha = s.cardOpacity / 100;
         const r = Math.round(s.cardRounding * 2 * baseScale);
         ctx.beginPath();
@@ -812,7 +867,6 @@
 
         // 6. Draw Items
         let currentY = Math.round(startY + padding + (rowHeight/2));
-        
         ctx.fillStyle = s.textColor;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -820,7 +874,7 @@
         items.forEach(item => {
             const x = Math.round(startX + padding);
             
-            if(item.type === 'row') {
+            if(item.type === 'row' || item.type === 'copyright') {
                 // Draw Icon
                 if(item.iconKey === 'clock') {
                      ctx.strokeStyle = s.accentColor;
@@ -828,13 +882,18 @@
                      ctx.beginPath();
                      ctx.arc(x + iconSize/2, currentY, iconSize/2 - ctx.lineWidth, 0, Math.PI * 2);
                      ctx.stroke();
-                     // Hands
                      ctx.beginPath();
                      ctx.moveTo(x + iconSize/2, currentY);
                      ctx.lineTo(x + iconSize/2, currentY - (iconSize/3));
                      ctx.moveTo(x + iconSize/2, currentY);
                      ctx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
                      ctx.stroke();
+                } else if (item.type === 'copyright') {
+                     // Manually draw © icon
+                     ctx.font = `${iconSize}px "Noto Sans", sans-serif`;
+                     ctx.fillStyle = s.accentColor;
+                     ctx.fillText("©", x, currentY + (iconSize*0.1)); // Slight nudge
+                     ctx.fillStyle = s.textColor; // Reset for text
                 } else if (loadedIcons[item.iconKey]) {
                     try {
                         const tCanvas = document.createElement('canvas');
@@ -845,20 +904,23 @@
                         tCtx.globalCompositeOperation = 'source-in';
                         tCtx.fillStyle = s.accentColor;
                         tCtx.fillRect(0, 0, iconSize, iconSize);
-                        
                         ctx.drawImage(tCanvas, x, currentY - iconSize/2);
                     } catch(e) {}
                 }
                 
                 // Draw Text
                 ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                ctx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
+                if(item.type === 'copyright') {
+                     // Copyright text matches other rows now
+                     ctx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
+                } else {
+                     ctx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
+                }
                 currentY += rowHeight;
 
             } else if (item.type === 'text') {
                 if(item.bold) ctx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
                 else ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                
                 ctx.fillText(item.text, x, currentY);
                 currentY += rowHeight;
 
@@ -873,13 +935,6 @@
 
             } else if (item.type === 'spacer') {
                 currentY += Math.round(item.height);
-            } else if (item.type === 'copyright') {
-                ctx.save();
-                ctx.font = `${Math.round(fontSize * 0.7)}px "Noto Sans", sans-serif`;
-                ctx.globalAlpha = 0.8;
-                ctx.fillText(item.text, x, currentY);
-                ctx.restore();
-                currentY += Math.round(rowHeight * 0.8);
             }
         });
     }
@@ -889,7 +944,6 @@
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
         canvas.toBlob((blob) => {
-            // New Filename Format: {OriginalName}-Overlay.jpg
             saveAs(blob, `${imgObj.rawName}-Overlay.jpg`);
         }, 'image/jpeg', 0.95);
     }
@@ -907,7 +961,6 @@
             const imgObj = images[i];
             const s = imgObj.settings;
             const baseImg = imgObj.imgElement;
-            
             processingText.innerText = `Rendering ${i+1}/${images.length}...`;
 
             // --- REPLICATE RENDER LOGIC ---
@@ -916,13 +969,14 @@
             const w = tempCanvas.width;
             const h = tempCanvas.height;
             const tCtx = tempCanvas.getContext('2d');
-            
             tCtx.imageSmoothingEnabled = true;
             tCtx.imageSmoothingQuality = 'high';
 
-            // 1. BG
             tCtx.save();
-            if (s.blur > 0) tCtx.filter = `blur(${s.blur * 2}px)`;
+            let filterStr = '';
+            if (s.blur > 0) filterStr += `blur(${s.blur * 2}px) `;
+            if (s.brightness !== 100) filterStr += `brightness(${s.brightness}%) `;
+            if (filterStr) tCtx.filter = filterStr.trim();
             tCtx.drawImage(baseImg, 0, 0);
             tCtx.restore();
 
@@ -947,6 +1001,13 @@
             if(s.showDate) bottomItems.push({ type: 'row', iconKey: 'clock', text: s.txtDate });
             if(s.showCamera) bottomItems.push({ type: 'row', iconKey: 'camera', text: s.txtCamera });
             if(s.showLens) bottomItems.push({ type: 'row', iconKey: 'lens', text: s.txtLens });
+            if(s.showFacebook) bottomItems.push({ type: 'row', iconKey: 'facebook', text: s.txtFacebook });
+            if(s.showInstagram) bottomItems.push({ type: 'row', iconKey: 'instagram', text: s.txtInstagram });
+            if(s.showX) bottomItems.push({ type: 'row', iconKey: 'x', text: s.txtX });
+            if(s.showMastodon) bottomItems.push({ type: 'row', iconKey: 'mastodon', text: s.txtMastodon });
+            if(s.showLinkedin) bottomItems.push({ type: 'row', iconKey: 'linkedin', text: s.txtLinkedin });
+            if(s.showTiktok) bottomItems.push({ type: 'row', iconKey: 'tiktok', text: s.txtTiktok });
+            if(s.showSnapchat) bottomItems.push({ type: 'row', iconKey: 'snapchat', text: s.txtSnapchat });
             
             if(hasTop && bottomItems.length > 0) items.push({ type: 'divider' });
             items.push(...bottomItems);
@@ -960,9 +1021,8 @@
                 tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
                 let maxTextWidth = 0;
                 let contentHeight = padding * 2;
-
                 items.forEach(item => {
-                    if(item.type === 'row') {
+                    if(item.type === 'row' || item.type === 'copyright') {
                         const tw = tCtx.measureText(item.text).width;
                         maxTextWidth = Math.max(maxTextWidth, iconSize + gap + tw);
                         contentHeight += rowHeight;
@@ -977,13 +1037,6 @@
                         contentHeight += rowHeight;
                     } else if (item.type === 'spacer') {
                         contentHeight += item.height;
-                    } else if (item.type === 'copyright') {
-                        tCtx.save();
-                        tCtx.font = `${Math.round(fontSize * 0.7)}px "Noto Sans", sans-serif`;
-                        const tw = tCtx.measureText(item.text).width;
-                        maxTextWidth = Math.max(maxTextWidth, tw);
-                        tCtx.restore();
-                        contentHeight += Math.round(rowHeight * 0.8);
                     }
                 });
 
@@ -991,7 +1044,6 @@
                 contentHeight = Math.round(contentHeight);
                 const margin = Math.round(minDim * 0.04);
                 let startX, startY;
-
                 switch(s.position) {
                     case 'top-left': startX = margin; startY = margin; break;
                     case 'top-right': startX = w - cardWidth - margin; startY = margin; break;
@@ -1018,7 +1070,7 @@
 
                 items.forEach(item => {
                     const x = Math.round(startX + padding);
-                    if(item.type === 'row') {
+                    if(item.type === 'row' || item.type === 'copyright') {
                         if(item.iconKey === 'clock') {
                              tCtx.strokeStyle = s.accentColor;
                              tCtx.lineWidth = Math.max(1, Math.round(2 * baseScale));
@@ -1031,6 +1083,11 @@
                              tCtx.moveTo(x + iconSize/2, currentY);
                              tCtx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
                              tCtx.stroke();
+                        } else if (item.type === 'copyright') {
+                             tCtx.font = `${iconSize}px "Noto Sans", sans-serif`;
+                             tCtx.fillStyle = s.accentColor;
+                             tCtx.fillText("©", x, currentY + (iconSize*0.1));
+                             tCtx.fillStyle = s.textColor;
                         } else if (loadedIcons[item.iconKey]) {
                             try { 
                                 const tCanvas = document.createElement('canvas');
@@ -1062,13 +1119,6 @@
                         currentY += rowHeight;
                     } else if (item.type === 'spacer') {
                         currentY += Math.round(item.height);
-                    } else if (item.type === 'copyright') {
-                        tCtx.save();
-                        tCtx.font = `${Math.round(fontSize * 0.7)}px "Noto Sans", sans-serif`;
-                        const tw = tCtx.measureText(item.text).width;
-                        maxTextWidth = Math.max(maxTextWidth, tw);
-                        tCtx.restore();
-                        contentHeight += Math.round(rowHeight * 0.8);
                     }
                 });
             }
