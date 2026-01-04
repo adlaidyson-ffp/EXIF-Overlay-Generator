@@ -1,7 +1,9 @@
-const CACHE_NAME = 'exif-overlay-v3';
+const CACHE_NAME = 'exif-overlay-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
+  // Removed external CDNs (Tailwind, FusedFrame Icons) to prevent CORS 'Failed to fetch' errors.
+  // These will still load and be cached by the browser's standard HTTP cache.
 ];
 
 self.addEventListener('install', (event) => {
