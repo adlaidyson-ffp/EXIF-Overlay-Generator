@@ -2,22 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>EXIF Overlay | Adlai Dyson | Fused Frame Photography</title>
+  <title>EXIF Overlay: Clean Summaries for Every Shot!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Free tool to overlay camera settings (EXIF) onto images with custom branding.">
+  <meta name="description" content="EXIF Overlay is a privacy first app that adds clean, customisable camera setting overlays to your photos. Available on most platforms and the web today!">
+  <meta name="theme-color" content="#0f172a" />
+
+  <!-- Analytics -->
+  <script src="https://analytics.adffp.uk/script.js" data-website-id="82354d4e-2425-4867-b575-bb39ee1e0be3"></script>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
 
   <!-- Favicon -->
   <link rel="icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" />
+  <link rel="apple-touch-icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg">
 
-  <!-- Google Fonts: Noto Sans -->
+  <!-- Fonts (Preload basics) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link id="font-link" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- External Libraries -->
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -30,7 +38,7 @@
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94fdf8; }
 
-    /* Range Input Styling */
+    /* Inputs */
     input[type=range] { -webkit-appearance: none; background: transparent; }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
@@ -47,26 +55,42 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Checkerboard Pattern for transparent areas */
+    /* Checkerboard */
     .checkerboard {
         background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), linear-gradient(-45deg, #1e293b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e293b 75%), linear-gradient(-45deg, transparent 75%, #1e293b 75%);
         background-size: 20px 20px;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
     
+    /* Drag & Drop Styles */
+    .draggable-item { cursor: grab; }
+    .draggable-item:active { cursor: grabbing; }
+    .dragging { opacity: 0.5; border: 2px dashed #94fdf8; }
+    
+    /* Modal Transitions */
+    .modal { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .modal.active { opacity: 1; pointer-events: auto; }
+    .modal-content { transform: scale(0.95); transition: transform 0.3s ease; }
+    .modal.active .modal-content { transform: scale(1); }
+
+    /* FAQ Accordion */
+    .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; opacity: 0; }
+    .faq-item.active .faq-content { max-height: 500px; padding-bottom: 1rem; opacity: 1; }
+    .faq-icon { transition: transform 0.3s ease; }
+    .faq-item.active .faq-icon { transform: rotate(180deg); color: #94fdf8; }
+
     body { font-family: 'Noto Sans', sans-serif; }
   </style>
 </head>
 
-<!-- Mobile: Min-h-screen to allow scrolling. Desktop: Fixed height hidden overflow -->
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col lg:h-screen lg:overflow-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col lg:h-screen lg:overflow-hidden select-none">
 
   <!-- Header -->
-  <header class="py-3 px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static">
+  <header class="py-3 px-4 lg:px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static">
     <div class="flex items-center gap-4">
       <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition group">
         <img src="https://cdn-eu.fusedframe.co.uk/main-logos/png/squarelogo-light-crop.png" alt="Fused Frame Photography" class="h-9 w-auto" />
-        <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 hidden sm:block group-hover:text-slate-300 transition">Return to Main Site</span>
+        <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 hidden sm:block group-hover:text-slate-300 transition">Visit the Main Site</span>
       </a>
       <div class="border-l border-slate-700 pl-4 hidden md:flex flex-col justify-center">
         <h1 class="text-lg font-bold text-slate-100 leading-tight">EXIF Overlay</h1>
@@ -81,21 +105,13 @@
     </div>
   </header>
 
-  <!-- Main Workspace -->
-  <!-- Mobile: Flex Col (Stack), Desktop: Flex Row (Side by side) -->
+  <!-- Main Layout -->
   <div class="flex-grow flex flex-col lg:flex-row relative overflow-y-auto lg:overflow-hidden">
     
-    <!-- RIGHT COLUMN (Canvas): Moved visually to top on mobile via order, or naturally first in DOM if we swap. 
-         Let's swap order in DOM to make it natural for tab/screen readers, using order classes for visual if needed.
-         Actually, standard DOM order: Sidebar first is accessible menu, but visual flow for tool is Canvas -> Controls.
-         We'll use flex-col-reverse on mobile? No, Canvas top.
-         Let's put Sidebar SECOND in DOM, so it renders below canvas on mobile.
-    -->
-    
-    <!-- CANVAS & FILMSTRIP (Desktop Right, Mobile Top) -->
-    <div class="flex-grow flex flex-col min-w-0 bg-slate-950 h-[60vh] lg:h-full relative shrink-0 lg:shrink order-1 lg:order-2">
+    <!-- CENTER/TOP: Canvas & Filmstrip -->
+    <div class="flex-grow flex flex-col min-w-0 bg-slate-950 h-[55vh] lg:h-full relative shrink-0 lg:shrink order-1 lg:order-2 group">
         
-        <!-- CENTER: Canvas Preview -->
+        <!-- Canvas Area -->
         <main class="flex-grow flex flex-col relative overflow-hidden bg-[#0b1120] checkerboard z-0">
             <!-- Toolbar -->
             <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-slate-900/90 backdrop-blur rounded-full px-2 py-1.5 border border-slate-700 shadow-xl">
@@ -106,16 +122,22 @@
                  <button onclick="resetZoom()" class="p-1.5 hover:text-[#94fdf8] transition" title="Fit to Screen"><i data-lucide="maximize" class="w-4 h-4"></i></button>
             </div>
 
-            <div class="absolute top-4 right-4 z-20 flex gap-2">
-                <button onclick="downloadCurrent()" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition">
-                    <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Save</span>
+            <!-- Save Tools -->
+            <div class="absolute top-4 right-4 z-20 flex flex-col lg:flex-row gap-2 items-end lg:items-center">
+                <button id="btn-compare" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition" onmousedown="toggleCompare(true)" onmouseup="toggleCompare(false)" onmouseleave="toggleCompare(false)" ontouchstart="toggleCompare(true)" ontouchend="toggleCompare(false)">
+                    <i data-lucide="eye" class="w-4 h-4"></i> <span class="hidden sm:inline">Hold to Compare</span>
                 </button>
-                 <button onclick="downloadAll()" class="bg-[#94fdf8] text-slate-950 px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] shadow-lg flex items-center gap-2 transition">
-                    <i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">ZIP All</span><span class="sm:hidden">ZIP</span>
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="downloadCurrent()" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition">
+                        <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Save</span>
+                    </button>
+                     <button onclick="downloadAll()" class="bg-[#94fdf8] text-slate-950 px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] shadow-lg flex items-center gap-2 transition">
+                        <i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">ZIP All</span><span class="sm:inline lg:hidden">ZIP All</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Canvas Container -->
+            <!-- Canvas -->
             <div class="w-full h-full flex items-center justify-center p-4 lg:p-8 overflow-hidden" id="canvas-wrapper">
                 <canvas id="previewCanvas" class="shadow-2xl border border-slate-700 rounded-sm hidden transition-transform duration-200 ease-out origin-center" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
                 <div id="empty-state" class="text-center text-slate-600 select-none">
@@ -125,82 +147,61 @@
                 </div>
             </div>
             
-            <!-- Processing Overlay -->
             <div id="processing-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
                  <div class="loader mb-4"></div>
                  <p class="text-[#94fdf8] font-bold animate-pulse" id="processing-text">Processing...</p>
             </div>
         </main>
 
-        <!-- BOTTOM: Filmstrip -->
-        <div class="h-28 lg:h-36 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+        <!-- Filmstrip -->
+        <div class="h-32 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
             <div class="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-                <span class="text-xs text-slate-400 font-mono" id="status-counter">0 images loaded</span>
+                <span class="text-xs text-slate-400 font-mono" id="status-counter">0 / 30 images</span>
                 <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 uppercase tracking-wide font-bold">
-                    <i data-lucide="trash-2" class="w-3 h-3"></i> Clear
+                    <i data-lucide="trash-2" class="w-3 h-3"></i> Clear All
                 </button>
             </div>
             <div class="flex-grow overflow-x-auto overflow-y-hidden p-3 flex gap-3 items-center whitespace-nowrap min-h-0 custom-scrollbar" id="filmstrip">
-                <!-- Thumbnails injected here -->
+                <!-- Thumbnails here -->
             </div>
         </div>
-        
-        <!-- FOOTER BANNER -->
-        <footer class="h-auto py-2 lg:h-8 bg-slate-950 border-t border-slate-800 flex flex-col lg:flex-row justify-between items-center px-4 text-[10px] text-slate-500 shrink-0 z-50 gap-2 lg:gap-0">
-            <div>
-                © Adlai Dyson | Fused Frame Photography
-            </div>
-            <div class="flex gap-4">
-                <a href="#" class="hover:text-[#94fdf8] transition">FAQs & Downloads</a>
-                <span class="text-slate-700">|</span>
-                <a href="#" class="hover:text-[#94fdf8] transition">Privacy Notice</a>
-                <span class="text-slate-700">|</span>
-                <a href="#" class="hover:text-[#94fdf8] transition">Feedback</a>
-            </div>
-        </footer>
     </div>
 
-    <!-- LEFT SIDEBAR: Controls (Desktop Left, Mobile Bottom) -->
-    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full order-2 lg:order-1">
+    <!-- LEFT SIDEBAR: Editor -->
+    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full order-2 lg:order-1 pb-20 lg:pb-0">
       <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 space-y-2 shadow-sm">
         <div class="flex justify-between items-center">
              <h2 class="font-bold text-[#94fdf8]">Editor</h2>
              <div class="flex gap-2">
-                 <button onclick="exportSettings()" title="Export Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="save" class="w-4 h-4"></i></button>
-                 <button onclick="document.getElementById('importInput').click()" title="Import Settings (JSON)" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="file-up" class="w-4 h-4"></i></button>
+                 <button onclick="exportSettings()" title="Export JSON" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="save" class="w-4 h-4"></i></button>
+                 <button onclick="document.getElementById('importInput').click()" title="Import JSON" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="file-up" class="w-4 h-4"></i></button>
                  <input type="file" id="importInput" accept=".json" class="hidden" onchange="importSettings(this.files)">
              </div>
         </div>
-        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition border border-slate-700 font-medium" title="Apply visual settings (blur, color, size) to all images">
+        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition border border-slate-700 font-medium" title="Apply visual settings to all images">
             Sync Style to All Images
         </button>
       </div>
 
-      <!-- No Image Selected State -->
-      <div id="no-image-msg" class="p-8 text-center text-slate-500 mt-10">
-        <i data-lucide="image" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-        <p>Upload images to start.</p>
-      </div>
-
-      <!-- Controls Container -->
-      <div id="controls-container" class="hidden p-4 space-y-6 pb-20">
+      <!-- Controls -->
+      <div id="controls-container" class="hidden p-4 space-y-6 pb-10">
         
-        <!-- Section: Content -->
+        <!-- Content (Drag & Drop) -->
         <div class="space-y-3">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Overlay Data</h3>
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between">
+                <span>Overlay Content</span>
+                <span class="text-[10px] text-slate-600 font-normal">Drag to reorder</span>
+            </h3>
             
-            <div id="content-rows" class="space-y-3">
-                <!-- Rows injected via JS -->
+            <div id="content-rows" class="space-y-2">
+                <!-- Injected via JS -->
             </div>
             
              <div class="pt-2 border-t border-slate-800 mt-2">
                  <h4 class="text-[10px] text-slate-500 uppercase font-bold mb-2">Social Handles</h4>
-                 <div id="social-rows" class="space-y-3">
-                    <!-- Social rows injected -->
-                 </div>
+                 <div id="social-rows" class="space-y-3"></div>
             </div>
 
-            <!-- Copyright -->
             <div class="pt-2 border-t border-slate-800 mt-2">
                  <div class="flex items-center gap-3 mb-2">
                     <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('showCopyright', this.checked)">
@@ -212,88 +213,114 @@
 
         <hr class="border-slate-800">
 
-        <!-- Section: Layout -->
+        <!-- Position -->
         <div class="space-y-3">
-             <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Position</h3>
-             <!-- 3x3 Grid -->
+             <div class="flex justify-between items-center">
+                 <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Position</h3>
+                 <span class="text-[10px] text-slate-500">Auto-aligns text</span>
+             </div>
              <div class="grid grid-cols-3 gap-2 max-w-[150px]">
-                 <!-- Top Row -->
-                 <button onclick="updateCurrent('position', 'top-left')" id="btn-pos-top-left" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-start justify-start p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'top-center')" id="btn-pos-top-center" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-start justify-center p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'top-right')" id="btn-pos-top-right" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-start justify-end p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 
-                 <!-- Middle Row -->
-                 <button onclick="updateCurrent('position', 'center-left')" id="btn-pos-center-left" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-center justify-start p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'center-center')" id="btn-pos-center-center" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-center justify-center p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'center-right')" id="btn-pos-center-right" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-center justify-end p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 
-                 <!-- Bottom Row -->
-                 <button onclick="updateCurrent('position', 'bottom-left')" id="btn-pos-bottom-left" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-end justify-start p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'bottom-center')" id="btn-pos-bottom-center" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-end justify-center p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'bottom-right')" id="btn-pos-bottom-right" class="h-10 border border-slate-600 rounded bg-slate-800 hover:bg-slate-700 hover:border-[#94fdf8] transition flex items-end justify-end p-1"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                 <!-- Grid Buttons (Top) -->
+                 <button onclick="updateCurrent('position', 'top-left')" id="btn-pos-top-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'top-center')" id="btn-pos-top-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'top-right')" id="btn-pos-top-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <!-- Mid -->
+                 <button onclick="updateCurrent('position', 'center-left')" id="btn-pos-center-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'center-center')" id="btn-pos-center-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'center-right')" id="btn-pos-center-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <!-- Bottom -->
+                 <button onclick="updateCurrent('position', 'bottom-left')" id="btn-pos-bottom-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'bottom-center')" id="btn-pos-bottom-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'bottom-right')" id="btn-pos-bottom-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
              </div>
         </div>
 
         <hr class="border-slate-800">
-        
-        <!-- Section: Card (New) -->
+
+        <!-- Image Style -->
         <div class="space-y-4">
-             <div class="flex items-center justify-between">
-                <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Background Card</h3>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="check-show-card" class="accent-[#94fdf8] h-3 w-3" onchange="updateCurrent('showCard', this.checked)">
-                    <span class="text-xs text-slate-300">Enable</span>
-                </label>
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Image Style</h3>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Scale</label>
+                    <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" oninput="updateCurrent('fontScale', this.value)">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Brightness</label>
+                    <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full" oninput="updateCurrent('brightness', this.value)">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1">Background Blur</label>
+                <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full" oninput="updateCurrent('blur', this.value)">
             </div>
             
-            <!-- Card Controls -->
-            <div id="card-controls" class="space-y-3 pl-2 border-l-2 border-slate-800">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs text-slate-400 block mb-1">Color</label>
-                        <div class="flex gap-2 items-center">
-                            <input type="color" id="color-card" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('cardColor', this.value)">
-                            <input type="text" id="hex-card" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('cardColor', this.value)">
-                        </div>
-                    </div>
-                    <div>
-                         <label class="text-xs text-slate-400 block mb-1">Opacity</label>
-                         <div class="flex items-center justify-between">
-                             <span id="val-card-opacity" class="text-[#94fdf8] text-xs">65%</span>
-                         </div>
-                         <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full mt-1" oninput="updateCurrent('cardOpacity', this.value)">
-                    </div>
+            <!-- Card Settings (Moved Here) -->
+            <div class="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50 space-y-3">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs text-slate-300 font-bold">Background Card</label>
+                    <input type="checkbox" id="check-show-card" class="accent-[#94fdf8]" onchange="updateCurrent('showCard', this.checked)">
                 </div>
-                
-                 <div>
-                    <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Corner Radius</span><span id="val-rounding" class="text-[#94fdf8]">10</span></div>
-                    <input type="range" id="range-rounding" min="0" max="100" step="1" class="w-full" oninput="updateCurrent('cardRounding', this.value)">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1">Color</label>
+                        <div class="flex gap-1"><input type="color" id="color-card" class="h-5 w-5 bg-transparent border-0 p-0" oninput="updateCurrent('cardColor', this.value)"></div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1">Opacity</label>
+                        <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full" oninput="updateCurrent('cardOpacity', this.value)">
+                    </div>
                 </div>
             </div>
         </div>
 
         <hr class="border-slate-800">
 
-        <!-- Section: Appearance -->
+        <!-- Typography (New) -->
         <div class="space-y-4">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Image Style</h3>
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Typography</h3>
             
             <div>
-                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Scale</span><span id="val-font" class="text-[#94fdf8]">0.8x</span></div>
-                <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" oninput="updateCurrent('fontScale', this.value)">
+                <label class="text-xs text-slate-400 block mb-1">Font Family</label>
+                <select id="select-font" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none focus:border-[#94fdf8]" onchange="updateCurrent('fontFamily', this.value)">
+                    <option value="Noto Sans">Noto Sans (Default)</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Lato">Lato</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Oswald">Oswald</option>
+                    <option value="Raleway">Raleway</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Playfair Display">Playfair Display (Serif)</option>
+                    <option value="Merriweather">Merriweather (Serif)</option>
+                    <option value="Courier Prime">Courier Prime (Mono)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Weight</label>
+                    <select id="select-weight" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontWeight', this.value)">
+                        <option value="normal">Normal</option>
+                        <option value="bold">Bold</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Style</label>
+                    <select id="select-style" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontStyle', this.value)">
+                        <option value="normal">Normal</option>
+                        <option value="italic">Italic</option>
+                    </select>
+                </div>
             </div>
 
             <div>
-                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Background Blur</span><span id="val-blur" class="text-[#94fdf8]">5px</span></div>
-                <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full" oninput="updateCurrent('blur', this.value)">
-            </div>
-            
-             <div>
-                <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Image Brightness</span><span id="val-brightness" class="text-[#94fdf8]">65%</span></div>
-                <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full" oninput="updateCurrent('brightness', this.value)">
+                <label class="text-xs text-slate-400 block mb-1">Text Shadow</label>
+                <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full" oninput="updateCurrent('textShadow', this.value)">
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 pt-2">
                 <div>
                     <label class="text-xs text-slate-400 block mb-1">Text Color</label>
                     <div class="flex gap-2 items-center">
@@ -310,13 +337,162 @@
                 </div>
             </div>
         </div>
+        
+        <div class="pt-4">
+            <button onclick="resetDefaults()" class="w-full text-xs text-red-400 hover:text-red-300 py-2 border border-slate-800 hover:border-red-900 rounded transition">Reset to Defaults</button>
+        </div>
+
       </div>
     </aside>
+    
+    <!-- Mobile Footer (Moved under Editor) -->
+    <footer class="lg:hidden bg-slate-950 border-t border-slate-800 p-4 pb-8 order-3">
+        <div class="text-center text-xs text-slate-500 mb-4">
+            &copy; 2026 Adlai Dyson | Fused Frame Photography.
+        </div>
+        <div class="flex justify-center gap-4 text-xs text-slate-400">
+            <button onclick="openModal('faqModal')" class="hover:text-[#94fdf8]">FAQs & Downloads</button>
+            <span>|</span>
+            <button onclick="openModal('privacyModal')" class="hover:text-[#94fdf8]">Privacy Notice</button>
+            <span>|</span>
+            <a href="https://adffp.uk/exif-feedback" target="_blank" class="hover:text-[#94fdf8]">Feedback</a>
+        </div>
+    </footer>
 
   </div>
 
+  <!-- --- MODALS --- -->
+
+  <!-- Welcome Modal -->
+  <div id="welcomeModal" class="modal fixed inset-0 z-[60] bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
+      <div class="modal-content bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+          <h2 class="text-2xl font-bold text-white mb-4">Welcome to EXIF Overlay</h2>
+          <p class="text-slate-300 mb-2">Create clean, fully customisable camera-setting overlays for your photos.</p>
+          <ul class="list-disc pl-5 text-sm text-slate-400 mb-4 space-y-1">
+              <li>Upload up to 30 images</li>
+              <li>Auto-reads EXIF data</li>
+              <li>Fully customisable style</li>
+              <li><strong>Privacy First:</strong> Your images never leave your device.</li>
+          </ul>
+          <div class="flex flex-col gap-2 mb-6">
+              <button onclick="openModal('faqModal')" class="text-sm text-[#94fdf8] hover:underline text-left">FAQs & Downloads</button>
+              <button onclick="openModal('privacyModal')" class="text-sm text-[#94fdf8] hover:underline text-left">Privacy Notice</button>
+          </div>
+          <div class="flex items-center justify-between mt-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="dontShowWelcome" class="accent-[#94fdf8]">
+                  <span class="text-xs text-slate-500">Do not show again</span>
+              </label>
+              <button onclick="closeModal('welcomeModal')" class="bg-[#94fdf8] text-slate-900 px-6 py-2 rounded-lg font-bold hover:bg-[#6ee7e2]">Get Started</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Custom Alert Modal -->
+  <div id="alertModal" class="modal fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeModal('alertModal')">
+      <div class="modal-content bg-slate-900 border border-slate-700 rounded-xl max-w-sm w-full p-6 shadow-2xl" onclick="event.stopPropagation()">
+          <h3 id="alertTitle" class="text-lg font-bold text-white mb-2">Notification</h3>
+          <p id="alertMessage" class="text-slate-300 text-sm mb-6">Message goes here.</p>
+          <div class="flex justify-end">
+              <button onclick="closeModal('alertModal')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm border border-slate-600">Okay</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- FAQ Modal -->
+  <div id="faqModal" class="modal fixed inset-0 z-[70] bg-slate-950/95 flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center max-w-3xl mx-auto w-full">
+          <h2 class="text-xl font-bold text-[#94fdf8]">FAQs & Downloads</h2>
+          <button onclick="closeModal('faqModal')" class="p-2 bg-slate-900 rounded-full hover:bg-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+      <div class="flex-grow overflow-y-auto p-6">
+          <div class="max-w-3xl mx-auto space-y-6 pb-20">
+              <!-- Content from Prompt -->
+              <p class="text-slate-300 border-l-4 border-[#94fdf8] pl-4">A privacy-first tool that turns your camera settings into clean, fully customisable overlays.</p>
+              
+              <!-- Privacy FAQ -->
+              <div class="space-y-2">
+                  <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Privacy</h3>
+                  <div class="faq-item border-b border-slate-800 pb-2">
+                      <button onclick="toggleFaq(this)" class="w-full py-2 flex justify-between text-left font-medium hover:text-[#94fdf8]">Does it upload photos? <i data-lucide="chevron-down" class="faq-icon w-4 h-4"></i></button>
+                      <div class="faq-content text-sm text-slate-400"><p><strong class="text-white">No.</strong> All processing is local on your device.</p></div>
+                  </div>
+                  <div class="faq-item border-b border-slate-800 pb-2">
+                      <button onclick="toggleFaq(this)" class="w-full py-2 flex justify-between text-left font-medium hover:text-[#94fdf8]">What data is tracked? <i data-lucide="chevron-down" class="faq-icon w-4 h-4"></i></button>
+                      <div class="faq-content text-sm text-slate-400"><p>Only anonymous usage stats (visits, device type). No personal data.</p></div>
+                  </div>
+              </div>
+
+              <!-- Usage FAQ -->
+              <div class="space-y-2">
+                  <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Usage</h3>
+                  <div class="faq-item border-b border-slate-800 pb-2">
+                      <button onclick="toggleFaq(this)" class="w-full py-2 flex justify-between text-left font-medium hover:text-[#94fdf8]">Limit on images? <i data-lucide="chevron-down" class="faq-icon w-4 h-4"></i></button>
+                      <div class="faq-content text-sm text-slate-400"><p>Up to 30 images at once.</p></div>
+                  </div>
+              </div>
+
+              <!-- Downloads Stub -->
+              <div class="pt-8 space-y-4">
+                  <h3 class="text-xl font-bold">Downloads</h3>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="bg-slate-900 p-4 rounded border border-slate-800">
+                          <h4 class="font-bold text-slate-300">PWA (Web App)</h4>
+                          <p class="text-xs text-slate-500 mb-3">Install via Browser</p>
+                          <button onclick="alertCustom('Install PWA', 'Use your browser menu (Add to Home Screen) to install.')" class="text-xs bg-[#94fdf8] text-slate-900 px-3 py-2 rounded font-bold">Install</button>
+                      </div>
+                      <div class="bg-slate-900 p-4 rounded border border-slate-800 opacity-50">
+                          <h4 class="font-bold text-slate-300">Desktop / Mobile Apps</h4>
+                          <p class="text-xs text-slate-500">Coming Soon</p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Privacy Modal -->
+  <div id="privacyModal" class="modal fixed inset-0 z-[70] bg-slate-950/95 flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center max-w-3xl mx-auto w-full">
+          <h2 class="text-xl font-bold text-[#94fdf8]">Privacy Notice</h2>
+          <button onclick="closeModal('privacyModal')" class="p-2 bg-slate-900 rounded-full hover:bg-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+      <div class="flex-grow overflow-y-auto p-6">
+          <div class="max-w-3xl mx-auto space-y-8 pb-20 text-slate-300 leading-relaxed">
+              <div>
+                  <h3 class="text-lg font-bold text-white mb-2">My "Local-Only" Promise</h3>
+                  <p class="text-sm">EXIF Overlay is a client-side application. Your photos never leave your device. I never upload, store, or see your original creative works.</p>
+              </div>
+              <div>
+                  <h3 class="text-lg font-bold text-white mb-2">Data Collection</h3>
+                  <p class="text-sm">I collect minimal, anonymous usage statistics (Device type, approximate location via IP) to improve the tool. No personal data is stored.</p>
+              </div>
+              <div>
+                  <h3 class="text-lg font-bold text-white mb-2">Contact</h3>
+                  <p class="text-sm">Adlai Dyson | Fused Frame Photography. Email: hello@fusedframe.co.uk</p>
+              </div>
+          </div>
+      </div>
+  </div>
+
 <script>
-    // --- ICONS ---
+    // --- PWA REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js').then(reg => {
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            alertCustom("Update Available", "New version available. Please refresh.");
+                        }
+                    };
+                };
+            });
+        });
+    }
+
+    // --- ICONS & FONTS ---
     const ICONS = {
         aperture: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/aperture.png",
         shutter: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/exposure.png",
@@ -324,12 +500,10 @@
         focal: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/focal-length.png",
         camera: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/camera.png",
         lens: "https://cdn-eu.fusedframe.co.uk/services/exif-overlay-generator/icons/lens.png",
-        // Socials - Using SimpleIcons from CDN for easy tinting
         facebook: "https://cdn.simpleicons.org/facebook/ffffff",
         instagram: "https://cdn.simpleicons.org/instagram/ffffff",
         x: "https://cdn.simpleicons.org/x/ffffff",
         mastodon: "https://cdn.simpleicons.org/mastodon/ffffff",
-        // Embedded SVG for LinkedIn to ensure reliability
         linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
         tiktok: "https://cdn.simpleicons.org/tiktok/ffffff",
         snapchat: "https://cdn.simpleicons.org/snapchat/ffffff",
@@ -340,167 +514,175 @@
     let images = []; 
     let selectedId = null;
     let currentZoom = 1.0;
+    let isComparing = false;
     
     // Default Settings
-    let userDefaults = {
+    const DEFAULT_SETTINGS = {
         blur: 5,
         brightness: 65,
-        // Card Defaults
         showCard: false,
         cardOpacity: 65,
         cardRounding: 10,
         cardColor: '#1e374d',
-        
         fontScale: 0.8,
+        fontFamily: 'Noto Sans',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textShadow: 0,
         textColor: '#ffffff',
         accentColor: '#94fdf8',
-        position: 'center-left', // Default to middle left
+        position: 'center-left',
         
-        // Toggles
-        showAperture: true,
-        showShutter: true,
-        showIso: true,
-        showFocal: true,
-        showDesc: true,
-        showDate: true,
-        showCamera: true,
-        showLens: true,
-        showCopyright: true,
-        // Social Toggles (Default Off)
-        showFacebook: false,
-        showInstagram: false,
-        showX: false,
-        showMastodon: false,
-        showLinkedin: false,
-        showTiktok: false,
-        showSnapchat: false,
-        // Text Content
-        txtAperture: '',
-        txtShutter: '',
-        txtIso: '',
-        txtFocal: '',
-        txtDesc: '',
-        txtDate: '',
-        txtCamera: '',
-        txtLens: '',
-        // Social Content
-        txtFacebook: '',
-        txtInstagram: '',
-        txtX: '',
-        txtMastodon: '',
-        txtLinkedin: '',
-        txtTiktok: '',
-        txtSnapchat: '',
+        // Items order (For Drag & Drop)
+        order: ['Aperture', 'Shutter', 'Iso', 'Focal', 'Divider', 'Desc', 'Date', 'Camera', 'Lens'],
         
-        copyright: 'Adlai Dyson | Fused Frame Photography'
+        // Toggles & Text
+        showAperture: true, txtAperture: '',
+        showShutter: true, txtShutter: '',
+        showIso: true, txtIso: '',
+        showFocal: true, txtFocal: '',
+        showDesc: true, txtDesc: '',
+        showDate: true, txtDate: '',
+        showCamera: true, txtCamera: '',
+        showLens: true, txtLens: '',
+        showCopyright: true, copyright: 'Your Name | Fused Frame Photography',
+        
+        // Socials
+        showFacebook: false, txtFacebook: '',
+        showInstagram: false, txtInstagram: '',
+        showX: false, txtX: '',
+        showMastodon: false, txtMastodon: '',
+        showLinkedin: false, txtLinkedin: '',
+        showTiktok: false, txtTiktok: '',
+        showSnapchat: false, txtSnapchat: '',
     };
 
-    // Load defaults
-    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v5'); // V5
-    if(savedDefaults) {
-        try {
-            userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) };
-        } catch(e) { console.error("Failed to load settings", e); }
-    }
+    let userDefaults = { ...DEFAULT_SETTINGS };
 
-    // --- DOM ELEMENTS ---
-    const canvas = document.getElementById('previewCanvas');
-    const ctx = canvas.getContext('2d');
-    const filmstrip = document.getElementById('filmstrip');
-    const controlsContainer = document.getElementById('controls-container');
-    const noImageMsg = document.getElementById('no-image-msg');
-    const emptyState = document.getElementById('empty-state');
-    const statusCounter = document.getElementById('status-counter');
-    const processingOverlay = document.getElementById('processing-overlay');
-    const processingText = document.getElementById('processing-text');
-    const contentRows = document.getElementById('content-rows');
-    const socialRows = document.getElementById('social-rows');
-
-    // Init
+    // --- INIT ---
+    // Load Icons
     lucide.createIcons();
-    preloadIcons();
-    buildSidebarUI();
+    Object.keys(ICONS).forEach(k => {
+        const img = new Image(); img.crossOrigin="Anonymous"; img.src = ICONS[k]; loadedIcons[k] = img;
+    });
 
-    function preloadIcons() {
-        Object.keys(ICONS).forEach(key => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.src = ICONS[key];
-            loadedIcons[key] = img;
-        });
+    // Load Settings
+    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v6');
+    if(savedDefaults) {
+        try { userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) }; } catch(e) {}
     }
 
-    function buildSidebarUI() {
-        // Main Data
-        const rows = [
-            { id: 'Aperture', label: 'Aperture', icon: 'aperture' },
-            { id: 'Shutter', label: 'Exposure', icon: 'shutter' },
-            { id: 'Iso', label: 'ISO', icon: 'iso' },
-            { id: 'Focal', label: 'Focal Length', icon: 'focal' },
-            { id: 'Divider', label: 'Divider Line', isDivider: true },
-            { id: 'Desc', label: 'Description', placeholder: 'Short description...' },
-            { id: 'Date', label: 'Time & Date', icon: 'clock' },
-            { id: 'Camera', label: 'Camera', icon: 'camera' },
-            { id: 'Lens', label: 'Lens', icon: 'lens' }
-        ];
+    // Show Welcome?
+    if (localStorage.getItem('adffp_welcome_seen') !== 'true') {
+        document.getElementById('welcomeModal').classList.add('active');
+    }
 
-        let html = '';
-        rows.forEach(r => {
-            if(r.isDivider) {
-                html += `
-                <div class="flex items-center gap-3 py-1 opacity-70">
-                    <div class="w-4 h-4"></div>
-                    <div class="flex-grow h-px bg-slate-600"></div>
-                    <span class="text-[10px] text-slate-500 uppercase">Accent Divider</span>
-                    <div class="flex-grow h-px bg-slate-600"></div>
-                </div>`;
-                return;
-            }
-
-            const keyShow = `show${r.id}`;
-            const keyTxt = `txt${r.id}`;
-            
-            html += `
-            <div class="flex items-center gap-3">
-                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)">
-                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate" title="${r.label}">${r.label}</span>
-                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="${r.placeholder || r.label}" oninput="updateCurrent('${keyTxt}', this.value)">
-            </div>`;
-        });
-        contentRows.innerHTML = html;
-
-        // Socials
-        const socials = [
-            { id: 'Facebook', label: 'Facebook' },
-            { id: 'Instagram', label: 'Instagram' },
-            { id: 'X', label: 'X (Twitter)' },
-            { id: 'Mastodon', label: 'Mastodon' },
-            { id: 'Linkedin', label: 'LinkedIn' },
-            { id: 'Tiktok', label: 'TikTok' },
-            { id: 'Snapchat', label: 'Snapchat' },
-        ];
+    // --- UI BUILDER ---
+    const buildSidebarUI = () => {
+        const rowsContainer = document.getElementById('content-rows');
+        rowsContainer.innerHTML = '';
         
+        // Sort based on userDefaults.order
+        userDefaults.order.forEach(id => {
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-3 draggable-item bg-slate-900/50 p-1 rounded border border-transparent hover:border-slate-700 transition";
+            div.draggable = true;
+            div.dataset.id = id;
+            
+            // Drag Events
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragover', handleDragOver);
+            div.addEventListener('drop', handleDrop);
+            div.addEventListener('dragend', handleDragEnd);
+
+            if (id === 'Divider') {
+                div.innerHTML = `<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
+                <div class="flex-grow flex items-center gap-2 opacity-70"><div class="h-px bg-slate-600 flex-grow"></div><span class="text-[9px] uppercase">Divider</span><div class="h-px bg-slate-600 flex-grow"></div></div>`;
+            } else {
+                const label = id; 
+                const keyShow = `show${id}`;
+                const keyTxt = `txt${id}`;
+                div.innerHTML = `
+                <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
+                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)" ${userDefaults[keyShow] ? 'checked' : ''}>
+                <span class="text-xs font-bold text-slate-300 w-16 shrink-0 truncate">${label}</span>
+                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="${label}" oninput="updateCurrent('${keyTxt}', this.value)" value="${userDefaults[keyTxt] || ''}">
+                `;
+            }
+            rowsContainer.appendChild(div);
+        });
+        
+        // Re-init icons for drag handles
+        lucide.createIcons();
+
+        // Socials (Static list)
+        const socialContainer = document.getElementById('social-rows');
         let socialHtml = '';
-        socials.forEach(s => {
-             const keyShow = `show${s.id}`;
-             const keyTxt = `txt${s.id}`;
+        ['Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'].forEach(s => {
+             const keyShow = `show${s}`;
+             const keyTxt = `txt${s}`;
              socialHtml += `
             <div class="flex items-center gap-3">
-                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)">
-                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate" title="${s.label}">${s.label}</span>
-                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="@username" oninput="updateCurrent('${keyTxt}', this.value)">
+                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)" ${userDefaults[keyShow] ? 'checked' : ''}>
+                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate">${s}</span>
+                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="@username" oninput="updateCurrent('${keyTxt}', this.value)" value="${userDefaults[keyTxt] || ''}">
             </div>`;
         });
-        socialRows.innerHTML = socialHtml;
+        socialContainer.innerHTML = socialHtml;
+    };
+
+    // --- DRAG & DROP LOGIC ---
+    let dragSrcEl = null;
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        this.classList.add('dragging');
+    }
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        return false;
+    }
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (dragSrcEl !== this) {
+            // Swap in DOM
+            const container = document.getElementById('content-rows');
+            const items = [...container.children];
+            const srcIdx = items.indexOf(dragSrcEl);
+            const dstIdx = items.indexOf(this);
+            
+            if (srcIdx < dstIdx) {
+                this.after(dragSrcEl);
+            } else {
+                this.before(dragSrcEl);
+            }
+            
+            // Update State Order
+            const newOrder = [...document.getElementById('content-rows').children].map(el => el.dataset.id);
+            userDefaults.order = newOrder; // Save global default order
+            if(selectedId) {
+                const img = images.find(i => i.id === selectedId);
+                img.settings.order = newOrder;
+                renderCanvas();
+            }
+            saveDefaults();
+        }
+        return false;
+    }
+    function handleDragEnd() {
+        this.classList.remove('dragging');
     }
 
     // --- FILE HANDLING ---
     function handleFiles(files) {
         if (!files.length) return;
-        processingOverlay.classList.remove('hidden');
-        processingText.innerText = `Loading ${files.length} images...`;
+        if ((images.length + files.length) > 30) {
+            alertCustom("Limit Reached", "You can only upload a maximum of 30 images at once.");
+            return;
+        }
+        
+        document.getElementById('processing-overlay').classList.remove('hidden');
         let loadedCount = 0;
-        const total = files.length;
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -509,9 +691,9 @@
                     EXIF.getData(img, function() {
                         addContentImage(file, img, this);
                         loadedCount++;
-                        if (loadedCount === total) {
-                            processingOverlay.classList.add('hidden');
-                            if (selectedId === null && images.length > 0) selectImage(images[0].id);
+                        if (loadedCount === files.length) {
+                            document.getElementById('processing-overlay').classList.add('hidden');
+                            if (!selectedId && images.length > 0) selectImage(images[0].id);
                         }
                     });
                 };
@@ -524,6 +706,7 @@
     function addContentImage(file, imgElement, exifData) {
         const id = Date.now() + Math.random().toString(16).slice(2);
         const extracted = parseExif(exifData);
+        // Copy userDefaults, but override text fields with extracted data
         const settings = { 
             ...userDefaults,
             txtAperture: extracted.aperture,
@@ -533,78 +716,89 @@
             txtCamera: extracted.camera,
             txtLens: extracted.lens,
             txtDate: extracted.date,
-            txtDesc: userDefaults.txtDesc
+            // Keep default manual text like desc/socials
         };
-        const nameParts = file.name.split('.');
-        const ext = nameParts.length > 1 ? nameParts.pop() : 'jpg';
+        const nameParts = file.name.split('.'); nameParts.pop();
         const rawName = nameParts.join('.');
-        const imageObj = { id, file, rawName, imgElement, settings };
-        images.push(imageObj);
-        createThumbnail(imageObj);
+        
+        images.push({ id, file, rawName, imgElement, settings });
+        createThumbnail({ id, imgElement });
         updateCounter();
     }
 
     function parseExif(exif) {
         const getTag = (tag) => exif.exifdata ? exif.exifdata[tag] : null;
-        let camera = getTag('Model') || 'Unknown Camera';
-        camera = camera.replace(/NIKON/i, 'Nikon').replace(/CANON/i, 'Canon').replace(/SONY/i, 'Sony').replace(/CORPORATION/i, '').replace(/DIGITAL CAMERA/i, '');
+        let camera = (getTag('Model') || 'Unknown').replace(/NIKON/i, 'Nikon').replace(/CANON/i, 'Canon').replace(/SONY/i, 'Sony').replace(/CORPORATION/i, '').replace(/DIGITAL CAMERA/i, '');
         let lens = getTag('LensModel') || '';
         let iso = getTag('ISOSpeedRatings') || '--';
         let aperture = getTag('FNumber') ? `f/${getTag('FNumber')}` : 'f/--';
         let focal = getTag('FocalLength') ? `${Math.round(getTag('FocalLength'))}mm` : '--mm';
         let shutter = getTag('ExposureTime');
-        if (shutter) {
-            shutter = (shutter < 1) ? `1/${Math.round(1/shutter)}s` : `${shutter}s`;
-        } else {
-            shutter = '--';
-        }
+        if (shutter && shutter < 1) shutter = `1/${Math.round(1/shutter)}s`; else if(shutter) shutter += 's'; else shutter = '--';
+        
         let date = getTag('DateTimeOriginal') || '';
         if(date) {
-            const parts = date.split(' ');
-            if(parts.length > 1) {
-                const d = parts[0].split(':');
-                const t = parts[1].split(':');
-                date = `${d[2]}/${d[1]}/${d[0]} ${t[0]}:${t[1]}`;
-            }
+            const p = date.split(' ');
+            if(p.length > 1) { const d = p[0].split(':'); const t = p[1].split(':'); date = `${d[2]}/${d[1]}/${d[0]} ${t[0]}:${t[1]}`; }
         }
         return { camera, iso, aperture, focal, shutter, lens, date };
     }
 
-    // --- THUMBNAIL UI ---
+    // --- UI HELPERS ---
     function createThumbnail(imgObj) {
         const div = document.createElement('div');
         div.className = `relative w-24 h-24 shrink-0 cursor-pointer border-4 border-slate-800 rounded-lg overflow-hidden group hover:border-slate-600 transition shadow-md`;
         div.id = `thumb-${imgObj.id}`;
-        div.onclick = () => selectImage(imgObj.id);
+        div.onclick = (e) => { if(!e.target.closest('.delete-btn')) selectImage(imgObj.id); };
+
         const img = document.createElement('img');
         img.src = imgObj.imgElement.src;
         img.className = "w-full h-full object-cover opacity-70 group-hover:opacity-100 transition";
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = "delete-btn absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition";
+        delBtn.innerHTML = `<i data-lucide="x" class="w-3 h-3"></i>`;
+        delBtn.onclick = () => deleteImage(imgObj.id);
+
         div.appendChild(img);
-        filmstrip.appendChild(div);
-        filmstrip.scrollLeft = filmstrip.scrollWidth;
+        div.appendChild(delBtn);
+        document.getElementById('filmstrip').appendChild(div);
+        lucide.createIcons();
     }
 
-    // --- SELECTION LOGIC ---
     function selectImage(id) {
         selectedId = id;
         document.querySelectorAll('#filmstrip > div').forEach(d => {
-            d.classList.remove('border-[#94fdf8]', 'ring-2', 'ring-[#94fdf8]', 'ring-offset-2', 'ring-offset-slate-900');
-            d.classList.add('border-slate-800');
+            d.classList.remove('border-[#94fdf8]'); d.classList.add('border-slate-800');
             d.querySelector('img').classList.add('opacity-70');
         });
-        const activeThumb = document.getElementById(`thumb-${id}`);
-        if (activeThumb) {
-            activeThumb.classList.remove('border-slate-800');
-            activeThumb.classList.add('border-[#94fdf8]', 'ring-2', 'ring-[#94fdf8]', 'ring-offset-2', 'ring-offset-slate-900');
-            activeThumb.querySelector('img').classList.remove('opacity-70');
-            activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const active = document.getElementById(`thumb-${id}`);
+        if(active) {
+            active.classList.remove('border-slate-800'); active.classList.add('border-[#94fdf8]');
+            active.querySelector('img').classList.remove('opacity-70');
+            active.scrollIntoView({behavior: 'smooth', inline: 'center'});
         }
-        controlsContainer.classList.remove('hidden');
-        noImageMsg.classList.add('hidden');
-        emptyState.classList.add('hidden');
-        canvas.classList.remove('hidden');
+        document.getElementById('controls-container').classList.remove('hidden');
+        document.getElementById('no-image-msg').classList.add('hidden');
+        document.getElementById('empty-state').classList.add('hidden');
+        document.getElementById('previewCanvas').classList.remove('hidden');
+        
         syncInputsToState();
         renderCanvas();
+    }
+
+    function deleteImage(id) {
+        if(!confirm("Delete this image?")) return;
+        images = images.filter(i => i.id !== id);
+        document.getElementById(`thumb-${id}`).remove();
+        if(selectedId === id) {
+            selectedId = null;
+            document.getElementById('controls-container').classList.add('hidden');
+            document.getElementById('previewCanvas').classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('hidden');
+            if(images.length > 0) selectImage(images[0].id);
+        }
+        updateCounter();
     }
 
     function syncInputsToState() {
@@ -612,186 +806,82 @@
         if (!img) return;
         const s = img.settings;
         
-        // Main Fields
-        ['Aperture', 'Shutter', 'Iso', 'Focal', 'Desc', 'Date', 'Camera', 'Lens'].forEach(k => {
-            const elTxt = document.getElementById(`input-txt${k}`);
-            if(elTxt) elTxt.value = s[`txt${k}`];
-            const elChk = document.getElementById(`check-show${k}`);
-            if(elChk) elChk.checked = s[`show${k}`];
+        // Re-render rows in correct order for this image? 
+        // For simplicity, we just rebuild the UI based on global order or image order.
+        // Let's assume global order updates, but we fill values.
+        
+        // Content
+        userDefaults.order.forEach(k => {
+            if(k === 'Divider') return;
+            document.getElementById(`input-txt${k}`).value = s[`txt${k}`];
+            document.getElementById(`check-show${k}`).checked = s[`show${k}`];
+        });
+        
+        // Socials
+        ['Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'].forEach(k => {
+            document.getElementById(`input-txt${k}`).value = s[`txt${k}`] || '';
+            document.getElementById(`check-show${k}`).checked = s[`show${k}`] || false;
         });
 
-        // Social Fields
-        ['Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'].forEach(k => {
-            const elTxt = document.getElementById(`input-txt${k}`);
-            if(elTxt) elTxt.value = s[`txt${k}`] || '';
-            const elChk = document.getElementById(`check-show${k}`);
-            if(elChk) elChk.checked = s[`show${k}`] || false;
-        });
-        
-        // Card
-        document.getElementById('check-show-card').checked = s.showCard;
-        // Toggle opacity/color inputs based on showCard? Or just leave them enabled.
-        
         document.getElementById('input-copyright').value = s.copyright;
         document.getElementById('check-show-copyright').checked = s.showCopyright;
+        document.getElementById('check-show-card').checked = s.showCard;
 
-        document.getElementById('range-blur').value = s.blur;
-        document.getElementById('val-blur').innerText = s.blur + 'px';
-        
-        document.getElementById('range-brightness').value = s.brightness;
-        document.getElementById('val-brightness').innerText = s.brightness + '%';
-
-        document.getElementById('range-card-opacity').value = s.cardOpacity;
-        document.getElementById('val-card-opacity').innerText = s.cardOpacity + '%';
-
-        document.getElementById('range-rounding').value = s.cardRounding;
-        document.getElementById('val-rounding').innerText = s.cardRounding;
-        
-        document.getElementById('range-font').value = s.fontScale;
-        document.getElementById('val-font').innerText = s.fontScale + 'x';
-
-        document.getElementById('color-text').value = s.textColor;
-        document.getElementById('hex-text').value = s.textColor;
-        document.getElementById('color-accent').value = s.accentColor;
-        document.getElementById('hex-accent').value = s.accentColor;
-        document.getElementById('color-card').value = s.cardColor;
-        document.getElementById('hex-card').value = s.cardColor;
-
-        // Reset positions
-        ['top-left', 'top-center', 'top-right', 'center-left', 'center-center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right'].forEach(pos => {
-            const btn = document.getElementById(`btn-pos-${pos}`);
-            if(btn) {
-                if(s.position === pos) {
-                    btn.classList.add('bg-[#94fdf8]', 'border-[#94fdf8]', 'text-slate-900');
-                    btn.classList.remove('bg-slate-800', 'border-slate-600');
-                } else {
-                    btn.classList.remove('bg-[#94fdf8]', 'border-[#94fdf8]', 'text-slate-900');
-                    btn.classList.add('bg-slate-800', 'border-slate-600');
-                }
-            }
+        // Ranges
+        ['blur', 'brightness', 'cardOpacity', 'cardRounding', 'fontScale', 'textShadow'].forEach(k => {
+            document.getElementById(`range-${k === 'textShadow' ? 'shadow' : k === 'fontScale' ? 'font' : k}`).value = s[k];
         });
+
+        // Colors
+        document.getElementById('color-text').value = s.textColor; document.getElementById('hex-text').value = s.textColor;
+        document.getElementById('color-accent').value = s.accentColor; document.getElementById('hex-accent').value = s.accentColor;
+        document.getElementById('color-card').value = s.cardColor;
+
+        // Fonts
+        document.getElementById('select-font').value = s.fontFamily;
+        document.getElementById('select-weight').value = s.fontWeight;
+        document.getElementById('select-style').value = s.fontStyle;
+
+        // Positions
+        document.querySelectorAll('[id^="btn-pos-"]').forEach(btn => {
+            btn.classList.remove('border-[#94fdf8]', 'text-[#94fdf8]');
+            btn.classList.add('border-slate-600');
+        });
+        const activePos = document.getElementById(`btn-pos-${s.position}`);
+        if(activePos) {
+            activePos.classList.add('border-[#94fdf8]', 'text-[#94fdf8]');
+            activePos.classList.remove('border-slate-600');
+        }
     }
 
-    // --- UPDATE & PERSISTENCE ---
     function updateCurrent(key, value) {
         if (!selectedId) return;
         const img = images.find(i => i.id === selectedId);
-        if (!img) return;
-
-        if (['blur', 'brightness', 'cardOpacity', 'cardRounding'].includes(key)) value = parseInt(value);
-        if (key === 'fontScale') value = parseFloat(value);
-
+        
+        // Type conversion
+        if(['blur','brightness','cardOpacity','cardRounding','textShadow'].includes(key)) value = parseInt(value);
+        if(key === 'fontScale') value = parseFloat(value);
+        
         img.settings[key] = value;
-        userDefaults[key] = value;
+        userDefaults[key] = value; // Sync to global defaults
         saveDefaults();
+        
+        // Load font dynamically
+        if(key === 'fontFamily') {
+            const fontName = value.replace(' ', '+');
+            document.getElementById('font-link').href = `https://fonts.googleapis.com/css2?family=${fontName}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+        }
 
-        if (key === 'blur') document.getElementById('val-blur').innerText = value + 'px';
-        if (key === 'brightness') document.getElementById('val-brightness').innerText = value + '%';
-        if (key === 'cardOpacity') document.getElementById('val-card-opacity').innerText = value + '%';
-        if (key === 'cardRounding') document.getElementById('val-rounding').innerText = value;
-        if (key === 'fontScale') document.getElementById('val-font').innerText = value + 'x';
-        if (key === 'textColor') { document.getElementById('color-text').value = value; document.getElementById('hex-text').value = value; }
-        if (key === 'accentColor') { document.getElementById('color-accent').value = value; document.getElementById('hex-accent').value = value; }
-        if (key === 'cardColor') { document.getElementById('color-card').value = value; document.getElementById('hex-card').value = value; }
-        if (key === 'position') syncInputsToState();
+        // Color Hex Sync
+        if(key === 'textColor') { document.getElementById('color-text').value = value; document.getElementById('hex-text').value = value; }
+        if(key === 'accentColor') { document.getElementById('color-accent').value = value; document.getElementById('hex-accent').value = value; }
+        
+        if(key === 'position') syncInputsToState(); // Update buttons visual
 
         renderCanvas();
     }
-    
-    let saveTimeout;
-    function saveDefaults() {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            localStorage.setItem('adffp_exif_defaults_v5', JSON.stringify(userDefaults));
-        }, 500);
-    }
-    
-    function exportSettings() {
-        const json = JSON.stringify(userDefaults, null, 2);
-        const blob = new Blob([json], {type: "application/json"});
-        saveAs(blob, "ADFFP-EXIF-Settings.json");
-    }
-    
-    function importSettings(files) {
-        if(!files.length) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const loaded = JSON.parse(e.target.result);
-                userDefaults = { ...userDefaults, ...loaded };
-                saveDefaults();
-                if(selectedId) {
-                    const img = images.find(i => i.id === selectedId);
-                    const styleKeys = ['blur', 'brightness', 'cardOpacity', 'cardRounding', 'cardColor', 'fontScale', 'textColor', 'accentColor', 'position', 'showCard'];
-                    styleKeys.forEach(k => {
-                       if(loaded[k] !== undefined) img.settings[k] = loaded[k]; 
-                    });
-                    syncInputsToState();
-                    renderCanvas();
-                }
-                alert("Settings imported!");
-            } catch(err) {
-                alert("Invalid JSON file");
-            }
-        };
-        reader.readAsText(files[0]);
-    }
 
-    function applyStyleToAll() {
-        if (!selectedId) return;
-        const source = images.find(i => i.id === selectedId).settings;
-        if(!confirm("Apply current Style (Blur, Brightness, Opacity, Position, Colors, Toggles) to all images? Content (Text) will be preserved.")) return;
-        images.forEach(img => {
-            if(img.id === selectedId) return;
-            const s = img.settings;
-            // Style
-            s.blur = source.blur;
-            s.brightness = source.brightness;
-            s.cardOpacity = source.cardOpacity;
-            s.cardRounding = source.cardRounding;
-            s.cardColor = source.cardColor;
-            s.showCard = source.showCard;
-            s.fontScale = source.fontScale;
-            s.textColor = source.textColor;
-            s.accentColor = source.accentColor;
-            s.position = source.position;
-            // Toggles
-            s.showAperture = source.showAperture;
-            s.showShutter = source.showShutter;
-            s.showIso = source.showIso;
-            s.showFocal = source.showFocal;
-            s.showDesc = source.showDesc;
-            s.showDate = source.showDate;
-            s.showCamera = source.showCamera;
-            s.showLens = source.showLens;
-            s.showCopyright = source.showCopyright;
-            s.showFacebook = source.showFacebook;
-            s.showInstagram = source.showInstagram;
-            s.showX = source.showX;
-            s.showMastodon = source.showMastodon;
-            s.showLinkedin = source.showLinkedin;
-            s.showTiktok = source.showTiktok;
-            s.showSnapchat = source.showSnapchat;
-        });
-        alert("Synced!");
-        renderCanvas();
-    }
-
-    function changeZoom(delta) {
-        currentZoom = Math.max(0.1, currentZoom + delta);
-        applyZoom();
-    }
-    function resetZoom() {
-        currentZoom = 1.0;
-        applyZoom();
-    }
-    function applyZoom() {
-        canvas.style.transform = `scale(${currentZoom})`;
-        document.getElementById('zoom-display').innerText = Math.round(currentZoom * 100) + '%';
-    }
-
-
-    // --- RENDER LOGIC ---
+    // --- RENDERER ---
     function renderCanvas() {
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
@@ -800,424 +890,339 @@
         
         canvas.width = baseImg.naturalWidth;
         canvas.height = baseImg.naturalHeight;
+        const w = canvas.width;
+        const h = canvas.height;
         
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        const w = canvas.width;
-        const h = canvas.height;
+        // 1. Draw BG (Optional Compare Mode)
+        if (isComparing) {
+            ctx.drawImage(baseImg, 0, 0);
+            // Draw "Original" Label
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillStyle = "rgba(255,255,255,0.8)";
+            ctx.fillText("ORIGINAL", 50, 80);
+            return; 
+        }
 
-        // 1. Draw Background (Blur + Brightness)
         ctx.save();
-        let filterStr = '';
-        if (s.blur > 0) filterStr += `blur(${s.blur * 2}px) `;
-        if (s.brightness !== 100) filterStr += `brightness(${s.brightness}%) `;
-        if (filterStr) ctx.filter = filterStr.trim();
+        let filters = [];
+        if(s.blur > 0) filters.push(`blur(${s.blur*2}px)`);
+        if(s.brightness !== 100) filters.push(`brightness(${s.brightness}%)`);
+        if(filters.length) ctx.filter = filters.join(' ');
         ctx.drawImage(baseImg, 0, 0);
         ctx.restore();
 
-        // 2. Setup Dimensions
+        // 2. Setup Font & Scale
         const minDim = Math.min(w, h);
-        const baseScale = minDim * 0.0016 * s.fontScale; 
+        const baseScale = minDim * 0.0016 * s.fontScale;
         
-        const fontSize = Math.round(28 * baseScale); 
+        const fontSize = Math.round(28 * baseScale);
         const rowHeight = Math.round(45 * baseScale);
         const iconSize = Math.round(32 * baseScale);
         const padding = Math.round(40 * baseScale);
         const gap = Math.round(20 * baseScale);
 
-        // Define Items to Render
-        const items = [];
-        // Technicals
-        if(s.showAperture) items.push({ type: 'row', iconKey: 'aperture', text: s.txtAperture });
-        if(s.showShutter) items.push({ type: 'row', iconKey: 'shutter', text: s.txtShutter });
-        if(s.showIso) items.push({ type: 'row', iconKey: 'iso', text: s.txtIso });
-        if(s.showFocal) items.push({ type: 'row', iconKey: 'focal', text: s.txtFocal });
+        // Build Render List based on Order
+        const renderItems = [];
         
-        // Splitter logic
-        const hasTop = items.length > 0;
-        const bottomItems = [];
-        
-        if(s.showDesc && s.txtDesc) bottomItems.push({ type: 'text', text: s.txtDesc, bold: true });
-        if(s.showDate) bottomItems.push({ type: 'row', iconKey: 'clock', text: s.txtDate });
-        if(s.showCamera) bottomItems.push({ type: 'row', iconKey: 'camera', text: s.txtCamera });
-        if(s.showLens) bottomItems.push({ type: 'row', iconKey: 'lens', text: s.txtLens });
-        
-        // Socials
-        if(s.showFacebook) bottomItems.push({ type: 'row', iconKey: 'facebook', text: s.txtFacebook });
-        if(s.showInstagram) bottomItems.push({ type: 'row', iconKey: 'instagram', text: s.txtInstagram });
-        if(s.showX) bottomItems.push({ type: 'row', iconKey: 'x', text: s.txtX });
-        if(s.showMastodon) bottomItems.push({ type: 'row', iconKey: 'mastodon', text: s.txtMastodon });
-        if(s.showLinkedin) bottomItems.push({ type: 'row', iconKey: 'linkedin', text: s.txtLinkedin });
-        if(s.showTiktok) bottomItems.push({ type: 'row', iconKey: 'tiktok', text: s.txtTiktok });
-        if(s.showSnapchat) bottomItems.push({ type: 'row', iconKey: 'snapchat', text: s.txtSnapchat });
-        
-        if(hasTop && bottomItems.length > 0) items.push({ type: 'divider' });
-        items.push(...bottomItems);
-
-        // Copyright (Always Last)
-        if(s.showCopyright) {
-            if(items.length > 0) items.push({ type: 'spacer', height: rowHeight * 0.5 });
-            items.push({ type: 'copyright', text: s.copyright });
-        }
-
-        if(items.length === 0) return;
-
-        // 3. Calculate Card Dimensions
-        ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
-        let maxTextWidth = 0;
-        let contentHeight = padding * 2;
-
-        items.forEach(item => {
-            if(item.type === 'row' || item.type === 'copyright') { 
-                const tw = ctx.measureText(item.text).width;
-                maxTextWidth = Math.max(maxTextWidth, iconSize + gap + tw);
-                contentHeight += rowHeight;
-            } else if (item.type === 'text') {
-                 ctx.save();
-                 if(item.bold) ctx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
-                 const tw = ctx.measureText(item.text).width;
-                 maxTextWidth = Math.max(maxTextWidth, tw);
-                 ctx.restore();
-                 contentHeight += rowHeight;
-            } else if (item.type === 'divider') {
-                contentHeight += rowHeight; 
-            } else if (item.type === 'spacer') {
-                contentHeight += item.height;
+        // 1. Main Order
+        s.order.forEach(k => {
+            if(k === 'Divider') {
+                // Only add divider if items exist before it
+                if(renderItems.length > 0) renderItems.push({ type: 'divider' });
+                return;
+            }
+            if(s[`show${k}`]) {
+                let txt = s[`txt${k}`];
+                let iconKey = k.toLowerCase();
+                let type = 'row';
+                if(k === 'Desc') type = 'text-bold';
+                
+                // Clock for Date
+                if(k === 'Date') iconKey = 'clock'; 
+                
+                renderItems.push({ type, iconKey, text: txt });
             }
         });
 
-        const cardWidth = Math.round(Math.max(minDim * 0.35, maxTextWidth + (padding * 2)));
-        contentHeight = Math.round(contentHeight);
+        // 2. Socials (Always after main content)
+        ['Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'].forEach(k => {
+            if(s[`show${k}`]) renderItems.push({ type: 'row', iconKey: k.toLowerCase(), text: s[`txt${k}`] });
+        });
 
-        // 4. Position Calculation
-        const margin = Math.round(minDim * 0.04);
-        let startX, startY;
-
-        switch(s.position) {
-            case 'top-left': startX = margin; startY = margin; break;
-            case 'top-center': startX = (w - cardWidth) / 2; startY = margin; break;
-            case 'top-right': startX = w - cardWidth - margin; startY = margin; break;
-            
-            case 'center-left': startX = margin; startY = (h - contentHeight) / 2; break;
-            case 'center-center': startX = (w - cardWidth) / 2; startY = (h - contentHeight) / 2; break;
-            case 'center-right': startX = w - cardWidth - margin; startY = (h - contentHeight) / 2; break;
-            
-            case 'bottom-right': startX = w - cardWidth - margin; startY = h - contentHeight - margin; break;
-            case 'bottom-center': startX = (w - cardWidth) / 2; startY = h - contentHeight - margin; break;
-            case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
-            
-            default: startX = margin; startY = (h - contentHeight) / 2; // Default center-left
+        // 3. Copyright (Always Last)
+        if(s.showCopyright) {
+            if(renderItems.length > 0) renderItems.push({ type: 'spacer', height: rowHeight * 0.5 });
+            renderItems.push({ type: 'copyright', text: s.copyright });
         }
-        startX = Math.round(startX);
-        startY = Math.round(startY);
 
-        // 5. Draw Card
+        if(renderItems.length === 0) return;
+
+        // Calculate Box Size
+        ctx.font = `${s.fontStyle} ${s.fontWeight} ${fontSize}px "${s.fontFamily}", sans-serif`;
+        let maxTextW = 0;
+        let contentH = padding * 2;
+
+        renderItems.forEach(item => {
+            if(item.type === 'row' || item.type === 'copyright') {
+                const tw = ctx.measureText(item.text).width;
+                maxTextW = Math.max(maxTextW, iconSize + gap + tw);
+                contentH += rowHeight;
+            } else if (item.type === 'text-bold') {
+                const tw = ctx.measureText(item.text).width;
+                maxTextW = Math.max(maxTextW, tw);
+                contentH += rowHeight;
+            } else if (item.type === 'divider') {
+                contentH += rowHeight;
+            } else if (item.type === 'spacer') {
+                contentH += item.height;
+            }
+        });
+
+        const cardW = Math.round(Math.max(minDim * 0.35, maxTextW + (padding * 2)));
+        contentH = Math.round(contentH);
+
+        // Position Logic (Auto Alignment)
+        const margin = Math.round(minDim * 0.04);
+        let startX = margin, startY = margin;
+        let textAlign = 'left';
+
+        const [vPos, hPos] = s.position.split('-'); // e.g. "top-right"
+        
+        // Horizontal
+        if(hPos === 'left') { startX = margin; textAlign = 'left'; }
+        if(hPos === 'center') { startX = (w - cardW)/2; textAlign = 'left'; } // Keep text left inside card usually looks best, but prompt said auto-align matches position.
+        // Actually, centering text inside a center card makes sense.
+        if(hPos === 'center') textAlign = 'center';
+        if(hPos === 'right') { startX = w - cardW - margin; textAlign = 'right'; }
+
+        // Vertical
+        if(vPos === 'top') startY = margin;
+        if(vPos === 'center') startY = (h - contentH)/2;
+        if(vPos === 'bottom') startY = h - contentH - margin;
+
+        // Draw Card
         if(s.showCard) {
             ctx.save();
             ctx.fillStyle = s.cardColor;
             ctx.globalAlpha = s.cardOpacity / 100;
             const r = Math.round(s.cardRounding * 2 * baseScale);
             ctx.beginPath();
-            ctx.roundRect(startX, startY, cardWidth, contentHeight, r);
+            ctx.roundRect(startX, startY, cardW, contentH, r);
             ctx.fill();
             ctx.restore();
         }
 
-        // 6. Draw Items
-        let currentY = Math.round(startY + padding + (rowHeight/2));
+        // Draw Content
+        let curY = Math.round(startY + padding + (rowHeight/2));
         ctx.fillStyle = s.textColor;
-        ctx.textAlign = 'left';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = s.textShadow;
+        ctx.textAlign = textAlign;
         ctx.textBaseline = 'middle';
 
-        items.forEach(item => {
-            const x = Math.round(startX + padding);
-            
+        renderItems.forEach(item => {
+            // Determine X based on alignment
+            let drawX = startX + padding; // Default Left
+            if (textAlign === 'center') drawX = startX + (cardW / 2);
+            if (textAlign === 'right') drawX = startX + cardW - padding;
+
+            // Icon Offset Calculation
+            let textX = drawX;
+            let iconX = drawX;
+
             if(item.type === 'row' || item.type === 'copyright') {
+                if (textAlign === 'left') {
+                    textX = drawX + iconSize + gap;
+                    iconX = drawX;
+                } else if (textAlign === 'right') {
+                    textX = drawX - iconSize - gap;
+                    iconX = drawX; // Icon on right edge? Or text then icon? Usually Icon then Text.
+                    // Let's do Text | Icon for right align? Or Icon | Text moved left?
+                    // Standard practice: Keep Icon Left of Text, but shift whole block right?
+                    // Simpler: Keep Icon Left of Text always.
+                    // Calculate block width
+                    const tw = ctx.measureText(item.text).width;
+                    const blockW = iconSize + gap + tw;
+                    if(textAlign === 'right') iconX = drawX - blockW; // Start of block
+                    if(textAlign === 'center') iconX = drawX - (blockW/2);
+                    
+                    // Reset Text Align to left for this block drawing to keep relative spacing easy?
+                    // No, let's just manually position.
+                    textX = iconX + iconSize + gap;
+                    ctx.textAlign = 'left'; 
+                } else { // Center
+                    const tw = ctx.measureText(item.text).width;
+                    const blockW = iconSize + gap + tw;
+                    iconX = drawX - (blockW/2);
+                    textX = iconX + iconSize + gap;
+                    ctx.textAlign = 'left';
+                }
+
                 // Draw Icon
-                if(item.iconKey === 'clock') {
+                if(item.type === 'copyright') {
+                     ctx.save();
+                     ctx.font = `${iconSize}px "${s.fontFamily}", sans-serif`;
+                     ctx.fillStyle = s.accentColor;
+                     ctx.fillText("©", iconX, curY + (iconSize*0.1));
+                     ctx.restore();
+                } else if (item.iconKey === 'clock') {
                      ctx.strokeStyle = s.accentColor;
                      ctx.lineWidth = Math.max(1, Math.round(2 * baseScale));
                      ctx.beginPath();
-                     ctx.arc(x + iconSize/2, currentY, iconSize/2 - ctx.lineWidth, 0, Math.PI * 2);
+                     ctx.arc(iconX + iconSize/2, curY, iconSize/2 - ctx.lineWidth, 0, Math.PI * 2);
                      ctx.stroke();
                      ctx.beginPath();
-                     ctx.moveTo(x + iconSize/2, currentY);
-                     ctx.lineTo(x + iconSize/2, currentY - (iconSize/3));
-                     ctx.moveTo(x + iconSize/2, currentY);
-                     ctx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
+                     ctx.moveTo(iconX + iconSize/2, curY);
+                     ctx.lineTo(iconX + iconSize/2, curY - (iconSize/3));
                      ctx.stroke();
-                } else if (item.type === 'copyright') {
-                     // Manually draw © icon
-                     ctx.font = `${iconSize}px "Noto Sans", sans-serif`;
-                     ctx.fillStyle = s.accentColor;
-                     ctx.fillText("©", x, currentY + (iconSize*0.1)); // Slight nudge
-                     ctx.fillStyle = s.textColor; // Reset for text
                 } else if (loadedIcons[item.iconKey]) {
-                    try {
+                    try { 
                         const tCanvas = document.createElement('canvas');
-                        tCanvas.width = iconSize;
-                        tCanvas.height = iconSize;
-                        const tCtx = tCanvas.getContext('2d');
-                        tCtx.drawImage(loadedIcons[item.iconKey], 0, 0, iconSize, iconSize);
-                        tCtx.globalCompositeOperation = 'source-in';
-                        tCtx.fillStyle = s.accentColor;
-                        tCtx.fillRect(0, 0, iconSize, iconSize);
-                        ctx.drawImage(tCanvas, x, currentY - iconSize/2);
+                        tCanvas.width = iconSize; tCanvas.height = iconSize;
+                        const tCtxIcon = tCanvas.getContext('2d');
+                        tCtxIcon.drawImage(loadedIcons[item.iconKey], 0, 0, iconSize, iconSize);
+                        tCtxIcon.globalCompositeOperation = 'source-in';
+                        tCtxIcon.fillStyle = s.accentColor;
+                        tCtxIcon.fillRect(0, 0, iconSize, iconSize);
+                        ctx.drawImage(tCanvas, iconX, curY - iconSize/2);
                     } catch(e) {}
                 }
                 
                 // Draw Text
-                ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                if(item.type === 'copyright') {
-                     ctx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
-                } else {
-                     ctx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
-                }
+                ctx.fillText(item.text, textX, curY);
                 currentY += rowHeight;
 
-            } else if (item.type === 'text') {
-                if(item.bold) ctx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
-                else ctx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                ctx.fillText(item.text, x, currentY);
+            } else if (item.type === 'text-bold') {
+                ctx.save();
+                ctx.font = `${s.fontStyle} bold ${fontSize}px "${s.fontFamily}", sans-serif`;
+                // Re-apply align because row logic might have reset it
+                ctx.textAlign = textAlign; 
+                ctx.fillText(item.text, drawX, curY);
+                ctx.restore();
                 currentY += rowHeight;
 
             } else if (item.type === 'divider') {
                 ctx.strokeStyle = s.accentColor;
                 ctx.lineWidth = Math.max(1, Math.round(3 * baseScale));
                 ctx.beginPath();
-                ctx.moveTo(x, currentY);
-                ctx.lineTo(x + cardWidth - (padding*2), currentY);
+                ctx.moveTo(startX + padding, curY);
+                ctx.lineTo(startX + cardW - padding, curY);
                 ctx.stroke();
                 currentY += rowHeight;
 
             } else if (item.type === 'spacer') {
-                currentY += Math.round(item.height);
+                currentY += item.height;
             }
         });
     }
 
-    // --- EXPORT LOGIC ---
+    // --- ACTIONS ---
+    function toggleCompare(active) {
+        isComparing = active;
+        renderCanvas();
+    }
+
+    function resetDefaults() {
+        if(!confirm("Reset all settings to default?")) return;
+        userDefaults = { ...DEFAULT_SETTINGS };
+        saveDefaults();
+        // Update UI
+        if(selectedId) {
+            const img = images.find(i => i.id === selectedId);
+            // keep content, reset style
+            const contentKeys = ['txtAperture','txtShutter','txtIso','txtFocal','txtDesc','txtDate','txtCamera','txtLens','copyright','txtFacebook','txtInstagram','txtX','txtMastodon','txtLinkedin','txtTiktok','txtSnapchat'];
+            const savedContent = {};
+            contentKeys.forEach(k => savedContent[k] = img.settings[k]);
+            
+            img.settings = { ...DEFAULT_SETTINGS, ...savedContent };
+            syncInputsToState();
+            renderCanvas();
+        }
+        buildSidebarUI(); // Reset order UI
+    }
+
     function downloadCurrent() {
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
-        canvas.toBlob((blob) => {
-            saveAs(blob, `${imgObj.rawName}-Overlay.jpg`);
-        }, 'image/jpeg', 0.95);
+        canvas.toBlob((blob) => saveAs(blob, `${imgObj.rawName}-Overlay.jpg`), 'image/jpeg', 0.95);
     }
 
     async function downloadAll() {
-        if (images.length === 0) return;
-        processingOverlay.classList.remove('hidden');
-        processingText.innerText = "Starting batch process...";
+        if (!images.length) return;
+        document.getElementById('processing-overlay').classList.remove('hidden');
+        document.getElementById('processing-text').innerText = "Processing Batch...";
         const zip = new JSZip();
+        // Logic same as before (omitted for brevity, assume similar loop to renderCanvas on temp canvas)
+        // Note: For production reliability, duplicate the renderCanvas logic adapted for offscreen context here.
+        // For this artifact, simply calling alert as placeholder for the heavy logic or re-using render logic is needed.
+        // I will implement a simplified synchronous loop to reuse the main canvas logic.
         
-        const tempCanvas = document.createElement('canvas');
-        const tCtx = tempCanvas.getContext('2d');
-
+        const originalId = selectedId;
+        
         for (let i = 0; i < images.length; i++) {
-            const imgObj = images[i];
-            const s = imgObj.settings;
-            const baseImg = imgObj.imgElement;
-            processingText.innerText = `Rendering ${i+1}/${images.length}...`;
-
-            // --- REPLICATE RENDER LOGIC ---
-            tempCanvas.width = baseImg.naturalWidth;
-            tempCanvas.height = baseImg.naturalHeight;
-            const w = tempCanvas.width;
-            const h = tempCanvas.height;
-            const tCtx = tempCanvas.getContext('2d');
-            tCtx.imageSmoothingEnabled = true;
-            tCtx.imageSmoothingQuality = 'high';
-
-            tCtx.save();
-            let filterStr = '';
-            if (s.blur > 0) filterStr += `blur(${s.blur * 2}px) `;
-            if (s.brightness !== 100) filterStr += `brightness(${s.brightness}%) `;
-            if (filterStr) tCtx.filter = filterStr.trim();
-            tCtx.drawImage(baseImg, 0, 0);
-            tCtx.restore();
-
-            const minDim = Math.min(w, h);
-            const baseScale = minDim * 0.0016 * s.fontScale;
-            
-            const fontSize = Math.round(28 * baseScale); 
-            const rowHeight = Math.round(45 * baseScale);
-            const iconSize = Math.round(32 * baseScale);
-            const padding = Math.round(40 * baseScale);
-            const gap = Math.round(20 * baseScale);
-
-            const items = [];
-            if(s.showAperture) items.push({ type: 'row', iconKey: 'aperture', text: s.txtAperture });
-            if(s.showShutter) items.push({ type: 'row', iconKey: 'shutter', text: s.txtShutter });
-            if(s.showIso) items.push({ type: 'row', iconKey: 'iso', text: s.txtIso });
-            if(s.showFocal) items.push({ type: 'row', iconKey: 'focal', text: s.txtFocal });
-            
-            const hasTop = items.length > 0;
-            const bottomItems = [];
-            if(s.showDesc && s.txtDesc) bottomItems.push({ type: 'text', text: s.txtDesc, bold: true });
-            if(s.showDate) bottomItems.push({ type: 'row', iconKey: 'clock', text: s.txtDate });
-            if(s.showCamera) bottomItems.push({ type: 'row', iconKey: 'camera', text: s.txtCamera });
-            if(s.showLens) bottomItems.push({ type: 'row', iconKey: 'lens', text: s.txtLens });
-            if(s.showFacebook) bottomItems.push({ type: 'row', iconKey: 'facebook', text: s.txtFacebook });
-            if(s.showInstagram) bottomItems.push({ type: 'row', iconKey: 'instagram', text: s.txtInstagram });
-            if(s.showX) bottomItems.push({ type: 'row', iconKey: 'x', text: s.txtX });
-            if(s.showMastodon) bottomItems.push({ type: 'row', iconKey: 'mastodon', text: s.txtMastodon });
-            if(s.showLinkedin) bottomItems.push({ type: 'row', iconKey: 'linkedin', text: s.txtLinkedin });
-            if(s.showTiktok) bottomItems.push({ type: 'row', iconKey: 'tiktok', text: s.txtTiktok });
-            if(s.showSnapchat) bottomItems.push({ type: 'row', iconKey: 'snapchat', text: s.txtSnapchat });
-            
-            if(hasTop && bottomItems.length > 0) items.push({ type: 'divider' });
-            items.push(...bottomItems);
-
-            if(s.showCopyright) {
-                if(items.length > 0) items.push({ type: 'spacer', height: rowHeight * 0.5 });
-                items.push({ type: 'copyright', text: s.copyright });
-            }
-
-            if(items.length > 0) {
-                tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                let maxTextWidth = 0;
-                let contentHeight = padding * 2;
-                items.forEach(item => {
-                    if(item.type === 'row' || item.type === 'copyright') {
-                        const tw = tCtx.measureText(item.text).width;
-                        maxTextWidth = Math.max(maxTextWidth, iconSize + gap + tw);
-                        contentHeight += rowHeight;
-                    } else if (item.type === 'text') {
-                        tCtx.save();
-                        if(item.bold) tCtx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
-                        const tw = tCtx.measureText(item.text).width;
-                        maxTextWidth = Math.max(maxTextWidth, tw);
-                        tCtx.restore();
-                        contentHeight += rowHeight;
-                    } else if (item.type === 'divider') {
-                        contentHeight += rowHeight;
-                    } else if (item.type === 'spacer') {
-                        contentHeight += item.height;
-                    }
-                });
-
-                const cardWidth = Math.round(Math.max(minDim * 0.35, maxTextWidth + (padding * 2)));
-                contentHeight = Math.round(contentHeight);
-                const margin = Math.round(minDim * 0.04);
-                let startX, startY;
-                switch(s.position) {
-                    case 'top-left': startX = margin; startY = margin; break;
-                    case 'top-center': startX = (w - cardWidth) / 2; startY = margin; break;
-                    case 'top-right': startX = w - cardWidth - margin; startY = margin; break;
-                    
-                    case 'center-left': startX = margin; startY = (h - contentHeight) / 2; break;
-                    case 'center-center': startX = (w - cardWidth) / 2; startY = (h - contentHeight) / 2; break;
-                    case 'center-right': startX = w - cardWidth - margin; startY = (h - contentHeight) / 2; break;
-                    
-                    case 'bottom-right': startX = w - cardWidth - margin; startY = h - contentHeight - margin; break;
-                    case 'bottom-center': startX = (w - cardWidth) / 2; startY = h - contentHeight - margin; break;
-                    case 'bottom-left': startX = margin; startY = h - contentHeight - margin; break;
-                    
-                    default: startX = margin; startY = (h - contentHeight) / 2;
-                }
-                startX = Math.round(startX);
-                startY = Math.round(startY);
-
-                if(s.showCard) {
-                    tCtx.save();
-                    tCtx.fillStyle = s.cardColor;
-                    tCtx.globalAlpha = s.cardOpacity / 100;
-                    const r = Math.round(s.cardRounding * 2 * baseScale);
-                    tCtx.beginPath();
-                    tCtx.roundRect(startX, startY, cardWidth, contentHeight, r);
-                    tCtx.fill();
-                    tCtx.restore();
-                }
-
-                let currentY = Math.round(startY + padding + (rowHeight/2));
-                tCtx.fillStyle = s.textColor;
-                tCtx.textAlign = 'left';
-                tCtx.textBaseline = 'middle';
-
-                items.forEach(item => {
-                    const x = Math.round(startX + padding);
-                    if(item.type === 'row' || item.type === 'copyright') {
-                        if(item.iconKey === 'clock') {
-                             tCtx.strokeStyle = s.accentColor;
-                             tCtx.lineWidth = Math.max(1, Math.round(2 * baseScale));
-                             tCtx.beginPath();
-                             tCtx.arc(x + iconSize/2, currentY, iconSize/2 - tCtx.lineWidth, 0, Math.PI * 2);
-                             tCtx.stroke();
-                             tCtx.beginPath();
-                             tCtx.moveTo(x + iconSize/2, currentY);
-                             tCtx.lineTo(x + iconSize/2, currentY - (iconSize/3));
-                             tCtx.moveTo(x + iconSize/2, currentY);
-                             tCtx.lineTo(x + iconSize/2 + (iconSize/4), currentY);
-                             tCtx.stroke();
-                        } else if (item.type === 'copyright') {
-                             tCtx.font = `${iconSize}px "Noto Sans", sans-serif`;
-                             tCtx.fillStyle = s.accentColor;
-                             tCtx.fillText("©", x, currentY + (iconSize*0.1));
-                             tCtx.fillStyle = s.textColor;
-                        } else if (loadedIcons[item.iconKey]) {
-                            try { 
-                                const tCanvas = document.createElement('canvas');
-                                tCanvas.width = iconSize;
-                                tCanvas.height = iconSize;
-                                const tCtxIcon = tCanvas.getContext('2d');
-                                tCtxIcon.drawImage(loadedIcons[item.iconKey], 0, 0, iconSize, iconSize);
-                                tCtxIcon.globalCompositeOperation = 'source-in';
-                                tCtxIcon.fillStyle = s.accentColor;
-                                tCtxIcon.fillRect(0, 0, iconSize, iconSize);
-                                tCtx.drawImage(tCanvas, x, currentY - iconSize/2);
-                            } catch(e) {}
-                        }
-                        tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                        tCtx.fillText(item.text, Math.round(x + iconSize + gap), currentY);
-                        currentY += rowHeight;
-                    } else if (item.type === 'text') {
-                        if(item.bold) tCtx.font = `bold ${fontSize}px "Noto Sans", sans-serif`;
-                        else tCtx.font = `${fontSize}px "Noto Sans", sans-serif`;
-                        tCtx.fillText(item.text, x, currentY);
-                        currentY += rowHeight;
-                    } else if (item.type === 'divider') {
-                        tCtx.strokeStyle = s.accentColor;
-                        tCtx.lineWidth = Math.max(1, Math.round(3 * baseScale));
-                        tCtx.beginPath();
-                        tCtx.moveTo(x, currentY);
-                        tCtx.lineTo(x + cardWidth - (padding*2), currentY);
-                        tCtx.stroke();
-                        currentY += rowHeight;
-                    } else if (item.type === 'spacer') {
-                        currentY += Math.round(item.height);
-                    }
-                });
-            }
-
-            const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg', 0.90));
-            zip.file(`${imgObj.rawName}-Overlay.jpg`, blob);
-            await new Promise(r => setTimeout(r, 10));
+            selectedId = images[i].id; // Switch context
+            renderCanvas();
+            await new Promise(r => canvas.toBlob(b => {
+                zip.file(`${images[i].rawName}-Overlay.jpg`, b);
+                r();
+            }, 'image/jpeg', 0.95));
         }
-
-        processingText.innerText = "Zipping...";
+        
+        selectedId = originalId; // Restore
+        renderCanvas();
+        
         const content = await zip.generateAsync({type:"blob"});
         saveAs(content, "fusedframe-overlays.zip");
-        processingOverlay.classList.add('hidden');
+        document.getElementById('processing-overlay').classList.add('hidden');
     }
 
+    // --- MODALS & HELPERS ---
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { 
+        document.getElementById(id).classList.remove('active'); 
+        if(id === 'welcomeModal' && document.getElementById('dontShowWelcome').checked) {
+            localStorage.setItem('adffp_welcome_seen', 'true');
+        }
+    }
+    function alertCustom(title, msg) {
+        document.getElementById('alertTitle').innerText = title;
+        document.getElementById('alertMessage').innerText = msg;
+        openModal('alertModal');
+    }
     function clearAll() {
         if(!confirm("Remove all images?")) return;
-        images = [];
-        selectedId = null;
-        filmstrip.innerHTML = '';
-        controlsContainer.classList.add('hidden');
-        canvas.classList.add('hidden');
-        noImageMsg.classList.remove('hidden');
-        emptyState.classList.remove('hidden');
+        images = []; selectedId = null;
+        document.getElementById('filmstrip').innerHTML = '';
+        document.getElementById('controls-container').classList.add('hidden');
+        document.getElementById('previewCanvas').classList.add('hidden');
+        document.getElementById('empty-state').classList.remove('hidden');
         updateCounter();
+        alertCustom("Images Cleared", "All images have been removed from the session.");
     }
-
-    function updateCounter() {
-        statusCounter.innerText = `${images.length} images`;
+    function updateCounter() { document.getElementById('status-counter').innerText = `${images.length} / 30 images`; }
+    function toggleFaq(btn) {
+        btn.parentElement.classList.toggle('active');
     }
+    
+    // Global Hotkeys
+    document.addEventListener('keydown', (e) => {
+        if(e.code === 'Space' && selectedId && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            toggleCompare(true);
+        }
+        if((e.code === 'Delete' || e.code === 'Backspace') && selectedId && document.activeElement.tagName !== 'INPUT') {
+            deleteImage(selectedId);
+        }
+    });
+    document.addEventListener('keyup', (e) => {
+        if(e.code === 'Space') toggleCompare(false);
+    });
 
+    // Run Builder
+    buildSidebarUI();
 </script>
 </body>
 </html>
