@@ -1685,14 +1685,13 @@
         var data = imageData.data;
         var factor = brightness / 100;
         for (var i = 0; i < data.length; i += 4) {
-            // Simple multiplication clamping to 255
-            data[i] = Math.min(255, data[i] * factor);
-            data[i+1] = Math.min(255, data[i+1] * factor);
-            data[i+2] = Math.min(255, data[i+2] * factor);
+            data[i] = Math.min(255, Math.max(0, data[i] * factor));
+            data[i+1] = Math.min(255, Math.max(0, data[i+1] * factor));
+            data[i+2] = Math.min(255, Math.max(0, data[i+2] * factor));
         }
     }
 
-    // StackBlur Implementation - Compact Version
+    // StackBlur Implementation - Corrected Version
     function stackBlurCanvasRGBA(imageData, radius) {
         if (isNaN(radius) || radius < 1) return;
         radius |= 0;
@@ -1724,81 +1723,118 @@
         for (i = 0; i < div; i++) {
             mul_sum[i] = sumFactor; 
         }
-
+        
         var stackpointer;
-        var stackstart;
+        var stackIndex;
         var sir;
-        var r1 = radius + 1;
-        var routsum, goutsum, boutsum;
-        var rinsum, ginsum, binsum;
         
         // Pass 1: Horizontal Blur
         yw = yi = 0;
+        
         for (y = 0; y < height; y++) {
-            rinsum = ginsum = binsum = routsum = goutsum = boutsum = r_sum = g_sum = b_sum = 0;
-            for (i = -radius; i <= radius; i++) {
-                p = pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4];
-                sir = stack[i + radius];
-                sir = [pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4], pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4 + 1], pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4 + 2]];
+            r_in_sum = g_in_sum = b_in_sum = r_sum = g_sum = b_sum = 0;
+            r_out_sum = g_out_sum = b_out_sum = 0;
+            
+            // Pre-fill sum with the first pixel
+            var pr0 = pixels[yi];
+            var pg0 = pixels[yi+1];
+            var pb0 = pixels[yi+2];
+            
+            for(i = -radius; i <= radius; i++){
+                // Clamp to edge
+                p = yi + (Math.min(widthMinus1, Math.max(i, 0))) * 4;
+                var r = pixels[p];
+                var g = pixels[p+1];
+                var b = pixels[p+2];
                 
-                // Manual unroll for stack population
-                var offset = (yi + Math.min(widthMinus1, Math.max(i, 0))) * 4;
-                var tr = pixels[offset];
-                var tg = pixels[offset+1];
-                var tb = pixels[offset+2];
+                var rbs = radiusPlus1 - Math.abs(i);
                 
-                rbs = r1 - Math.abs(i);
-                r_sum += tr * rbs;
-                g_sum += tg * rbs;
-                b_sum += tb * rbs;
+                r_sum += r * rbs;
+                g_sum += g * rbs;
+                b_sum += b * rbs;
                 
                 if (i > 0) {
-                    rinsum += tr; ginsum += tg; binsum += tb;
+                    r_in_sum += r; g_in_sum += g; b_in_sum += b;
                 } else {
-                    routsum += tr; goutsum += tg; boutsum += tb;
+                    r_out_sum += r; g_out_sum += g; b_out_sum += b;
+                }
+                
+                if(i < 0){
+                    stackIndex = (i + radius) * 3;
+                    stack[stackIndex] = r;
+                    stack[stackIndex + 1] = g;
+                    stack[stackIndex + 2] = b;
+                } else {
+                    // For positive i, we will fill in the loop below or handle boundaries
+                    // Actually, standard StackBlur pre-fills strictly.
+                    // Simplified logic:
                 }
             }
+            
+            // Correct Stack Initialization
+            for(i = 0; i < div; i++){
+                var dist = i - radius;
+                p = yi + (Math.min(widthMinus1, Math.max(dist, 0))) * 4;
+                stack[i*3] = pixels[p];
+                stack[i*3+1] = pixels[p+1];
+                stack[i*3+2] = pixels[p+2];
+            }
+            
             stackpointer = radius;
-
+            
             for (x = 0; x < width; x++) {
-                // Approximate division
                 pixels[yi] = (r_sum / sumFactor) | 0;
                 pixels[yi+1] = (g_sum / sumFactor) | 0;
                 pixels[yi+2] = (b_sum / sumFactor) | 0;
                 
-                r_sum -= routsum; g_sum -= goutsum; b_sum -= boutsum;
+                r_sum -= r_out_sum;
+                g_sum -= g_out_sum;
+                b_sum -= b_out_sum;
                 
-                // Get next pixel to add
-                var nextOffset = (yw + Math.min(widthMinus1, x + radius + 1)) * 4;
-                var nR = pixels[nextOffset];
-                var nG = pixels[nextOffset+1];
-                var nB = pixels[nextOffset+2];
+                stackIndex = ((stackpointer - radius + div) % div) * 3;
                 
-                // Get pixel to remove (calculated from previous pass conceptually)
-                var prevOffset = (yw + Math.max(0, x - radius)) * 4;
-                var pR = pixels[prevOffset];
-                var pG = pixels[prevOffset+1];
-                var pB = pixels[prevOffset+2];
+                r_out_sum -= stack[stackIndex];
+                g_out_sum -= stack[stackIndex + 1];
+                b_out_sum -= stack[stackIndex + 2];
                 
-                // Simple box blur approximation for the stack movement logic here to save lines 
-                // Using true stack logic makes this file huge. 
-                // We use a simplified convolution here that behaves similarly for visual blur.
-                // Actually, let's just stick to the simplified math:
+                if(y === 0) {
+                    stackStart[x] = stackIndex; // Keep track for vertical pass? No, simpler to just recalc.
+                }
                 
-                rinsum += nR; ginsum += nG; binsum += nB;
-                r_sum += rinsum; g_sum += ginsum; b_sum += binsum;
+                // Get next pixel (incoming)
+                var nextX = Math.min(x + radius + 1, widthMinus1);
+                var pNext = (yw + nextX) * 4;
+                
+                var rNext = pixels[pNext];
+                var gNext = pixels[pNext+1];
+                var bNext = pixels[pNext+2];
+                
+                stack[stackIndex] = rNext;
+                stack[stackIndex + 1] = gNext;
+                stack[stackIndex + 2] = bNext;
+                
+                r_in_sum += rNext;
+                g_in_sum += gNext;
+                b_in_sum += bNext;
+                
+                r_sum += r_in_sum;
+                g_sum += g_in_sum;
+                b_sum += b_in_sum;
                 
                 stackpointer = (stackpointer + 1) % div;
+                stackIndex = (stackpointer % div) * 3;
                 
-                routsum += pR; goutsum += pG; boutsum += pB;
-                rinsum -= pR; ginsum -= pG; binsum -= pB;
+                var rPr = stack[stackIndex];
+                var gPr = stack[stackIndex + 1];
+                var bPr = stack[stackIndex + 2];
                 
-                // Correct subtraction logic for moving window
-                routsum -= pR; goutsum -= pG; boutsum -= pB; // This line conceptually flawed in simple unroll, but sufficient for visual glue. 
-                // A true StackBlur is 200+ lines. I am using a simplified sliding window average (Box Blur) here instead which is O(1) and safe for iOS.
+                r_out_sum += rPr;
+                g_out_sum += gPr;
+                b_out_sum += bPr;
                 
-                // NOTE: Detailed StackBlur omitted for brevity. Using Box Blur Approximation.
-                // It is sufficient for background blurring.
+                r_in_sum -= rPr;
+                g_in_sum -= gPr;
+                b_in_sum -= bPr;
                 
                 yi += 4;
             }
@@ -1807,56 +1843,86 @@
 
         // Pass 2: Vertical Blur
         for (x = 0; x < width; x++) {
-            yi = x * 4;
-            rinsum = ginsum = binsum = routsum = goutsum = boutsum = r_sum = g_sum = b_sum = 0;
+            r_in_sum = g_in_sum = b_in_sum = r_sum = g_sum = b_sum = 0;
+            r_out_sum = g_out_sum = b_out_sum = 0;
             
-            for (i = -radius; i <= radius; i++) {
-                var yOffset = Math.min(heightMinus1, Math.max(i, 0)) * width;
-                var offset = (x + yOffset) * 4;
-                var tr = pixels[offset];
-                var tg = pixels[offset+1];
-                var tb = pixels[offset+2];
+            // Fill Stack
+            for(i = 0; i < div; i++){
+                var dist = i - radius;
+                var yPos = Math.min(heightMinus1, Math.max(dist, 0));
+                p = (yPos * width + x) * 4;
                 
-                rbs = r1 - Math.abs(i);
-                r_sum += tr * rbs;
-                g_sum += tg * rbs;
-                b_sum += tb * rbs;
+                stack[i*3] = pixels[p];
+                stack[i*3+1] = pixels[p+1];
+                stack[i*3+2] = pixels[p+2];
                 
-                if (i > 0) {
-                    rinsum += tr; ginsum += tg; binsum += tb;
+                var rbs = radiusPlus1 - Math.abs(dist);
+                r_sum += stack[i*3] * rbs;
+                g_sum += stack[i*3+1] * rbs;
+                b_sum += stack[i*3+2] * rbs;
+                
+                if (dist > 0) {
+                    r_in_sum += stack[i*3]; g_in_sum += stack[i*3+1]; b_in_sum += stack[i*3+2];
                 } else {
-                    routsum += tr; goutsum += tg; boutsum += tb;
+                    r_out_sum += stack[i*3]; g_out_sum += stack[i*3+1]; b_out_sum += stack[i*3+2];
                 }
             }
             
-            var stackpointer = radius;
+            stackpointer = radius;
+            yi = x << 2; // initial pixel index for column
             
             for (y = 0; y < height; y++) {
-                var offset = (y * width + x) * 4;
-                pixels[offset] = (r_sum / sumFactor) | 0;
-                pixels[offset+1] = (g_sum / sumFactor) | 0;
-                pixels[offset+2] = (b_sum / sumFactor) | 0;
+                // We must read/write to the buffer directly
+                var pInd = (y * width + x) * 4;
                 
-                r_sum -= routsum; g_sum -= goutsum; b_sum -= boutsum;
+                pixels[pInd] = (r_sum / sumFactor) | 0;
+                pixels[pInd+1] = (g_sum / sumFactor) | 0;
+                pixels[pInd+2] = (b_sum / sumFactor) | 0;
                 
-                var nextY = Math.min(heightMinus1, y + radius + 1);
-                var nextOffset = (nextY * width + x) * 4;
-                var nR = pixels[nextOffset];
-                var nG = pixels[nextOffset+1];
-                var nB = pixels[nextOffset+2];
+                r_sum -= r_out_sum;
+                g_sum -= g_out_sum;
+                b_sum -= b_out_sum;
                 
-                var prevY = Math.max(0, y - radius);
-                var prevOffset = (prevY * width + x) * 4;
-                var pR = pixels[prevOffset];
-                var pG = pixels[prevOffset+1];
-                var pB = pixels[prevOffset+2];
+                stackIndex = ((stackpointer - radius + div) % div) * 3;
                 
-                rinsum += nR; ginsum += nG; binsum += nB;
-                r_sum += rinsum; g_sum += ginsum; b_sum += binsum;
+                r_out_sum -= stack[stackIndex];
+                g_out_sum -= stack[stackIndex + 1];
+                b_out_sum -= stack[stackIndex + 2];
                 
-                routsum += pR; goutsum += pG; boutsum += pB;
-                rinsum -= pR; ginsum -= pG; binsum -= pB;
-                routsum -= pR; goutsum -= pG; boutsum -= pB;
+                // Get next pixel
+                var nextY = Math.min(y + radius + 1, heightMinus1);
+                var pNext = (nextY * width + x) * 4;
+                
+                var rNext = pixels[pNext];
+                var gNext = pixels[pNext+1];
+                var bNext = pixels[pNext+2];
+                
+                stack[stackIndex] = rNext;
+                stack[stackIndex + 1] = gNext;
+                stack[stackIndex + 2] = bNext;
+                
+                r_in_sum += rNext;
+                g_in_sum += gNext;
+                b_in_sum += bNext;
+                
+                r_sum += r_in_sum;
+                g_sum += g_in_sum;
+                b_sum += b_in_sum;
+                
+                stackpointer = (stackpointer + 1) % div;
+                stackIndex = (stackpointer % div) * 3;
+                
+                var rPr = stack[stackIndex];
+                var gPr = stack[stackIndex + 1];
+                var bPr = stack[stackIndex + 2];
+                
+                r_out_sum += rPr;
+                g_out_sum += gPr;
+                b_out_sum += bPr;
+                
+                r_in_sum -= rPr;
+                g_in_sum -= gPr;
+                b_in_sum -= bPr;
             }
         }
     }
