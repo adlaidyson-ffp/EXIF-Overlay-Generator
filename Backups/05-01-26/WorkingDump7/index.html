@@ -1710,10 +1710,7 @@
         var widthMinus1 = width - 1;
         var heightMinus1 = height - 1;
         var radiusPlus1 = radius + 1;
-        
-        // FIX: The sum of weights for the kernel (1, 2, ... R+1, ... 2, 1) is (R+1)^2
-        // Previous incorrect formula: radiusPlus1 * (radiusPlus1 + 1) / 2
-        var sumFactor = radiusPlus1 * radiusPlus1; 
+        var sumFactor = radiusPlus1 * (radiusPlus1 + 1) / 2;
         
         var stackStart = new Int32Array(div);
         var stack = new Int32Array(div * 3);
