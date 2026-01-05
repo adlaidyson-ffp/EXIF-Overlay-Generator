@@ -42,7 +42,7 @@
     ::-webkit-scrollbar-thumb:hover { background: #94fdf8; }
 
     /* Inputs */
-    input[type=range] { -webkit-appearance: none; background: transparent; cursor: pointer; }
+    input[type=range] { -webkit-appearance: none; background: transparent; }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
       background: #94fdf8; cursor: pointer; margin-top: -6px; border: 2px solid #1e293b;
@@ -66,7 +66,7 @@
     }
     
     /* Drag & Drop Styles */
-    .draggable-item { cursor: grab; transition: transform 0.1s, border-color 0.2s; user-select: none; }
+    .draggable-item { cursor: grab; transition: transform 0.1s, border-color 0.2s; }
     .draggable-item:active { cursor: grabbing; }
     .dragging { opacity: 0.5; background: #1e293b; }
     
@@ -97,10 +97,10 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col lg:h-screen lg:overflow-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col lg:h-screen lg:overflow-hidden select-none">
 
   <!-- Header -->
-  <header class="py-3 px-4 lg:px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static select-none">
+  <header class="py-3 px-4 lg:px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static">
     <div class="flex items-center gap-4">
       <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition group">
         <img src="https://cdn-eu.fusedframe.co.uk/main-logos/png/squarelogo-light-crop.png" alt="Fused Frame Photography" class="h-9 w-auto" />
@@ -123,9 +123,8 @@
   <div class="flex-grow flex flex-col lg:flex-row relative overflow-hidden">
     
     <!-- LEFT SIDEBAR: Editor -->
-    <!-- On Mobile: Order 2 (Below Canvas). On Desktop: Order 1 (Left) -->
-    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full pb-20 lg:pb-0 order-2 lg:order-1">
-      <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 space-y-2 shadow-sm select-none">
+    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full pb-20 lg:pb-0">
+      <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 space-y-2 shadow-sm">
         <div class="flex justify-between items-center">
              <h2 class="font-bold text-[#94fdf8]">Editor</h2>
              <div class="flex gap-2">
@@ -144,7 +143,7 @@
         
         <!-- Content (Drag & Drop) -->
         <div class="space-y-3">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between select-none">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between">
                 <span>Overlay Content</span>
                 <span class="text-[10px] text-slate-600 font-normal">Drag to reorder</span>
             </h3>
@@ -156,7 +155,7 @@
             <div class="pt-2 border-t border-slate-800 mt-2">
                  <div class="flex items-center gap-3 mb-2">
                     <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('showCopyright', this.checked)">
-                    <span class="text-xs font-bold text-slate-300 w-20 shrink-0 select-none">Copyright</span>
+                    <span class="text-xs font-bold text-slate-300 w-20 shrink-0">Copyright</span>
                     <input type="text" id="input-copyright" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" oninput="updateCurrent('copyright', this.value)">
                 </div>
             </div>
@@ -165,7 +164,7 @@
         <hr class="border-slate-800">
 
         <!-- Position -->
-        <div class="space-y-3 select-none">
+        <div class="space-y-3">
              <div class="flex justify-between items-center">
                  <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Position</h3>
                  <span class="text-[10px] text-slate-500">Auto-aligns text</span>
@@ -190,19 +189,19 @@
 
         <!-- Image Style -->
         <div class="space-y-4">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider select-none">Image Style</h3>
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Image Style</h3>
             
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs text-slate-400 select-none">Scale</label>
+                        <label class="text-xs text-slate-400">Scale</label>
                         <span id="val-fontScale" class="text-[10px] text-slate-500 font-mono">0.8</span>
                     </div>
                     <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" oninput="updateCurrent('fontScale', this.value)">
                 </div>
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs text-slate-400 select-none">Brightness</label>
+                        <label class="text-xs text-slate-400">Brightness</label>
                         <span id="val-brightness" class="text-[10px] text-slate-500 font-mono">65%</span>
                     </div>
                     <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full" oninput="updateCurrent('brightness', this.value)">
@@ -210,7 +209,7 @@
             </div>
             <div>
                 <div class="flex justify-between items-center mb-1">
-                    <label class="text-xs text-slate-400 select-none">Background Blur</label>
+                    <label class="text-xs text-slate-400">Background Blur</label>
                     <span id="val-blur" class="text-[10px] text-slate-500 font-mono">5px</span>
                 </div>
                 <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full" oninput="updateCurrent('blur', this.value)">
@@ -219,17 +218,17 @@
             <!-- Card Settings -->
             <div class="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50 space-y-3">
                 <div class="flex justify-between items-center">
-                    <label class="text-xs text-slate-300 font-bold select-none">Background Card</label>
+                    <label class="text-xs text-slate-300 font-bold">Background Card</label>
                     <input type="checkbox" id="check-show-card" class="accent-[#94fdf8]" onchange="updateCurrent('showCard', this.checked)">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-[10px] text-slate-500 block mb-1 select-none">Color</label>
+                        <label class="text-[10px] text-slate-500 block mb-1">Color</label>
                         <div class="flex gap-1"><input type="color" id="color-card" class="h-5 w-5 bg-transparent border-0 p-0" oninput="updateCurrent('cardColor', this.value)"></div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                             <label class="text-[10px] text-slate-500 select-none">Opacity</label>
+                             <label class="text-[10px] text-slate-500">Opacity</label>
                              <span id="val-cardOpacity" class="text-[9px] text-slate-500 font-mono">65%</span>
                         </div>
                         <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full" oninput="updateCurrent('cardOpacity', this.value)">
@@ -242,15 +241,15 @@
 
         <!-- Typography -->
         <div class="space-y-4">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider select-none">Typography</h3>
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Typography</h3>
             
             <div>
-                <label class="text-xs text-slate-400 block mb-1 select-none">Font Family</label>
+                <label class="text-xs text-slate-400 block mb-1">Font Family</label>
                 <select id="select-font" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none focus:border-[#94fdf8]" onchange="updateCurrent('fontFamily', this.value)">
-                    <option value="Noto Sans">Noto Sans</option>
-                    <option value="Lato">Lato (Default)</option>
+                    <option value="Noto Sans">Noto Sans (Default)</option>
                     <option value="Roboto">Roboto</option>
                     <option value="Open Sans">Open Sans</option>
+                    <option value="Lato">Lato</option>
                     <option value="Montserrat">Montserrat</option>
                     <option value="Oswald">Oswald</option>
                     <option value="Raleway">Raleway</option>
@@ -263,14 +262,14 @@
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1 select-none">Weight</label>
+                    <label class="text-xs text-slate-400 block mb-1">Weight</label>
                     <select id="select-weight" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontWeight', this.value)">
                         <option value="normal">Normal</option>
                         <option value="bold">Bold</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1 select-none">Style</label>
+                    <label class="text-xs text-slate-400 block mb-1">Style</label>
                     <select id="select-style" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontStyle', this.value)">
                         <option value="normal">Normal</option>
                         <option value="italic">Italic</option>
@@ -280,22 +279,22 @@
 
             <div>
                 <div class="flex justify-between items-center mb-1">
-                    <label class="text-xs text-slate-400 select-none">Text Shadow</label>
-                    <span id="val-textShadow" class="text-[10px] text-slate-500 font-mono">3px</span>
+                    <label class="text-xs text-slate-400">Text Shadow</label>
+                    <span id="val-textShadow" class="text-[10px] text-slate-500 font-mono">0px</span>
                 </div>
                 <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full" oninput="updateCurrent('textShadow', this.value)">
             </div>
 
             <div class="grid grid-cols-2 gap-4 pt-2">
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1 select-none">Text Color</label>
+                    <label class="text-xs text-slate-400 block mb-1">Text Color</label>
                     <div class="flex gap-2 items-center">
                         <input type="color" id="color-text" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('textColor', this.value)">
                         <input type="text" id="hex-text" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('textColor', this.value)">
                     </div>
                 </div>
                 <div>
-                     <label class="text-xs text-slate-400 block mb-1 select-none">Accent</label>
+                     <label class="text-xs text-slate-400 block mb-1">Accent</label>
                     <div class="flex gap-2 items-center">
                         <input type="color" id="color-accent" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('accentColor', this.value)">
                         <input type="text" id="hex-accent" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('accentColor', this.value)">
@@ -311,20 +310,16 @@
       </div>
     </aside>
 
-    <!-- RIGHT CONTENT: Canvas & Footer (Wrapper) -->
-    <!-- On Mobile: Use display:contents so children become flex items of parent. 
-         Order 1: Canvas. Order 3: Footer. -->
-    <!-- On Desktop: Flex Column (Order 2) -->
-    <div class="contents lg:flex lg:flex-col lg:min-w-0 lg:h-full lg:relative lg:order-2">
+    <!-- RIGHT CONTENT: Canvas & Footer -->
+    <div class="flex-grow flex flex-col min-w-0 h-full relative">
         
         <!-- TOP: Canvas & Filmstrip -->
-        <!-- On Mobile: Order 1 (Top) -->
-        <div class="order-1 lg:order-none flex-grow flex flex-col min-w-0 bg-slate-950 relative group h-[55vh] lg:h-full overflow-hidden">
+        <div class="flex-grow flex flex-col min-w-0 bg-slate-950 relative group h-full overflow-hidden">
             
             <!-- Canvas Area -->
             <main class="flex-grow flex flex-col relative overflow-hidden bg-[#0b1120] checkerboard z-0">
                 <!-- Toolbar -->
-                <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-slate-900/90 backdrop-blur rounded-full px-2 py-1.5 border border-slate-700 shadow-xl select-none">
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-slate-900/90 backdrop-blur rounded-full px-2 py-1.5 border border-slate-700 shadow-xl">
                     <button onclick="changeZoom(-0.1)" class="p-1.5 hover:text-[#94fdf8] transition" title="Zoom Out"><i data-lucide="minus" class="w-4 h-4"></i></button>
                     <span class="text-xs font-mono w-12 text-center py-1.5" id="zoom-display">Fit</span>
                     <button onclick="changeZoom(0.1)" class="p-1.5 hover:text-[#94fdf8] transition" title="Zoom In"><i data-lucide="plus" class="w-4 h-4"></i></button>
@@ -333,7 +328,7 @@
                 </div>
 
                 <!-- Save Tools -->
-                <div class="absolute top-4 right-4 z-20 flex flex-col lg:flex-row gap-2 items-end lg:items-center select-none">
+                <div class="absolute top-4 right-4 z-20 flex flex-col lg:flex-row gap-2 items-end lg:items-center">
                     <button id="btn-compare" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition" onmousedown="toggleCompare(true)" onmouseup="toggleCompare(false)" onmouseleave="toggleCompare(false)" ontouchstart="toggleCompare(true)" ontouchend="toggleCompare(false)">
                         <i data-lucide="eye" class="w-4 h-4"></i> <span class="hidden sm:inline">Hold to Compare</span>
                     </button>
@@ -357,14 +352,14 @@
                     </div>
                 </div>
                 
-                <div id="processing-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden select-none">
+                <div id="processing-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
                     <div class="loader mb-4"></div>
                     <p class="text-[#94fdf8] font-bold animate-pulse" id="processing-text">Processing...</p>
                 </div>
             </main>
 
             <!-- Filmstrip -->
-            <div class="h-32 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] select-none">
+            <div class="h-32 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
                 <div class="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-900">
                     <span class="text-xs text-slate-400 font-mono" id="status-counter">0 / 30 images</span>
                     <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 uppercase tracking-wide font-bold">
@@ -378,8 +373,7 @@
         </div>
 
         <!-- Footer -->
-        <!-- On Mobile: Order 3 (Bottom) -->
-        <footer class="bg-slate-950 border-t border-slate-800 p-4 pb-8 lg:pb-4 z-40 shrink-0 order-3 lg:order-none select-none">
+        <footer class="bg-slate-950 border-t border-slate-800 p-4 pb-8 lg:pb-4 z-40 shrink-0">
             <div class="flex flex-col md:flex-row justify-between items-center text-[10px] text-slate-500 gap-2">
                 <div>
                     &copy; Adlai Dyson | Fused Frame Photography
@@ -460,7 +454,6 @@
               <section class="mb-20">
                   <h2 class="text-2xl font-bold mb-8 flex items-center gap-2"><span class="w-8 h-px bg-[#94fdf8]"></span> Frequently Asked Questions</h2>
                   <div class="space-y-2">
-                    
                     <!-- Privacy -->
                     <div class="pt-4 pb-2"><h3 class="text-xs font-bold uppercase tracking-widest dim-text">Privacy & Security</h3></div>
                     <div class="faq-item border-b border-slate-800">
@@ -468,27 +461,40 @@
                         <span class="text-lg font-medium group-hover:pl-1 transition-all">Does EXIF Overlay upload my photos?</span>
                         <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                       </button>
-                      <div class="faq-content text-slate-400 space-y-3"><p><strong class="text-white">Locally</strong>. Any photo or metadata uploaded by this tool, <strong class="text-white">never</strong> leaves your device. All the magic is done in browser.</p></div>
+                      <div class="faq-content text-slate-400 space-y-3"><p><strong class="text-white">No.</strong> All processing happens locally on your device.</p></div>
                     </div>
-                    
-                    <!-- Usage -->
+                     <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">What data is tracked?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-3">
+                         <p>We only collect <strong class="text-white">anonymous usage statistics</strong> to improve the tool. This includes:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                          <li>Number of visits and app opens</li>
+                          <li>General country location (from IP)</li>
+                          <li>Device type</li>
+                        </ul>
+                        <p>No personal data, images, or EXIF information is ever collected.</p>
+                      </div>
+                    </div>
+                     <!-- Usage -->
                     <div class="pt-8 pb-2"><h3 class="text-xs font-bold uppercase tracking-widest dim-text">Using the Tool</h3></div>
                     <div class="faq-item border-b border-slate-800">
                       <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
                         <span class="text-lg font-medium group-hover:pl-1 transition-all">What if my image has no EXIF data?</span>
                         <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                       </button>
-                      <div class="faq-content text-slate-400 space-y-3"><p>No problem, all fields remain <strong class="text-white">fully editable</strong>, for manual changes.</p></div>
+                      <div class="faq-content text-slate-400 space-y-3"><p>Missing metadata is not a problem. Fields remain <strong class="text-white">fully editable</strong>.</p></div>
                     </div>
                     <div class="faq-item border-b border-slate-800">
                       <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
                         <span class="text-lg font-medium group-hover:pl-1 transition-all">How many images can I process?</span>
                         <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                       </button>
-                      <div class="faq-content text-slate-400"><p>You can upload up to <strong class="text-white">30 images at once</strong>. This is to reduce load on your device, as everything happens locally in your browser. We may alter this limit at a later time.</p></div>
+                      <div class="faq-content text-slate-400"><p>You can upload up to <strong class="text-white">30 images at once</strong>.</p></div>
                     </div>
-                    
-                    <!-- Availability -->
+                     <!-- Availability -->
                     <div class="pt-8 pb-2"><h3 class="text-xs font-bold uppercase tracking-widest dim-text">Availability</h3></div>
                     <div class="faq-item border-b border-slate-800">
                       <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
@@ -496,7 +502,7 @@
                         <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                       </button>
                       <div class="faq-content text-slate-400 space-y-4">
-                        <p>iOS, Android, Windows and macOS apps coming soon! Online Version (Current Website, available now). Please use the download button below to track status and download when released!</p>
+                        <p>Web: exifoverlay.com. iOS/Android PWA supported. Desktop Apps Coming Soon.</p>
                       </div>
                     </div>
 
@@ -572,14 +578,14 @@
       <div class="flex-grow overflow-y-auto p-6">
           <div class="max-w-3xl mx-auto space-y-8 pb-20 text-slate-300 leading-relaxed">
               <header class="mb-12">
-                  <div class="flex items-center gap-3 mb-4"><span class="px-3 py-1 rounded-full bg-[#94fdf8]/10 text-[#94fdf8] text-xs font-bold uppercase tracking-widest">Legal</span><span class="text-slate-500 text-xs">Last Updated: 5th January 2026</span></div>
+                  <div class="flex items-center gap-3 mb-4"><span class="px-3 py-1 rounded-full bg-[#94fdf8]/10 text-[#94fdf8] text-xs font-bold uppercase tracking-widest">Legal</span><span class="text-slate-500 text-xs">Last Updated: 4th January 2026</span></div>
                   <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight accent-text">Privacy Notice</h1>
                   <p class="text-lg text-slate-300 leading-relaxed border-l-4 border-[#94fdf8] pl-6 py-2">At EXIF Overlay, privacy is a must. I believe your creative data should stay where it belongs: with you.</p>
               </header>
               <section>
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span> Overview</h2>
                 <div class="space-y-4 text-slate-400 leading-relaxed">
-                  <p>This Privacy Notice explains how I, <span class="text-white">Adlai Dyson | Fused Frame Photography</span>, manage information through the EXIF Overlay application at <span class="accent-text">exifoverlay.com</span>. I operate in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
+                  <p>This Privacy Notice explains how I, <span class="text-white">Adlai Dyson</span> (operating as <span class="text-white">Fused Frame Photography</span>), manage information through the EXIF Overlay application at <span class="accent-text">exifoverlay.com</span>. I operate in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
                 </div>
               </section>
               <section class="legal-card p-8 rounded-3xl">
@@ -686,10 +692,10 @@
         cardRounding: 10,
         cardColor: '#1e374d',
         fontScale: 0.8,
-        fontFamily: 'Lato',
+        fontFamily: 'Noto Sans',
         fontWeight: 'normal',
         fontStyle: 'normal',
-        textShadow: 3,
+        textShadow: 0,
         textColor: '#ffffff',
         accentColor: '#94fdf8',
         position: 'center-left',
@@ -724,7 +730,7 @@
         const img = new Image(); img.crossOrigin="Anonymous"; img.src = ICONS[k]; loadedIcons[k] = img;
     });
 
-    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v9');
+    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v8');
     if(savedDefaults) {
         try { userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) }; } catch(e) {}
     }
@@ -735,7 +741,7 @@
 
     // --- STORAGE & IMPORT/EXPORT ---
     function saveDefaults() {
-        localStorage.setItem('adffp_exif_defaults_v9', JSON.stringify(userDefaults));
+        localStorage.setItem('adffp_exif_defaults_v8', JSON.stringify(userDefaults));
     }
 
     function exportSettings() {
@@ -809,7 +815,7 @@
 
             if (id === 'Divider') {
                 div.innerHTML = `<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
-                <div class="flex-grow flex items-center gap-2 opacity-70"><div class="h-px bg-slate-600 flex-grow"></div><span class="text-[9px] uppercase select-none">Divider</span><div class="h-px bg-slate-600 flex-grow"></div></div>`;
+                <div class="flex-grow flex items-center gap-2 opacity-70"><div class="h-px bg-slate-600 flex-grow"></div><span class="text-[9px] uppercase">Divider</span><div class="h-px bg-slate-600 flex-grow"></div></div>`;
             } else {
                 let label = id;
                 if(id === 'ISO') label = 'ISO';
@@ -823,7 +829,7 @@
                 div.innerHTML = `
                 <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
                 <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)" ${userDefaults[keyShow] ? 'checked' : ''}>
-                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate select-none">${label}</span>
+                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate">${label}</span>
                 <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="${placeholder}" oninput="updateCurrent('${keyTxt}', this.value)" value="${userDefaults[keyTxt] || ''}">
                 `;
             }
@@ -1110,8 +1116,7 @@
         if(key === 'fontFamily') {
             const fontName = value.replace(' ', '+');
             const link = document.getElementById('canvas-font-link');
-            // Simplified URL construction for better compatibility
-            link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;700&display=swap`;
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
             
             // Wait for font load before render
             document.fonts.load(`1em "${value}"`).then(() => {
@@ -1189,7 +1194,7 @@
         });
 
         if(s.showCopyright) {
-            // Spacer removed as requested to be inline
+            if(renderItems.length > 0) renderItems.push({ type: 'spacer', height: rowHeight * 0.5 });
             renderItems.push({ type: 'copyright', text: s.copyright || 'Your Name' });
         }
 
@@ -1266,10 +1271,11 @@
                     textX = drawX + iconSize + gap;
                     iconX = drawX;
                 } else if (textAlign === 'right') {
-                    // Right Align: Icon on right edge, Text to left
-                    iconX = drawX - iconSize;
-                    textX = iconX - gap;
-                    ctx.textAlign = 'right'; 
+                    const tw = ctx.measureText(item.text).width;
+                    const blockW = iconSize + gap + tw;
+                    iconX = drawX - blockW;
+                    textX = iconX + iconSize + gap;
+                    ctx.textAlign = 'left'; 
                 } else {
                     const tw = ctx.measureText(item.text).width;
                     const blockW = iconSize + gap + tw;
