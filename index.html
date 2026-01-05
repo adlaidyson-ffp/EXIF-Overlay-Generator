@@ -310,14 +310,25 @@
                 </div>
             </div>
 
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <label class="text-xs text-slate-400 select-none">Text Shadow</label>
-                    <span id="val-textShadow" class="text-[10px] text-slate-500 font-mono">3px</span>
-                </div>
-                <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full"
-                       oninput="updateCurrent('textShadow', this.value, false)" 
-                       onchange="updateCurrent('textShadow', this.value, true)">
+            <div class="grid grid-cols-2 gap-3">
+                 <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 select-none">Shadow</label>
+                        <span id="val-textShadow" class="text-[10px] text-slate-500 font-mono">3px</span>
+                    </div>
+                    <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full"
+                           oninput="updateCurrent('textShadow', this.value, false)" 
+                           onchange="updateCurrent('textShadow', this.value, true)">
+                 </div>
+                 <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 select-none">Line Spacing</label>
+                        <span id="val-rowSpacing" class="text-[10px] text-slate-500 font-mono">0px</span>
+                    </div>
+                    <input type="range" id="range-spacing" min="-10" max="50" step="1" class="w-full"
+                           oninput="updateCurrent('rowSpacing', this.value, false)" 
+                           onchange="updateCurrent('rowSpacing', this.value, true)">
+                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4 pt-2">
@@ -501,6 +512,9 @@
     // --- GLOBAL CANVAS ---
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
+    
+    // Performance Limit for Mobile Previews
+    const MAX_PREVIEW_DIM = 1600;
 
     // --- PWA LOGIC ---
     let deferredPrompt;
@@ -532,7 +546,7 @@
         instagram: "https://cdn.simpleicons.org/instagram/ffffff",
         x: "https://cdn.simpleicons.org/x/ffffff",
         mastodon: "https://cdn.simpleicons.org/mastodon/ffffff",
-        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
+        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
         tiktok: "https://cdn.simpleicons.org/tiktok/ffffff",
         snapchat: "https://cdn.simpleicons.org/snapchat/ffffff",
     };
@@ -557,6 +571,7 @@
         fontWeight: 'normal',
         fontStyle: 'normal',
         textShadow: 3,
+        rowSpacing: 0,
         textColor: '#ffffff',
         accentColor: '#94fdf8',
         position: 'center-left',
@@ -567,7 +582,7 @@
         showShutter: true, txtShutter: '',
         showISO: true, txtISO: '',
         showFocal: true, txtFocal: '',
-        showDescription: true, txtDescription: '',
+        showDescription: true, txtDescription: 'Description', // Updated Default
         showDate: true, txtDate: '',
         showCamera: true, txtCamera: '',
         showLens: true, txtLens: '',
@@ -888,10 +903,10 @@
         document.getElementById('check-show-card').checked = s.showCard;
 
         // Ranges
-        const rangeMap = { 'blur': 'px', 'brightness': '%', 'cardOpacity': '%', 'fontScale': '', 'textShadow': 'px' };
+        const rangeMap = { 'blur': 'px', 'brightness': '%', 'cardOpacity': '%', 'fontScale': '', 'textShadow': 'px', 'rowSpacing': 'px' };
         Object.keys(rangeMap).forEach(k => {
              const val = s[k];
-             const el = document.getElementById(`range-${k === 'textShadow' ? 'shadow' : k === 'fontScale' ? 'font' : k}`);
+             const el = document.getElementById(`range-${k === 'textShadow' ? 'shadow' : k === 'fontScale' ? 'font' : k === 'rowSpacing' ? 'spacing' : k}`);
              if(el) el.value = val;
              const disp = document.getElementById(`val-${k}`);
              if(disp) disp.innerText = `${val}${rangeMap[k]}`;
@@ -920,7 +935,7 @@
         if (!selectedId) return;
         const img = images.find(i => i.id === selectedId);
         
-        if(['blur','brightness','cardOpacity','cardRounding','textShadow'].includes(key)) value = parseInt(value);
+        if(['blur','brightness','cardOpacity','cardRounding','textShadow','rowSpacing'].includes(key)) value = parseInt(value);
         if(key === 'fontScale') value = parseFloat(value);
         
         img.settings[key] = value;
@@ -936,6 +951,7 @@
         if(key === 'cardOpacity') document.getElementById('val-cardOpacity').innerText = value + '%';
         if(key === 'fontScale') document.getElementById('val-fontScale').innerText = value;
         if(key === 'textShadow') document.getElementById('val-textShadow').innerText = value + 'px';
+        if(key === 'rowSpacing') document.getElementById('val-rowSpacing').innerText = value + 'px';
 
         if(key === 'fontFamily') {
              // Local font loading check
@@ -958,13 +974,30 @@
         if (!renderRequested) {
             renderRequested = true;
             requestAnimationFrame(() => {
-                renderCanvas();
+                renderCanvas(false); // Default to preview mode
                 renderRequested = false;
             });
         }
     }
 
-    function renderCanvas() {
+    // New helper to determine optimal preview dimensions
+    function getRenderDimensions(img, forceFull) {
+        if (forceFull) return { w: img.naturalWidth, h: img.naturalHeight, scale: 1 };
+        
+        // For preview, cap the size to prevent mobile choking
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        let scale = 1;
+        
+        if (w > MAX_PREVIEW_DIM || h > MAX_PREVIEW_DIM) {
+            scale = Math.min(MAX_PREVIEW_DIM / w, MAX_PREVIEW_DIM / h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+        }
+        return { w, h, scale };
+    }
+
+    function renderCanvas(forceFull = false) {
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
         if(!imgObj) return; 
@@ -972,16 +1005,20 @@
         const s = imgObj.settings;
         const baseImg = imgObj.imgElement;
         
-        canvas.width = baseImg.naturalWidth;
-        canvas.height = baseImg.naturalHeight;
-        const w = canvas.width;
-        const h = canvas.height;
+        // Use smart dimensions
+        const { w, h, scale } = getRenderDimensions(baseImg, forceFull);
+        
+        // Update Canvas Size
+        if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
+        }
         
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
         if (isComparing) {
-            ctx.drawImage(baseImg, 0, 0);
+            ctx.drawImage(baseImg, 0, 0, w, h);
             ctx.font = "bold 40px sans-serif";
             ctx.fillStyle = "rgba(255,255,255,0.8)";
             ctx.fillText("ORIGINAL", 50, 80);
@@ -990,17 +1027,22 @@
 
         ctx.save();
         let filters = [];
-        if(s.blur > 0) filters.push(`blur(${s.blur*2}px)`);
+        // Scale blur radius relative to the canvas size
+        if(s.blur > 0) filters.push(`blur(${s.blur * 2 * scale}px)`);
         if(s.brightness !== 100) filters.push(`brightness(${s.brightness}%)`);
+        
         if(filters.length) ctx.filter = filters.join(' ');
-        ctx.drawImage(baseImg, 0, 0);
+        else ctx.filter = 'none'; // Explicitly clear filters
+        
+        ctx.drawImage(baseImg, 0, 0, w, h);
         ctx.restore();
 
         const minDim = Math.min(w, h);
         const baseScale = minDim * 0.0016 * s.fontScale;
         
         const fontSize = Math.round(28 * baseScale);
-        const rowHeight = Math.round(45 * baseScale);
+        const spacingAdd = s.rowSpacing * baseScale;
+        const rowHeight = Math.round((45 * baseScale) + spacingAdd);
         const iconSize = Math.round(32 * baseScale);
         const padding = Math.round(40 * baseScale);
         const gap = Math.round(20 * baseScale);
@@ -1105,9 +1147,11 @@
 
                 if(item.type === 'copyright') {
                      ctx.save();
+                     ctx.textAlign = 'center'; // Force center alignment for the symbol itself
                      ctx.font = `${iconSize}px "${s.fontFamily}", sans-serif`;
                      ctx.fillStyle = s.accentColor;
-                     ctx.fillText("©", iconX, curY + (iconSize*0.1));
+                     // Draw exactly in the center of the icon box
+                     ctx.fillText("©", iconX + (iconSize/2), curY + (iconSize*0.1));
                      ctx.restore();
                 } else if (item.iconKey === 'clock') {
                      ctx.strokeStyle = s.accentColor;
@@ -1176,7 +1220,13 @@
     function downloadCurrent() {
         if (!selectedId) return;
         const imgObj = images.find(i => i.id === selectedId);
-        canvas.toBlob((blob) => saveAs(blob, `${imgObj.rawName}-Overlay.jpg`), 'image/jpeg', 0.95);
+        // Force full resolution render for save
+        renderCanvas(true);
+        canvas.toBlob((blob) => {
+            saveAs(blob, `${imgObj.rawName}-Overlay.jpg`);
+            // Restore preview resolution
+            renderCanvas(false);
+        }, 'image/jpeg', 0.95);
     }
 
     async function downloadAll() {
@@ -1188,14 +1238,16 @@
         const originalId = selectedId;
         for (let i = 0; i < images.length; i++) {
             selectedId = images[i].id; 
-            renderCanvas();
+            // Force full resolution for each image
+            renderCanvas(true);
             await new Promise(r => canvas.toBlob(b => {
                 zip.file(`${images[i].rawName}-Overlay.jpg`, b);
                 r();
             }, 'image/jpeg', 0.95));
         }
         selectedId = originalId;
-        requestRender();
+        // Restore preview
+        renderCanvas(false);
         
         const content = await zip.generateAsync({type:"blob"});
         saveAs(content, "fusedframe-overlays.zip");

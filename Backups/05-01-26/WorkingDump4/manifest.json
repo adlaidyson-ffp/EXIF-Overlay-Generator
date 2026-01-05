@@ -1,0 +1,21 @@
+{
+  "name": "EXIF Overlay",
+  "short_name": "EXIF Overlay",
+  "description": "Create clean, customisable camera setting overlays for your photos.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
