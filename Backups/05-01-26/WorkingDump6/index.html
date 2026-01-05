@@ -120,8 +120,7 @@
   <header class="py-3 px-4 lg:px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static select-none">
     <div class="flex items-center gap-4">
       <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition group">
-        <!-- Logo Updated as Requested -->
-        <img src="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" alt="Fused Frame Photography" class="h-9 w-auto rounded-full" />
+        <img src="https://cdn-eu.fusedframe.co.uk/main-logos/png/squarelogo-light-crop.png" alt="Fused Frame Photography" class="h-9 w-auto" />
         <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 hidden sm:block group-hover:text-slate-300 transition">Visit the Main Site</span>
       </a>
       <div class="border-l border-slate-700 pl-4 hidden md:flex flex-col justify-center">
@@ -899,7 +898,7 @@
         instagram: "https://cdn.simpleicons.org/instagram/ffffff",
         x: "https://cdn.simpleicons.org/x/ffffff",
         mastodon: "https://cdn.simpleicons.org/mastodon/ffffff",
-        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
+        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
         tiktok: "https://cdn.simpleicons.org/tiktok/ffffff",
         snapchat: "https://cdn.simpleicons.org/snapchat/ffffff",
     };
@@ -1390,30 +1389,36 @@
             return; 
         }
 
-        // --- FILTER RENDERING (iOS SAFE PIXEL MANIPULATION) ---
-        // Replacing WebKit filters with direct pixel manipulation (CPU based)
-        // 1. Draw Image
-        ctx.drawImage(baseImg, 0, 0, w, h);
-
-        // 2. Get Data
-        const imageData = ctx.getImageData(0, 0, w, h);
+        // --- FILTER RENDERING (Updated for Mobile) ---
+        // On mobile, applying filters to large images directly on main canvas is often ignored.
+        // We use an offscreen canvas to resize FIRST, then apply filters to the smaller image.
         
-        // 3. Apply Brightness
-        if (s.brightness !== 100) {
-            applyBrightness(imageData, s.brightness);
-        }
+        let filters = [];
+        if(s.blur > 0) filters.push(`blur(${s.blur * 2 * scale}px)`);
+        if(s.brightness !== 100) filters.push(`brightness(${s.brightness}%)`);
         
-        // 4. Apply Blur (using safe scale for performance)
-        if (s.blur > 0) {
-             // Scale radius by image size context
-             const blurRad = Math.max(1, Math.round(s.blur * 2 * scale));
-             stackBlurCanvasRGBA(imageData, blurRad);
+        ctx.save();
+        if (scale < 1 && !forceFull) {
+            // Mobile Preview Mode: Draw to small offscreen canvas first
+            if (offscreenCanvas.width !== w || offscreenCanvas.height !== h) {
+                offscreenCanvas.width = w;
+                offscreenCanvas.height = h;
+            }
+            offCtx.clearRect(0, 0, w, h);
+            offCtx.drawImage(baseImg, 0, 0, w, h); // Resize happens here
+            
+            // Now apply filters to the already-resized image
+            if(filters.length) ctx.filter = filters.join(' ');
+            else ctx.filter = 'none';
+            
+            ctx.drawImage(offscreenCanvas, 0, 0);
+        } else {
+            // Desktop / Export Mode: Apply filters directly
+            if(filters.length) ctx.filter = filters.join(' ');
+            else ctx.filter = 'none';
+            ctx.drawImage(baseImg, 0, 0, w, h);
         }
-
-        // 5. Put Data Back
-        ctx.putImageData(imageData, 0, 0);
-
-        // --- END PIXEL MANIPULATION ---
+        ctx.restore();
 
         const minDim = Math.min(w, h);
         const baseScale = minDim * 0.0016 * s.fontScale;
@@ -1677,189 +1682,6 @@
     document.addEventListener('keyup', (e) => { if(e.code === 'Space') toggleCompare(false); });
 
     buildSidebarUI();
-
-    // --- HELPER FUNCTIONS FOR PIXEL MANIPULATION (iOS Safe) ---
-    
-    function applyBrightness(imageData, brightness) {
-        if (brightness === 100) return;
-        var data = imageData.data;
-        var factor = brightness / 100;
-        for (var i = 0; i < data.length; i += 4) {
-            // Simple multiplication clamping to 255
-            data[i] = Math.min(255, data[i] * factor);
-            data[i+1] = Math.min(255, data[i+1] * factor);
-            data[i+2] = Math.min(255, data[i+2] * factor);
-        }
-    }
-
-    // StackBlur Implementation - Compact Version
-    function stackBlurCanvasRGBA(imageData, radius) {
-        if (isNaN(radius) || radius < 1) return;
-        radius |= 0;
-        
-        var pixels = imageData.data;
-        var width = imageData.width;
-        var height = imageData.height;
-        
-        var x, y, i, p, yp, yi, yw, r_sum, g_sum, b_sum,
-        r_out_sum, g_out_sum, b_out_sum,
-        r_in_sum, g_in_sum, b_in_sum,
-        pr, pg, pb, rbs;
-        
-        var div = radius + radius + 1;
-        var w4 = width << 2;
-        var widthMinus1 = width - 1;
-        var heightMinus1 = height - 1;
-        var radiusPlus1 = radius + 1;
-        var sumFactor = radiusPlus1 * (radiusPlus1 + 1) / 2;
-        
-        var stackStart = new Int32Array(div);
-        var stack = new Int32Array(div * 3);
-        var stackIn = new Int32Array(div);
-        var stackOut = new Int32Array(div);
-        
-        var mul_sum = new Int32Array(div);
-        var shg_sum = new Int32Array(div);
-        
-        for (i = 0; i < div; i++) {
-            mul_sum[i] = sumFactor; 
-        }
-
-        var stackpointer;
-        var stackstart;
-        var sir;
-        var r1 = radius + 1;
-        var routsum, goutsum, boutsum;
-        var rinsum, ginsum, binsum;
-        
-        // Pass 1: Horizontal Blur
-        yw = yi = 0;
-        for (y = 0; y < height; y++) {
-            rinsum = ginsum = binsum = routsum = goutsum = boutsum = r_sum = g_sum = b_sum = 0;
-            for (i = -radius; i <= radius; i++) {
-                p = pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4];
-                sir = stack[i + radius];
-                sir = [pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4], pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4 + 1], pixels[yi + Math.min(widthMinus1, Math.max(i, 0)) * 4 + 2]];
-                
-                // Manual unroll for stack population
-                var offset = (yi + Math.min(widthMinus1, Math.max(i, 0))) * 4;
-                var tr = pixels[offset];
-                var tg = pixels[offset+1];
-                var tb = pixels[offset+2];
-                
-                rbs = r1 - Math.abs(i);
-                r_sum += tr * rbs;
-                g_sum += tg * rbs;
-                b_sum += tb * rbs;
-                
-                if (i > 0) {
-                    rinsum += tr; ginsum += tg; binsum += tb;
-                } else {
-                    routsum += tr; goutsum += tg; boutsum += tb;
-                }
-            }
-            stackpointer = radius;
-
-            for (x = 0; x < width; x++) {
-                // Approximate division
-                pixels[yi] = (r_sum / sumFactor) | 0;
-                pixels[yi+1] = (g_sum / sumFactor) | 0;
-                pixels[yi+2] = (b_sum / sumFactor) | 0;
-                
-                r_sum -= routsum; g_sum -= goutsum; b_sum -= boutsum;
-                
-                // Get next pixel to add
-                var nextOffset = (yw + Math.min(widthMinus1, x + radius + 1)) * 4;
-                var nR = pixels[nextOffset];
-                var nG = pixels[nextOffset+1];
-                var nB = pixels[nextOffset+2];
-                
-                // Get pixel to remove (calculated from previous pass conceptually)
-                var prevOffset = (yw + Math.max(0, x - radius)) * 4;
-                var pR = pixels[prevOffset];
-                var pG = pixels[prevOffset+1];
-                var pB = pixels[prevOffset+2];
-                
-                // Simple box blur approximation for the stack movement logic here to save lines 
-                // Using true stack logic makes this file huge. 
-                // We use a simplified convolution here that behaves similarly for visual blur.
-                // Actually, let's just stick to the simplified math:
-                
-                rinsum += nR; ginsum += nG; binsum += nB;
-                r_sum += rinsum; g_sum += ginsum; b_sum += binsum;
-                
-                stackpointer = (stackpointer + 1) % div;
-                
-                routsum += pR; goutsum += pG; boutsum += pB;
-                rinsum -= pR; ginsum -= pG; binsum -= pB;
-                
-                // Correct subtraction logic for moving window
-                routsum -= pR; goutsum -= pG; boutsum -= pB; // This line conceptually flawed in simple unroll, but sufficient for visual glue. 
-                // A true StackBlur is 200+ lines. I am using a simplified sliding window average (Box Blur) here instead which is O(1) and safe for iOS.
-                
-                // NOTE: Detailed StackBlur omitted for brevity. Using Box Blur Approximation.
-                // It is sufficient for background blurring.
-                
-                yi += 4;
-            }
-            yw += width;
-        }
-
-        // Pass 2: Vertical Blur
-        for (x = 0; x < width; x++) {
-            yi = x * 4;
-            rinsum = ginsum = binsum = routsum = goutsum = boutsum = r_sum = g_sum = b_sum = 0;
-            
-            for (i = -radius; i <= radius; i++) {
-                var yOffset = Math.min(heightMinus1, Math.max(i, 0)) * width;
-                var offset = (x + yOffset) * 4;
-                var tr = pixels[offset];
-                var tg = pixels[offset+1];
-                var tb = pixels[offset+2];
-                
-                rbs = r1 - Math.abs(i);
-                r_sum += tr * rbs;
-                g_sum += tg * rbs;
-                b_sum += tb * rbs;
-                
-                if (i > 0) {
-                    rinsum += tr; ginsum += tg; binsum += tb;
-                } else {
-                    routsum += tr; goutsum += tg; boutsum += tb;
-                }
-            }
-            
-            var stackpointer = radius;
-            
-            for (y = 0; y < height; y++) {
-                var offset = (y * width + x) * 4;
-                pixels[offset] = (r_sum / sumFactor) | 0;
-                pixels[offset+1] = (g_sum / sumFactor) | 0;
-                pixels[offset+2] = (b_sum / sumFactor) | 0;
-                
-                r_sum -= routsum; g_sum -= goutsum; b_sum -= boutsum;
-                
-                var nextY = Math.min(heightMinus1, y + radius + 1);
-                var nextOffset = (nextY * width + x) * 4;
-                var nR = pixels[nextOffset];
-                var nG = pixels[nextOffset+1];
-                var nB = pixels[nextOffset+2];
-                
-                var prevY = Math.max(0, y - radius);
-                var prevOffset = (prevY * width + x) * 4;
-                var pR = pixels[prevOffset];
-                var pG = pixels[prevOffset+1];
-                var pB = pixels[prevOffset+2];
-                
-                rinsum += nR; ginsum += nG; binsum += nB;
-                r_sum += rinsum; g_sum += ginsum; b_sum += binsum;
-                
-                routsum += pR; goutsum += pG; boutsum += pB;
-                rinsum -= pR; ginsum -= pG; binsum -= pB;
-                routsum -= pR; goutsum -= pG; boutsum -= pB;
-            }
-        }
-    }
 </script>
 </body>
 </html>
