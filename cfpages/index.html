@@ -530,7 +530,16 @@
                         <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                       </button>
                       <div class="faq-content text-slate-400 space-y-3">
-                        <p><strong class="text-white">No.</strong> All processing happens locally on your device. Your images are never uploaded to a server, keeping your creative work private.</p>
+                        <p><strong class="text-white">Locally.</strong> All processing happens locally on your device's browser. Your images are never uploaded to a server, keeping your creative work private.</p>
+                      </div>
+                      
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">Was this tools created by AI?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-3">
+                        <p><strong class="text-white">Partially.</strong> AI (Specifically Google's Gemini), was used in the creation of this tool, however had no decision in the technologies, services, features, or design elements of the tool. No data entered by this tool, will be used or seen by AI under any circumstance.</p>
                       </div>
                     </div>
 
@@ -633,7 +642,7 @@
                 <header class="mb-12">
                   <div class="flex items-center gap-3 mb-4">
                     <span class="px-3 py-1 rounded-full bg-[#94fdf8]/10 text-[#94fdf8] text-xs font-bold uppercase tracking-widest">Legal</span>
-                    <span class="text-slate-500 text-xs">Last Updated: 4th January 2026</span>
+                    <span class="text-slate-500 text-xs">Last Updated: 6th January 2026</span>
                   </div>
                   <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight accent-text">
                     Privacy Notice
@@ -650,7 +659,7 @@
                       Overview
                     </h2>
                     <div class="space-y-4 text-slate-400 leading-relaxed">
-                      <p>This Privacy Notice explains how I, <span class="text-white">Adlai Dyson</span> (operating as <span class="text-white">Fused Frame Photography</span>), manage information through the EXIF Overlay application at <span class="accent-text">exifoverlay.com</span>. I operate in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
+                      <p>This Privacy Notice explains how I, <span class="text-white">Adlai Dyson | Fused Frame Photography</span>, manage information through the EXIF Overlay application at <span class="accent-text">exifoverlay.com</span>. I operate in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
                     </div>
                   </section>
 
@@ -913,8 +922,8 @@
     
     // UPDATED DEFAULTS
     const DEFAULT_SETTINGS = {
-        blur: 5,
-        brightness: 65, // Updated
+        blur: 10,
+        brightness: 50,
         showCard: false,
         cardOpacity: 65,
         cardRounding: 10,
@@ -923,8 +932,8 @@
         fontFamily: 'Oswald',
         fontWeight: 'normal',
         fontStyle: 'normal',
-        textShadow: 5, // Updated
-        rowSpacing: 2, // Updated
+        textShadow: 5,
+        rowSpacing: 2,
         textColor: '#ffffff',
         accentColor: '#94fdf8',
         position: 'center-left',
