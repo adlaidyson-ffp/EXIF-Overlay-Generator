@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-v9';
+const CACHE_NAME = 'exif-overlay-v10';
 const ASSETS = [
   './index.html',
   './manifest.json',
