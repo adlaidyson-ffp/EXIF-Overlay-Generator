@@ -102,7 +102,7 @@
     .official-badge { height: 40px; width: auto; display: block; }
     .badge-link { transition: all 0.2s ease; display: block; }
     .badge-link:hover { transform: translateY(-2px); filter: brightness(1.1); }
-    .coming-soon-pill { font-size: 10px; background: rgba(148, 253, 248, 0.1); padding: 2px 8px; border-radius: 99px; color: #94fdf8; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(148, 253, 248, 0.2); white-space: nowrap; }
+    .coming-soon-pill { font-size: 10px; background: rgba(148, 253, 248, 0.1); padding: 2px 8px; border-radius: 99px; color: #94fdf8; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(148, 253, 248, 0.2); }
     .legal-card { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 253, 248, 0.1); transition: border-color 0.3s ease; }
     .legal-card:hover { border-color: rgba(148, 253, 248, 0.3); }
 
@@ -771,14 +771,12 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Windows</h3>
+            <span class="coming-soon-pill">Coming Soon</span>
           </div>
           <div class="flex flex-col gap-3">
-            <div class="flex items-center gap-3">
-                <a href="https://adffp.uk/exif-msstore" target="_blank" class="badge-link opacity-60">
-                    <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" class="official-badge">
-                </a>
-                <span class="coming-soon-pill">Coming Soon</span>
-            </div>
+            <a href="https://adffp.uk/exif-msstore" target="_blank" class="badge-link">
+              <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" class="official-badge">
+            </a>
           </div>
         </div>
 
@@ -786,20 +784,15 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">macOS</h3>
+            <span class="coming-soon-pill">Coming Soon</span>
           </div>
           <div class="flex flex-col gap-3">
-            <div class="flex items-center gap-3">
-                <a href="https://adffp.uk/exif-mac-appstore" target="_blank" class="badge-link opacity-60">
-                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the Mac App Store" class="official-badge">
-                </a>
-                <span class="coming-soon-pill">Coming Soon</span>
-            </div>
-            <a href="https://adffp.uk/exif-mac-direct" target="_blank" class="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition group">
-               <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition">
-                   <svg class="w-5 h-5 accent-text" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.1 2.48-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.36 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                   <span class="text-sm font-bold">Direct DMG</span>
-               </div>
-               <span class="coming-soon-pill">Coming Soon</span>
+            <a href="https://adffp.uk/exif-mac-appstore" target="_blank" class="badge-link">
+              <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the Mac App Store" class="official-badge">
+            </a>
+            <a href="https://adffp.uk/exif-mac-direct" target="_blank" class="flex items-center gap-3 bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition">
+               <svg class="w-5 h-5 accent-text" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.1 2.48-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.36 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              <span class="text-sm font-bold">Direct DMG Download</span>
             </a>
           </div>
         </div>
@@ -808,22 +801,17 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Android</h3>
+            <span class="coming-soon-pill">Coming Soon</span>
           </div>
           <div class="flex flex-col gap-3">
-             <div class="flex items-center gap-3">
-                <a href="https://adffp.uk/exif-android-play" target="_blank" class="badge-link opacity-60">
-                <div class="h-[40px] w-[135px] overflow-hidden flex items-center bg-black rounded">
-                    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" class="h-[58px] min-w-[155px] -ml-2">
-                </div>
-                </a>
-                <span class="coming-soon-pill">Coming Soon</span>
-            </div>
-             <a href="https://adffp.uk/exif-android-apk" target="_blank" class="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition group">
-              <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition">
-                  <svg class="w-5 h-5 accent-text" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414C17.1557 15.3414 16.8574 15.043 16.8574 14.6758C16.8574 14.3085 17.1557 14.0101 17.523 14.0101C17.8903 14.0101 18.1887 14.3085 18.1887 14.6758C18.1887 15.043 17.8903 15.3414 17.523 15.3414ZM6.47704 15.3414C6.10976 15.3414 5.81139 15.043 5.81139 14.6758C5.81139 14.3085 6.10976 14.0101 6.47704 14.0101C6.84431 14.0101 7.14268 14.3085 7.14268 14.6758C7.14268 15.043 6.84431 15.3414 6.47704 15.3414ZM17.9351 10.9576L19.7825 7.75783C19.9193 7.52097 19.8378 7.2177 19.601 7.0809C19.3641 6.9441 19.0608 7.2177 18.9241 7.2624L17.0396 10.5269C15.5414 9.84968 13.8427 9.46875 12 9.46875C10.1573 9.46875 8.45863 9.84968 6.96035 10.5269L5.07593 7.2624C4.93913 7.02554 4.63587 6.9441 4.399 7.0809C4.16213 7.2177 4.0807 7.52097 4.2175 7.75783L6.0649 10.9576C2.62884 12.8273 0.354133 16.3268 0 20.4375H24C23.6459 16.3268 21.3712 12.8273 17.9351 10.9576Z"/></svg>
-                  <span class="text-sm font-bold">Android APK</span>
+            <a href="https://adffp.uk/exif-android-play" target="_blank" class="badge-link">
+              <div class="h-[40px] w-[135px] overflow-hidden flex items-center bg-black rounded">
+                <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" class="h-[58px] min-w-[155px] -ml-2">
               </div>
-              <span class="coming-soon-pill">Coming Soon</span>
+            </a>
+             <a href="https://adffp.uk/exif-android-apk" target="_blank" class="flex items-center gap-3 bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition">
+              <svg class="w-5 h-5 accent-text" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414C17.1557 15.3414 16.8574 15.043 16.8574 14.6758C16.8574 14.3085 17.1557 14.0101 17.523 14.0101C17.8903 14.0101 18.1887 14.3085 18.1887 14.6758C18.1887 15.043 17.8903 15.3414 17.523 15.3414ZM6.47704 15.3414C6.10976 15.3414 5.81139 15.043 5.81139 14.6758C5.81139 14.3085 6.10976 14.0101 6.47704 14.0101C6.84431 14.0101 7.14268 14.3085 7.14268 14.6758C7.14268 15.043 6.84431 15.3414 6.47704 15.3414ZM17.9351 10.9576L19.7825 7.75783C19.9193 7.52097 19.8378 7.2177 19.601 7.0809C19.3641 6.9441 19.0608 7.2177 18.9241 7.2624L17.0396 10.5269C15.5414 9.84968 13.8427 9.46875 12 9.46875C10.1573 9.46875 8.45863 9.84968 6.96035 10.5269L5.07593 7.2624C4.93913 7.02554 4.63587 6.9441 4.399 7.0809C4.16213 7.2177 4.0807 7.52097 4.2175 7.75783L6.0649 10.9576C2.62884 12.8273 0.354133 16.3268 0 20.4375H24C23.6459 16.3268 21.3712 12.8273 17.9351 10.9576Z"/></svg>
+              <span class="text-sm font-bold">Android APK Download</span>
             </a>
           </div>
         </div>
@@ -832,14 +820,12 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">iOS / iPadOS</h3>
+            <span class="coming-soon-pill">App Store Soon</span>
           </div>
           <div class="flex flex-col gap-3">
-            <div class="flex items-center gap-3">
-                <a href="https://adffp.uk/exif-ios-appstore" target="_blank" class="badge-link opacity-60">
-                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" class="official-badge">
-                </a>
-                <span class="coming-soon-pill">Coming Soon</span>
-            </div>
+            <a href="https://adffp.uk/exif-ios-appstore" target="_blank" class="badge-link">
+              <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" class="official-badge">
+            </a>
             <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
               <p class="text-[11px] text-slate-300 leading-tight mb-2">PWA Ready:</p>
               <p class="text-[10px] text-slate-500 italic">Tap 'Share' → 'Add to Home Screen' in Safari.</p>
@@ -919,7 +905,7 @@
         instagram: "./icons/instagram.svg",
         x: "./icons/x.svg",
         mastodon: "./icons/mastodon.svg",
-        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
+        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
         tiktok: "./icons/tiktok.svg",
         snapchat: "./icons/snapchat.svg",
     };

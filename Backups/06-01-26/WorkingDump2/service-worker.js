@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-v16';
+const CACHE_NAME = 'exif-overlay-v15'; // Incremented version to capture all fonts
 
 const ASSETS = [
   './',
@@ -73,19 +73,6 @@ const ASSETS = [
   './fonts/Courier_Prime/CourierPrime-Italic.ttf',
   './fonts/Courier_Prime/CourierPrime-Bold.ttf',
   './fonts/Courier_Prime/CourierPrime-BoldItalic.ttf'
-  
-  './icons/aperture.png',
-  './icons/exposure.png',
-  './icons/iso.png',
-  './icons/focal-length.png',
-  './icons/camera.png',
-  './icons/lens.png',
-  './icons/facebook.svg',
-  './icons/instagram.svg',
-  './icons/x.svg',
-  './icons/mastodon.svg',
-  './icons/tiktok.svg',
-  './icons/snapchat.svg'
 ];
 
 // Install event - caching assets
