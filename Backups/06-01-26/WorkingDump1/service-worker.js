@@ -1,8 +1,7 @@
-const CACHE_NAME = 'exif-overlay-v12';
+const CACHE_NAME = 'exif-overlay-v11';
 const ASSETS = [
   './index.html',
   './manifest.json',
-  './fonts',
 ];
 
 self.addEventListener('install', (event) => {
