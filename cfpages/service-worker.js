@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-v16';
+const CACHE_NAME = 'exif-overlay-v16.1';
 
 const ASSETS = [
   './',

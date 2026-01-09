@@ -1648,7 +1648,7 @@
         renderCanvas(false);
         
         const content = await zip.generateAsync({type:"blob"});
-        saveAs(content, "fusedframe-overlays.zip");
+        saveAs(content, "exif-overlays.zip");
         document.getElementById('processing-overlay').classList.add('hidden');
     }
 
