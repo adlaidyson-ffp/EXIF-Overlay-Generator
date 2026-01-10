@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-sw-v1.8';
+const CACHE_NAME = 'exif-overlay-sw-v1.9';
 
 // TIP: Ensure these paths exactly match your folder structure on GitHub
 const ASSETS = [
