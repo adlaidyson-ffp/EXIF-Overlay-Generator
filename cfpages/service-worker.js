@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.3';
+const CACHE_NAME = 'exif-overlay-sw-v2.4';
 
 // We remove explicit './index.html' to avoid redundancy and redirects.
 // The root './' will represent our main page.
