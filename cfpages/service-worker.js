@@ -1,5 +1,7 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.1';
+const CACHE_NAME = 'exif-overlay-sw-v2.3';
 
+// We remove explicit './index.html' to avoid redundancy and redirects.
+// The root './' will represent our main page.
 const ASSETS = [
   './',
   './manifest.json',
@@ -8,41 +10,21 @@ const ASSETS = [
   './assets/libs/filesaver.min.js',
   './assets/libs/lucide.min.js',
   './icons/favicon.jpg',
-  './src/styles.css'
+  './src/styles.css',
   
-  // Playfair Display
+  // Fonts
   './fonts/Playfair/Playfair-VariableFont_opsz,wdth,wght.ttf',
   './fonts/Playfair/Playfair-Italic-VariableFont_opsz,wdth,wght.ttf',
-  
-  // Rubik Burned
   './fonts/Rubik_Burned/RubikBurned-Regular.ttf',
-  
-  // Lato
   './fonts/Lato/Lato-Regular.ttf',
   './fonts/Lato/Lato-Bold.ttf',
   './fonts/Lato/Lato-Italic.ttf',
-  
-  // Story Script
   './fonts/Story_Script/StoryScript-Regular.ttf',
-  
-  // Orbitron
   './fonts/Orbitron/Orbitron-VariableFont_wght.ttf',
-  
-  // Oswald
   './fonts/Oswald/Oswald-VariableFont_wght.ttf',
-  
-  // Shadows Into Light
   './fonts/Shadows_Into_Light/ShadowsIntoLight-Regular.ttf',
-  
-  // EBGaramond
   './fonts/EBGaramond/EBGaramond-VariableFont_wght.ttf',
   './fonts/EBGaramond/EBGaramond-Italic-VariableFont_wght.ttf',
-  
-  // Inter
-  './fonts/Inter/Inter-VariableFont_opsz,wght.ttf',
-  './fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf',
-  
-  // Courier Prime
   './fonts/Courier_Prime/CourierPrime-Regular.ttf',
   './fonts/Courier_Prime/CourierPrime-Italic.ttf',
   './fonts/Courier_Prime/CourierPrime-Bold.ttf',
@@ -63,10 +45,10 @@ const ASSETS = [
   './icons/snapchat.svg'
 ];
 
+// Install: Cache all assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // We use map + Promise.allSettled so one 404 doesn't kill the whole PWA installation
       return Promise.allSettled(
         ASSETS.map(async (url) => {
           try {
@@ -74,7 +56,7 @@ self.addEventListener('install', (event) => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             await cache.put(url, response);
           } catch (err) {
-            console.warn(`PWA Warning: Could not cache ${new URL(url, location.href).href}. Check if file exists.`);
+            console.warn(`PWA Warning: Could not cache ${url}`);
           }
         })
       );
@@ -83,18 +65,50 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate: Cleanup old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.map((key) => {
-        if (key !== CACHE_NAME) return caches.delete(key);
-      })
-    ))
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
+  return self.clients.claim();
 });
 
+// Fetch: Network-first falling back to cache
 self.addEventListener('fetch', (event) => {
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
   event.respondWith(
-    caches.match(event.request).then((res) => res || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful responses for future offline use
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // OFFLINE MODE
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+
+          // If it's a navigation request (page load) or index.html explicitly,
+          // return the cached root './'
+          const url = new URL(event.request.url);
+          if (event.request.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
+            return caches.match('./');
+          }
+        });
+      })
   );
 });
