@@ -1,11 +1,10 @@
-const CACHE_NAME = 'exif-overlay-sw-v1.7';
+const CACHE_NAME = 'exif-overlay-sw-v1.8';
 
 // TIP: Ensure these paths exactly match your folder structure on GitHub
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'https://analytics.adffp.uk/script.js',
   './assets/libs/exif-js.js',
   './assets/libs/jszip.min.js',
   './assets/libs/filesaver.min.js',
