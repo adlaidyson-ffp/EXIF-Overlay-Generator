@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.0';
+const CACHE_NAME = 'exif-overlay-sw-v2.1';
 
 const ASSETS = [
   './',
@@ -8,6 +8,7 @@ const ASSETS = [
   './assets/libs/filesaver.min.js',
   './assets/libs/lucide.min.js',
   './icons/favicon.jpg',
+  './src/styles.css'
   
   // Playfair Display
   './fonts/Playfair/Playfair-VariableFont_opsz,wdth,wght.ttf',
