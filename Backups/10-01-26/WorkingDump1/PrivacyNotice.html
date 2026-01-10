@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EXIF Overlay | Privacy Notice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom scrollbar for better UX */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+    .accent-text { color: #94fdf8; }
+    .dim-text { color: #94a3b8; }
+    
+    .legal-card {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(148, 253, 248, 0.1);
+      transition: border-color 0.3s ease;
+    }
+    .legal-card:hover {
+      border-color: rgba(148, 253, 248, 0.3);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-[#94fdf8]/30 selection:text-[#94fdf8]">
+
+  <!-- Close Navigation -->
+  <nav class="sticky top-0 z-50 w-full bg-slate-950/80 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto flex justify-end p-6">
+      <a href="https://exifoverlay.com" class="text-slate-400 hover:text-[#94fdf8] transition-colors p-2 bg-slate-900 rounded-full" aria-label="Close and return to app">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-3xl mx-auto px-6 w-full pb-20">
+
+    <!-- Header Section -->
+    <header class="mb-12">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="px-3 py-1 rounded-full bg-[#94fdf8]/10 text-[#94fdf8] text-xs font-bold uppercase tracking-widest">Legal</span>
+        <span class="text-slate-500 text-xs">Last Updated: 4th January 2026</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight accent-text">
+        Privacy Notice
+      </h1>
+      <p class="text-lg text-slate-300 leading-relaxed border-l-4 border-[#94fdf8] pl-6 py-2">
+        At EXIF Overlay, privacy is a must. I believe your creative data should stay where it belongs: with you.
+      </p>
+    </header>
+
+    <!-- Content Sections -->
+    <div class="space-y-12">
+      
+      <!-- Introduction -->
+      <section>
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+          Overview
+        </h2>
+        <div class="space-y-4 text-slate-400 leading-relaxed">
+          <p>This Privacy Notice explains how I, <span class="text-white">Adlai Dyson</span> (operating as <span class="text-white">Fused Frame Photography</span>), manage information through the EXIF Overlay application at <span class="accent-text">exifoverlay.com</span>. I operate in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
+        </div>
+      </section>
+
+      <!-- The Core Privacy Promise -->
+      <section class="legal-card p-8 rounded-3xl">
+        <h2 class="text-2xl font-bold mb-4 text-white">My "Local-Only" Promise</h2>
+        <p class="text-slate-300 mb-6 leading-relaxed">
+          EXIF Overlay is a <span class="text-white font-medium">client-side application</span>. This means your photos never leave your device.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+            <h3 class="text-[#94fdf8] font-bold text-sm mb-2 uppercase tracking-wide">Photo Processing</h3>
+            <p class="text-xs text-slate-400">Images are read locally by your browser. I never upload, store, or see your original creative works.</p>
+          </div>
+          <div class="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+            <h3 class="text-[#94fdf8] font-bold text-sm mb-2 uppercase tracking-wide">EXIF Metadata</h3>
+            <p class="text-xs text-slate-400">Metadata is extracted on your CPU. No camera settings or GPS data is transmitted to my servers.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section>
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+          Information I Collect
+        </h2>
+        <div class="space-y-4 text-slate-400 leading-relaxed">
+          <p>To improve the tool and understand how it is used, I collect minimal, <span class="text-white">anonymous usage statistics</span> using Umami, a privacy-focused, self-hosted analytics platform (analytics.adffp.uk).</p>
+          <ul class="space-y-3 pl-2">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 accent-text mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span><strong class="text-slate-200">Device/Browser Info:</strong> I see which browser (e.g. Chrome, Safari) and device type (e.g. Mobile, Desktop) you use to ensure compatibility.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 accent-text mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span><strong class="text-slate-200">Approximate Location:</strong> I process your IP address to determine your general country. This IP is anonymised and never stored in a way that identifies you.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 accent-text mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span><strong class="text-slate-200">Usage Metrics:</strong> I track page views and "App Open" events to see how frequently the tool is being used.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Legal Basis -->
+      <section>
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+          Legal Basis for Processing
+        </h2>
+        <p class="text-slate-400 leading-relaxed">
+          Under UK GDPR, I process anonymous analytics data based on <span class="text-white">Legitimate Interests</span>. This allows me to maintain the website, monitor performance, and ensure the service remains functional without collecting personal data.
+        </p>
+      </section>
+
+      <!-- Data Retention -->
+      <section>
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+          Data Retention
+        </h2>
+        <p class="text-slate-400 leading-relaxed">
+          Since I do not collect personal data (names, emails, or images), there is no personal data to retain. Anonymous analytics are kept for 24 months to monitor usage trends before being aggregated.
+        </p>
+      </section>
+
+      <!-- Contact Section -->
+      <section class="border-t border-slate-800 pt-12">
+        <h2 class="text-xl font-bold mb-4 accent-text">Your Rights & Contact</h2>
+        <p class="text-slate-400 mb-6 leading-relaxed">
+          Even though I don't store your personal data, you still have rights under UK law. If you have any questions regarding this notice or the way I handle information, please reach out.
+        </p>
+        <div class="flex">
+          <a href="mailto:hello@fusedframe.co.uk" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-xl transition flex items-center justify-center gap-3 border border-slate-700">
+            <svg class="w-5 h-5 accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            <span class="font-bold">Contact via Email</span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Footer Credit -->
+    <footer class="mt-24 pt-8 border-t border-slate-900 text-center">
+      <p class="text-xs text-slate-600">
+        &copy; 2026 Adlai Dyson | Fused Frame Photography. Built for photographers, by photographers.
+      </p>
+    </footer>
+
+  </main>
+
+</body>
+</html>

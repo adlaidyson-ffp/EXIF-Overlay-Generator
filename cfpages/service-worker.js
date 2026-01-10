@@ -1,15 +1,16 @@
-const CACHE_NAME = 'exif-overlay-v16.1';
+const CACHE_NAME = 'exif-overlay-sw-v1.7';
 
+// TIP: Ensure these paths exactly match your folder structure on GitHub
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  // Favicon/Icons
-  'https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg',
-  // External Analytics Script (Included for silent loading/speed)
   'https://analytics.adffp.uk/script.js',
-  
-
+  './assets/libs/exif-js.js',
+  './assets/libs/jszip.min.js',
+  './assets/libs/filesaver.min.js',
+  './assets/libs/lucide.min.js',
+  './icons/favicon.jpg',
   
   // Playfair Display
   './fonts/Playfair/Playfair-VariableFont_opsz,wdth,wght.ttf',
@@ -35,32 +36,7 @@ const ASSETS = [
   // Shadows Into Light
   './fonts/Shadows_Into_Light/ShadowsIntoLight-Regular.ttf',
   
-  // Montserrat
-  './fonts/Montserrat/Montserrat-VariableFont_wght.ttf',
-  './fonts/Montserrat/Montserrat-Italic-VariableFont_wght.ttf',
-  
-  // Rubik Distressed
-  './fonts/Rubik_Distressed/RubikDistressed-Regular.ttf',
-  
-  // Open Sans
-  './fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf',
-  
-  // Roboto
-  './fonts/Roboto/Roboto-VariableFont_wdth,wght.ttf',
-  
-  // Barriecito
-  './fonts/Barriecito/Barriecito-Regular.ttf',
-  
-  // Schoolbell
-  './fonts/Schoolbell/Schoolbell-Regular.ttf',
-  
-  // Delius
-  './fonts/Delius/Delius-Regular.ttf',
-  
-  // Jersey 10
-  './fonts/Jersey_10/Jersey10-Regular.ttf',
-  
-  // EB Garamond
+  // EBGaramond
   './fonts/EBGaramond/EBGaramond-VariableFont_wght.ttf',
   './fonts/EBGaramond/EBGaramond-Italic-VariableFont_wght.ttf',
   
@@ -72,8 +48,9 @@ const ASSETS = [
   './fonts/Courier_Prime/CourierPrime-Regular.ttf',
   './fonts/Courier_Prime/CourierPrime-Italic.ttf',
   './fonts/Courier_Prime/CourierPrime-Bold.ttf',
-  './fonts/Courier_Prime/CourierPrime-BoldItalic.ttf'
+  './fonts/Courier_Prime/CourierPrime-BoldItalic.ttf',
   
+  // Icons
   './icons/aperture.png',
   './icons/exposure.png',
   './icons/iso.png',
@@ -88,33 +65,38 @@ const ASSETS = [
   './icons/snapchat.svg'
 ];
 
-// Install event - caching assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      // We use map + Promise.allSettled so one 404 doesn't kill the whole PWA installation
+      return Promise.allSettled(
+        ASSETS.map(async (url) => {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await cache.put(url, response);
+          } catch (err) {
+            console.warn(`PWA Warning: Could not cache ${new URL(url, location.href).href}. Check if file exists.`);
+          }
+        })
+      );
     })
   );
   self.skipWaiting();
 });
 
-// Activate event - cleaning up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
+    caches.keys().then((keys) => Promise.all(
+      keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      })
+    ))
   );
-  self.clients.claim();
 });
 
-// Fetch event - serving from cache or network
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request).then((res) => res || fetch(event.request))
   );
 });

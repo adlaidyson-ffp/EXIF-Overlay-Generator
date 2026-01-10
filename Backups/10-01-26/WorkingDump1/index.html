@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EXIF Overlay: Clean Summaries for Every Shot!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="EXIF Overlay is a privacy first app that adds clean, customisable camera setting overlays to your photos. Available on most platforms and the web today!">
+  <meta name="theme-color" content="#0f172a" />
+
+  <!-- Analytics -->
+  <script src="https://analytics.adffp.uk/script.js" data-website-id="82354d4e-2425-4867-b575-bb39ee1e0be3"></script>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" />
+  <link rel="apple-touch-icon" href="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg">
+
+  <!-- Local Font Definitions -->
+  <style>
+    @font-face { font-family: 'Playfair Display'; src: url('./fonts/Playfair/Playfair-VariableFont_opsz,wdth,wght.ttf') format('truetype'); font-weight: 100 900; font-style: normal italic; }
+    @font-face { font-family: 'Rubik Burned'; src: url('./fonts/Rubik_Burned/RubikBurned-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Lato'; src: url('./fonts/Lato/Lato-Regular.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+    @font-face { font-family: 'Lato'; src: url('./fonts/Lato/Lato-Bold.ttf') format('truetype'); font-weight: bold; font-style: normal; }
+    @font-face { font-family: 'Lato'; src: url('./fonts/Lato/Lato-Italic.ttf') format('truetype'); font-weight: normal; font-style: italic; }
+    @font-face { font-family: 'Story Script'; src: url('./fonts/Story_Script/StoryScript-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Orbitron'; src: url('./fonts/Orbitron/Orbitron-VariableFont_wght.ttf') format('truetype'); font-weight: 100 900; }
+    @font-face { font-family: 'Oswald'; src: url('./fonts/Oswald/Oswald-VariableFont_wght.ttf') format('truetype'); font-weight: 100 900; }
+    @font-face { font-family: 'Shadows Into Light'; src: url('./fonts/Shadows_Into_Light/ShadowsIntoLight-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Montserrat'; src: url('./fonts/Montserrat/Montserrat-VariableFont_wght.ttf') format('truetype'); font-weight: 100 900; font-style: normal italic; }
+    @font-face { font-family: 'Rubik Distressed'; src: url('./fonts/Rubik_Distressed/RubikDistressed-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Open Sans'; src: url('./fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf') format('truetype'); font-weight: 100 900; font-style: normal italic; }
+    @font-face { font-family: 'Roboto'; src: url('./fonts/Roboto/Roboto-VariableFont_wdth,wght.ttf') format('truetype'); font-weight: 100 900; font-style: normal italic; }
+    @font-face { font-family: 'Barriecito'; src: url('./fonts/Barriecito/Barriecito-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Schoolbell'; src: url('./fonts/Schoolbell/Schoolbell-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Delius'; src: url('./fonts/Delius/Delius-Regular.ttf') format('truetype'); }
+    @font-face { font-family: 'Jersey 10'; src: url('./fonts/Jersey_10/Jersey10-Regular.ttf') format('truetype'); }
+  </style>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94fdf8; }
+
+    /* Inputs */
+    input[type=range] { -webkit-appearance: none; background: transparent; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+      background: #94fdf8; cursor: pointer; margin-top: -6px; border: 2px solid #1e293b;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
+    }
+    
+    /* Loader */
+    .loader {
+      border: 4px solid #1e293b; border-radius: 50%; border-top: 4px solid #94fdf8;
+      width: 24px; height: 24px; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Checkerboard */
+    .checkerboard {
+        background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), linear-gradient(-45deg, #1e293b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1e293b 75%), linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+    
+    /* Drag & Drop Styles */
+    .draggable-item { cursor: grab; transition: transform 0.1s, border-color 0.2s; user-select: none; }
+    .draggable-item:active { cursor: grabbing; }
+    .dragging { opacity: 0.5; background: #1e293b; }
+    
+    /* Drop Indicators */
+    .drop-above { border-top: 2px solid #94fdf8 !important; }
+    .drop-below { border-bottom: 2px solid #94fdf8 !important; }
+    
+    /* Modal Transitions */
+    .modal { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .modal.active { opacity: 1; pointer-events: auto; }
+    .modal-content { transform: scale(0.95); transition: transform 0.3s ease; }
+    .modal.active .modal-content { transform: scale(1); }
+
+    /* Imported Styles from FAQs/Privacy */
+    .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease; opacity: 0; }
+    .faq-item.active .faq-content { max-height: 1200px; padding-bottom: 1.5rem; opacity: 1; }
+    .faq-item.active .faq-icon { transform: rotate(180deg); color: #94fdf8; }
+    .accent-text { color: #94fdf8; }
+    .dim-text { color: #94a3b8; }
+    .official-badge { height: 40px; width: auto; display: block; }
+    .badge-link { transition: all 0.2s ease; display: block; }
+    .badge-link:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    .coming-soon-pill { font-size: 10px; background: rgba(148, 253, 248, 0.1); padding: 2px 8px; border-radius: 99px; color: #94fdf8; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(148, 253, 248, 0.2); white-space: nowrap; }
+    .legal-card { background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 253, 248, 0.1); transition: border-color 0.3s ease; }
+    .legal-card:hover { border-color: rgba(148, 253, 248, 0.3); }
+
+    /* Custom scrollbar for download modal */
+    .modal-scrollable::-webkit-scrollbar { width: 6px; }
+    .modal-scrollable::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+    body { font-family: 'Noto Sans', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col lg:h-screen lg:overflow-hidden">
+
+  <!-- Header -->
+  <header class="py-3 px-4 lg:px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static select-none">
+    <div class="flex items-center gap-4">
+      <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition group">
+        <!-- Logo Updated as Requested -->
+        <img src="https://cdn-eu.fusedframe.co.uk/main-logos/jpg/squarefavicon-nocircle.jpg" alt="Fused Frame Photography" class="h-9 w-auto rounded-full" />
+        <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 hidden sm:block group-hover:text-slate-300 transition">Visit the Main Site</span>
+      </a>
+      <div class="border-l border-slate-700 pl-4 hidden md:flex flex-col justify-center">
+        <h1 class="text-lg font-bold text-slate-100 leading-tight">EXIF Overlay</h1>
+        <span class="text-[10px] text-[#94fdf8] font-medium tracking-wide uppercase">Clean Summaries for Every Shot!</span>
+      </div>
+    </div>
+    <div class="flex gap-3">
+        <button onclick="document.getElementById('fileInput').click()" class="bg-[#94fdf8] text-slate-950 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] transition flex items-center gap-2 shadow-lg shadow-cyan-900/20">
+            <i data-lucide="upload" class="w-4 h-4"></i> <span class="hidden sm:inline">Upload Images</span><span class="sm:hidden">Upload</span>
+        </button>
+        <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="flex-grow flex flex-col lg:flex-row relative overflow-hidden">
+    
+    <!-- LEFT SIDEBAR: Editor -->
+    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full pb-20 lg:pb-0 order-2 lg:order-1">
+      <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 space-y-2 shadow-sm select-none">
+        <div class="flex justify-between items-center">
+             <h2 class="font-bold text-[#94fdf8]">Editor</h2>
+             <div class="flex gap-2">
+                 <button onclick="exportSettings()" title="Export JSON" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="save" class="w-4 h-4"></i></button>
+                 <button onclick="document.getElementById('importInput').click()" title="Import JSON" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="file-up" class="w-4 h-4"></i></button>
+                 <input type="file" id="importInput" accept=".json" class="hidden" onchange="importSettings(this.files)">
+             </div>
+        </div>
+        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition border border-slate-700 font-medium" title="Apply visual settings to all images">
+            Sync Style to All Images
+        </button>
+      </div>
+
+      <!-- Empty Sidebar State -->
+      <div id="sidebar-empty-state" class="flex flex-col items-center justify-center p-8 mt-10 text-slate-600 select-none">
+          <i data-lucide="image-plus" class="w-12 h-12 mb-4 opacity-30"></i>
+          <p class="text-sm font-medium opacity-60">No Image Selected</p>
+          <p class="text-xs text-center opacity-40 mt-1">Upload and select an image<br>to enable the editor.</p>
+      </div>
+
+      <!-- Controls -->
+      <div id="controls-container" class="hidden p-4 space-y-6 pb-10">
+        
+        <!-- Content (Drag & Drop) -->
+        <div class="space-y-3">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between select-none">
+                <span>Overlay Content</span>
+                <span class="text-[10px] text-slate-600 font-normal">Drag to reorder</span>
+            </h3>
+            
+            <div id="content-rows" class="space-y-2">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 mt-2">
+                 <div class="flex items-center gap-3 mb-2">
+                    <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('showCopyright', this.checked)">
+                    <span class="text-xs font-bold text-slate-300 w-20 shrink-0 select-none">Copyright</span>
+                    <input type="text" id="input-copyright" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" oninput="updateCurrent('copyright', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- Position -->
+        <div class="space-y-3 select-none">
+             <div class="flex justify-between items-center">
+                 <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Position</h3>
+                 <span class="text-[10px] text-slate-500">Auto-aligns text</span>
+             </div>
+             <div class="grid grid-cols-3 gap-2 max-w-[150px]">
+                 <!-- Grid Buttons -->
+                 <button onclick="updateCurrent('position', 'top-left')" id="btn-pos-top-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'top-center')" id="btn-pos-top-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'top-right')" id="btn-pos-top-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 
+                 <button onclick="updateCurrent('position', 'center-left')" id="btn-pos-center-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'center-center')" id="btn-pos-center-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'center-right')" id="btn-pos-center-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 
+                 <button onclick="updateCurrent('position', 'bottom-left')" id="btn-pos-bottom-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'bottom-center')" id="btn-pos-bottom-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+                 <button onclick="updateCurrent('position', 'bottom-right')" id="btn-pos-bottom-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
+             </div>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- Image Style (Optimized for Mobile) -->
+        <div class="space-y-4">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider select-none">Image Style</h3>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 select-none">Scale</label>
+                        <span id="val-fontScale" class="text-[10px] text-slate-500 font-mono">1.0</span>
+                    </div>
+                    <!-- Update on Input (No Save), Save on Change (Release) -->
+                    <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" 
+                           oninput="updateCurrent('fontScale', this.value, false)" 
+                           onchange="updateCurrent('fontScale', this.value, true)">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 select-none">Brightness</label>
+                        <span id="val-brightness" class="text-[10px] text-slate-500 font-mono">65%</span>
+                    </div>
+                    <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full"
+                           oninput="updateCurrent('brightness', this.value, false)" 
+                           onchange="updateCurrent('brightness', this.value, true)">
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-xs text-slate-400 select-none">Background Blur</label>
+                    <span id="val-blur" class="text-[10px] text-slate-500 font-mono">5px</span>
+                </div>
+                <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full"
+                       oninput="updateCurrent('blur', this.value, false)" 
+                       onchange="updateCurrent('blur', this.value, true)">
+            </div>
+            
+            <!-- Card Settings -->
+            <div class="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50 space-y-3">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs text-slate-300 font-bold select-none">Background Card</label>
+                    <input type="checkbox" id="check-show-card" class="accent-[#94fdf8]" onchange="updateCurrent('showCard', this.checked)">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1 select-none">Color</label>
+                        <div class="flex gap-1"><input type="color" id="color-card" class="h-5 w-5 bg-transparent border-0 p-0" oninput="updateCurrent('cardColor', this.value)"></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                             <label class="text-[10px] text-slate-500 select-none">Opacity</label>
+                             <span id="val-cardOpacity" class="text-[9px] text-slate-500 font-mono">65%</span>
+                        </div>
+                        <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full"
+                               oninput="updateCurrent('cardOpacity', this.value, false)" 
+                               onchange="updateCurrent('cardOpacity', this.value, true)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <!-- Typography -->
+        <div class="space-y-4">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider select-none">Typography</h3>
+            
+            <div>
+                <label class="text-xs text-slate-400 block mb-1 select-none">Font Family</label>
+                <select id="select-font" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none focus:border-[#94fdf8]" onchange="updateCurrent('fontFamily', this.value)">
+                    <option value="Oswald" selected>Oswald</option>
+                    <option value="Playfair Display">Playfair Display</option>
+                    <option value="Rubik Burned">Rubik Burned</option>
+                    <option value="Lato">Lato</option>
+                    <option value="Story Script">Story Script</option>
+                    <option value="Orbitron">Orbitron</option>
+                    <option value="Shadows Into Light">Shadows Into Light</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Rubik Distressed">Rubik Distressed</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Barriecito">Barriecito</option>
+                    <option value="Schoolbell">Schoolbell</option>
+                    <option value="Delius">Delius</option>
+                    <option value="Jersey 10">Jersey 10</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1 select-none">Weight</label>
+                    <select id="select-weight" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontWeight', this.value)">
+                        <option value="normal">Normal</option>
+                        <option value="bold">Bold</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1 select-none">Style</label>
+                    <select id="select-style" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontStyle', this.value)">
+                        <option value="normal">Normal</option>
+                        <option value="italic">Italic</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                 <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 select-none">Shadow</label>
+                        <span id="val-textShadow" class="text-[10px] text-slate-500 font-mono">5px</span>
+                    </div>
+                    <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full"
+                           oninput="updateCurrent('textShadow', this.value, false)" 
+                           onchange="updateCurrent('textShadow', this.value, true)">
+                 </div>
+                 <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-slate-400 select-none">Line Spacing</label>
+                        <span id="val-rowSpacing" class="text-[10px] text-slate-500 font-mono">2px</span>
+                    </div>
+                    <input type="range" id="range-spacing" min="-10" max="50" step="1" class="w-full"
+                           oninput="updateCurrent('rowSpacing', this.value, false)" 
+                           onchange="updateCurrent('rowSpacing', this.value, true)">
+                 </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1 select-none">Text Color</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="color-text" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('textColor', this.value)">
+                        <input type="text" id="hex-text" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('textColor', this.value)">
+                    </div>
+                </div>
+                <div>
+                     <label class="text-xs text-slate-400 block mb-1 select-none">Accent</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="color-accent" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('accentColor', this.value)">
+                        <input type="text" id="hex-accent" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('accentColor', this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pt-4">
+            <button onclick="resetDefaults()" class="w-full text-xs text-red-400 hover:text-red-300 py-2 border border-slate-800 hover:border-red-900 rounded transition">Reset to Defaults</button>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT: Canvas & Footer (Wrapper) -->
+    <!-- Added lg:flex-grow to fix Desktop Layout issue -->
+    <div class="contents lg:flex lg:flex-col lg:flex-grow lg:min-w-0 lg:h-full lg:relative lg:order-2">
+        
+        <!-- TOP: Canvas & Filmstrip -->
+        <div class="order-1 lg:order-none flex-grow flex flex-col min-w-0 bg-slate-950 relative group h-[55vh] lg:h-full overflow-hidden">
+            
+            <!-- Canvas Area -->
+            <main class="flex-grow flex flex-col relative overflow-hidden bg-[#0b1120] checkerboard z-0">
+                <!-- Toolbar -->
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-slate-900/90 backdrop-blur rounded-full px-2 py-1.5 border border-slate-700 shadow-xl select-none">
+                    <button onclick="changeZoom(-0.1)" class="p-1.5 hover:text-[#94fdf8] transition" title="Zoom Out"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                    <span class="text-xs font-mono w-12 text-center py-1.5" id="zoom-display">Fit</span>
+                    <button onclick="changeZoom(0.1)" class="p-1.5 hover:text-[#94fdf8] transition" title="Zoom In"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    <div class="w-px h-4 bg-slate-700 my-auto mx-1"></div>
+                    <button onclick="resetZoom()" class="p-1.5 hover:text-[#94fdf8] transition" title="Fit to Screen"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+                </div>
+
+                <!-- Save Tools -->
+                <div class="absolute top-4 right-4 z-20 flex flex-col lg:flex-row gap-2 items-end lg:items-center select-none">
+                    <button id="btn-compare" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition" onmousedown="toggleCompare(true)" onmouseup="toggleCompare(false)" onmouseleave="toggleCompare(false)" ontouchstart="toggleCompare(true)" ontouchend="toggleCompare(false)">
+                        <i data-lucide="eye" class="w-4 h-4"></i> <span class="hidden sm:inline">Hold to Compare</span>
+                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="downloadCurrent()" class="bg-slate-800/80 backdrop-blur text-white px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-600 shadow-lg flex items-center gap-2 transition">
+                            <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Save</span>
+                        </button>
+                        <button onclick="downloadAll()" class="bg-[#94fdf8] text-slate-950 px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] shadow-lg flex items-center gap-2 transition">
+                            <i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">ZIP All</span><span class="sm:inline lg:hidden">ZIP All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas -->
+                <div class="w-full h-full flex items-center justify-center p-4 lg:p-8 overflow-hidden" id="canvas-wrapper">
+                    <canvas id="previewCanvas" class="shadow-2xl border border-slate-700 rounded-sm hidden transition-transform duration-200 ease-out origin-center" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
+                    <div id="empty-state" class="text-center text-slate-600 select-none">
+                        <i data-lucide="camera" class="w-16 h-16 lg:w-24 lg:h-24 mx-auto mb-4 opacity-20"></i>
+                        <h2 class="text-xl font-bold opacity-50">Ready to Create</h2>
+                        <p class="text-sm opacity-40">Upload images to begin</p>
+                    </div>
+                </div>
+                
+                <div id="processing-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden select-none">
+                    <div class="loader mb-4"></div>
+                    <p class="text-[#94fdf8] font-bold animate-pulse" id="processing-text">Processing...</p>
+                </div>
+            </main>
+
+            <!-- Filmstrip -->
+            <div class="h-32 bg-slate-900 border-t border-slate-800 flex flex-col shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] select-none">
+                <div class="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                    <span class="text-xs text-slate-400 font-mono" id="status-counter">0 / 30 images</span>
+                    <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 uppercase tracking-wide font-bold">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> Clear All
+                    </button>
+                </div>
+                <div class="flex-grow overflow-x-auto overflow-y-hidden p-3 flex gap-3 items-center whitespace-nowrap min-h-0 custom-scrollbar" id="filmstrip">
+                    <!-- Thumbnails here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-slate-950 border-t border-slate-800 p-4 pb-8 lg:pb-4 z-40 shrink-0 order-3 lg:order-none select-none">
+            <div class="flex flex-col md:flex-row justify-between items-center text-[10px] text-slate-500 gap-2">
+                <div>
+                    &copy; Adlai Dyson | Fused Frame Photography
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="openModal('faqModal')" class="hover:text-[#94fdf8] transition">FAQs & Downloads</button>
+                    <span class="text-slate-700">|</span>
+                    <button onclick="openModal('privacyModal')" class="hover:text-[#94fdf8] transition">Privacy Notice</button>
+                    <span class="text-slate-700">|</span>
+                    <a href="https://adffp.uk/exif-feedback" target="_blank" class="hover:text-[#94fdf8] transition">Feedback</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+  </div>
+
+  <!-- --- MODALS --- -->
+
+  <!-- Welcome Modal -->
+  <div id="welcomeModal" class="modal fixed inset-0 z-[60] bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
+      <div class="modal-content bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+          <h2 class="text-2xl font-bold text-white mb-4">Welcome to EXIF Overlay</h2>
+          <p class="text-slate-300 mb-2">Create clean, fully customisable camera-setting overlays for your photos.</p>
+          <ul class="list-disc pl-5 text-sm text-slate-400 mb-4 space-y-1">
+              <li>Upload up to 30 images</li>
+              <li>Auto-reads EXIF data</li>
+              <li>Fully customisable style</li>
+              <li><strong>Privacy First:</strong> Your images never leave your device.</li>
+          </ul>
+          <div class="flex flex-col gap-2 mb-6">
+              <button onclick="openModal('faqModal')" class="text-sm text-[#94fdf8] hover:underline text-left">FAQs & Downloads</button>
+              <button onclick="openModal('privacyModal')" class="text-sm text-[#94fdf8] hover:underline text-left">Privacy Notice</button>
+          </div>
+          <div class="flex items-center justify-between mt-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="dontShowWelcome" class="accent-[#94fdf8]">
+                  <span class="text-xs text-slate-500">Do not show again</span>
+              </label>
+              <button onclick="closeModal('welcomeModal')" class="bg-[#94fdf8] text-slate-900 px-6 py-2 rounded-lg font-bold hover:bg-[#6ee7e2]">Get Started</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Custom Alert Modal -->
+  <div id="alertModal" class="modal fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeModal('alertModal')">
+      <div class="modal-content bg-slate-900 border border-slate-700 rounded-xl max-w-sm w-full p-6 shadow-2xl" onclick="event.stopPropagation()">
+          <h3 id="alertTitle" class="text-lg font-bold text-white mb-2">Notification</h3>
+          <p id="alertMessage" class="text-slate-300 text-sm mb-6">Message goes here.</p>
+          <div class="flex justify-end">
+              <button onclick="closeModal('alertModal')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm border border-slate-600">Okay</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- FAQ Modal (Replaced Content) -->
+  <div id="faqModal" class="modal fixed inset-0 z-[70] bg-slate-950/95 flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center max-w-3xl mx-auto w-full">
+          <h2 class="text-xl font-bold text-[#94fdf8]">FAQs & Downloads</h2>
+          <button onclick="closeModal('faqModal')" class="p-2 bg-slate-900 rounded-full hover:bg-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+      <div class="flex-grow overflow-y-auto p-6">
+          <div class="max-w-3xl mx-auto space-y-6 pb-20">
+              <header class="mb-16">
+                  <h1 class="text-5xl md:text-6xl font-bold mb-6 tracking-tight accent-text">
+                    EXIF Overlay
+                  </h1>
+                  <p class="text-xl text-slate-300 leading-relaxed border-l-4 border-[#94fdf8] pl-6 py-2">
+                    A privacy-first tool that turns your camera settings into clean, fully customisable overlays for your photos. Built for photographers to share their settings consistently without paid tools or locked features.
+                  </p>
+                </header>
+
+                <!-- About Section -->
+                <section class="mb-20">
+                  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <span class="w-8 h-px bg-[#94fdf8]"></span>
+                    About the Project
+                  </h2>
+                  <div class="space-y-4 text-slate-300 leading-relaxed">
+                    <p>EXIF Overlay was built to solve a common problem: sharing camera settings in a clean, consistent, and customisable way, without needing to rely on paid tools, locked features, or online processing.</p>
+                    <p>Like many photographers, I’d seen others using camera settings summaries with some built into websites, some paid, and many with limited customisation. They worked, but never quite how I wanted. So I built my own.</p>
+                    <p>It’s designed to be <span class="text-white font-medium">simple</span>, <span class="text-white font-medium">fully customisable</span>, <span class="text-white font-medium">privacy-first</span>, <span class="text-white font-medium">usable offline</span>, and nothing is locked behind a paywall.</p>
+                  </div>
+                </section>
+
+                <!-- FAQ Section -->
+                <section class="mb-20">
+                  <h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+                    <span class="w-8 h-px bg-[#94fdf8]"></span>
+                    Frequently Asked Questions
+                  </h2>
+
+                  <div class="space-y-2">
+                    
+                    <!-- Category: Privacy -->
+                    <div class="pt-4 pb-2">
+                      <h3 class="text-xs font-bold uppercase tracking-widest dim-text">Privacy & Security</h3>
+                    </div>
+
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">Does EXIF Overlay upload my photos?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-3">
+                        <p><strong class="text-white">Locally.</strong> All processing happens locally on your device's browser. Your images are never uploaded to a server, keeping your creative work private.</p>
+                      </div>
+                    </div>
+                      
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">Was this tool created by AI?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-3">
+                        <p><strong class="text-white">Partially.</strong> AI (Specifically Google's Gemini), was used in the creation of this tool, however had no decision in the technologies, services, features, or design elements of the tool. No data entered by this tool, will be used or seen by AI under any circumstance.</p>
+                      </div>
+                    </div>
+
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">What data is tracked?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-3">
+                        <p>We only collect <strong class="text-white">anonymous usage statistics</strong> to improve the tool. This includes:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                          <li>Number of visits and app opens</li>
+                          <li>General country location (from IP)</li>
+                          <li>Device type</li>
+                        </ul>
+                        <p>No personal data, images, or EXIF information is ever collected. <button onclick="openModal('privacyModal')" class="accent-text underline">View Privacy Notice</button>.</p>
+                      </div>
+                    </div>
+
+                    <!-- Category: Usage -->
+                    <div class="pt-8 pb-2">
+                      <h3 class="text-xs font-bold uppercase tracking-widest dim-text">Using the Tool</h3>
+                    </div>
+
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">What if my image has no EXIF data?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-3">
+                        <p>Missing metadata is not a problem. If an image has no embedded EXIF, all fields remain <strong class="text-white">fully editable</strong>. You can enter values manually, toggle specific fields on/off, and customise the style as normal.</p>
+                      </div>
+                    </div>
+
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">How many images can I process?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400">
+                        <p>You can upload up to <strong class="text-white">30 images at once</strong>. The tool reads data for all of them simultaneously, allowing for consistent batch styling.</p>
+                      </div>
+                    </div>
+
+                    <!-- Category: Availability -->
+                    <div class="pt-8 pb-2">
+                      <h3 class="text-xs font-bold uppercase tracking-widest dim-text">Availability</h3>
+                    </div>
+
+                    <div class="faq-item border-b border-slate-800">
+                      <button onclick="toggleFaq(this)" class="w-full py-5 flex justify-between items-center text-left hover:text-[#94fdf8] transition-colors focus:outline-none group">
+                        <span class="text-lg font-medium group-hover:pl-1 transition-all">Which platforms are supported?</span>
+                        <svg class="faq-icon w-5 h-5 transition-transform duration-300 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </button>
+                      <div class="faq-content text-slate-400 space-y-4">
+                        <p>EXIF Overlay is available as a <strong class="text-white">Website</strong> at <a href="https://exifoverlay.com" class="accent-text underline">exifoverlay.com</a>.</p>
+                        <p><strong class="text-white">Mobile/Desktop Apps:</strong></p>
+                        <ul class="list-disc pl-5 space-y-1">
+                          <li><strong class="text-white">iOS & iPadOS:</strong> Available as a PWA. In Safari, tap 'Share' → 'Add to Home Screen'.</li>
+                          <li><strong class="text-white">Apps for Windows, macOS, iOS/iPadOS & Android:</strong> Coming Soon.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="flex flex-wrap gap-4 pt-16">
+                    <button
+                      onclick="openModal('downloadModal')"
+                      class="bg-[#94fdf8] hover:opacity-90 text-slate-900 font-bold px-8 py-4 rounded-xl transition shadow-lg shadow-[#94fdf8]/10 flex items-center gap-2"
+                    >
+                      Download App
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </button>
+                    <a
+                      href="https://adffp.uk/exif-feedback"
+                      target="_blank"
+                      class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-8 py-4 rounded-xl transition border border-slate-700"
+                    >
+                      Send Feedback
+                    </a>
+                  </div>
+
+                </section>
+          </div>
+      </div>
+  </div>
+
+  <!-- Privacy Modal (Replaced Content) -->
+  <div id="privacyModal" class="modal fixed inset-0 z-[70] bg-slate-950/95 flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center max-w-3xl mx-auto w-full">
+          <h2 class="text-xl font-bold text-[#94fdf8]">Privacy Notice</h2>
+          <button onclick="closeModal('privacyModal')" class="p-2 bg-slate-900 rounded-full hover:bg-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+      <div class="flex-grow overflow-y-auto p-6">
+           <div class="max-w-3xl mx-auto space-y-12 pb-20">
+               
+                <!-- Header Section -->
+                <header class="mb-12">
+                  <div class="flex items-center gap-3 mb-4">
+                    <span class="px-3 py-1 rounded-full bg-[#94fdf8]/10 text-[#94fdf8] text-xs font-bold uppercase tracking-widest">Legal</span>
+                    <span class="text-slate-500 text-xs">Last Updated: 6th January 2026</span>
+                  </div>
+                  <h1 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight accent-text">
+                    Privacy Notice
+                  </h1>
+                  <p class="text-lg text-slate-300 leading-relaxed border-l-4 border-[#94fdf8] pl-6 py-2">
+                    At EXIF Overlay, privacy is a must. I believe your creative data should stay where it belongs: with you.
+                  </p>
+                </header>
+
+                <!-- Introduction -->
+                  <section>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                      <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+                      Overview
+                    </h2>
+                    <div class="space-y-4 text-slate-400 leading-relaxed">
+                      <p>This Privacy Notice explains how I, <span class="text-white">Adlai Dyson | Fused Frame Photography</span>, manage information through the EXIF Overlay application at <span class="accent-text">exifoverlay.com</span>. I operate in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
+                    </div>
+                  </section>
+
+                  <!-- The Core Privacy Promise -->
+                  <section class="legal-card p-8 rounded-3xl">
+                    <h2 class="text-2xl font-bold mb-4 text-white">My "Local-Only" Promise</h2>
+                    <p class="text-slate-300 mb-6 leading-relaxed">
+                      EXIF Overlay is a <span class="text-white font-medium">client-side application</span>. This means your photos never leave your device.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div class="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                        <h3 class="text-[#94fdf8] font-bold text-sm mb-2 uppercase tracking-wide">Photo Processing</h3>
+                        <p class="text-xs text-slate-400">Images are read locally by your browser. I never upload, store, or see your original creative works.</p>
+                      </div>
+                      <div class="p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                        <h3 class="text-[#94fdf8] font-bold text-sm mb-2 uppercase tracking-wide">EXIF Metadata</h3>
+                        <p class="text-xs text-slate-400">Metadata is extracted on your CPU. No camera settings or GPS data is transmitted to my servers.</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <!-- Analytics Section -->
+                  <section>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                      <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+                      Information I Collect
+                    </h2>
+                    <div class="space-y-4 text-slate-400 leading-relaxed">
+                      <p>To improve the tool and understand how it is used, I collect minimal, <span class="text-white">anonymous usage statistics</span> using Umami, a privacy-focused, self-hosted analytics platform (analytics.adffp.uk).</p>
+                      <ul class="space-y-3 pl-2">
+                        <li class="flex items-start gap-3">
+                          <svg class="w-5 h-5 accent-text mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <span><strong class="text-slate-200">Device/Browser Info:</strong> I see which browser (e.g. Chrome, Safari) and device type (e.g. Mobile, Desktop) you use to ensure compatibility.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                          <svg class="w-5 h-5 accent-text mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <span><strong class="text-slate-200">Approximate Location:</strong> I process your IP address to determine your general country. This IP is anonymised and never stored in a way that identifies you.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                          <svg class="w-5 h-5 accent-text mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <span><strong class="text-slate-200">Usage Metrics:</strong> I track page views and "App Open" events to see how frequently the tool is being used.</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  <!-- Legal Basis -->
+                  <section>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                      <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+                      Legal Basis for Processing
+                    </h2>
+                    <p class="text-slate-400 leading-relaxed">
+                      Under UK GDPR, I process anonymous analytics data based on <span class="text-white">Legitimate Interests</span>. This allows me to maintain the website, monitor performance, and ensure the service remains functional without collecting personal data.
+                    </p>
+                  </section>
+
+                  <!-- Data Retention -->
+                  <section>
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                      <span class="w-2 h-2 rounded-full bg-[#94fdf8]"></span>
+                      Data Retention
+                    </h2>
+                    <p class="text-slate-400 leading-relaxed">
+                      Since I do not collect personal data (names, emails, or images), there is no personal data to retain. Anonymous analytics are kept for 24 months to monitor usage trends before being aggregated.
+                    </p>
+                  </section>
+
+                  <!-- Contact Section -->
+                  <section class="border-t border-slate-800 pt-12">
+                    <h2 class="text-xl font-bold mb-4 accent-text">Your Rights & Contact</h2>
+                    <p class="text-slate-400 mb-6 leading-relaxed">
+                      Even though I don't store your personal data, you still have rights under UK law. If you have any questions regarding this notice or the way I handle information, please reach out.
+                    </p>
+                    <div class="flex">
+                      <a href="mailto:hello@fusedframe.co.uk" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-xl transition flex items-center justify-center gap-3 border border-slate-700">
+                        <svg class="w-5 h-5 accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="font-bold">Contact via Email</span>
+                      </a>
+                    </div>
+                  </section>
+
+                  <!-- Footer Credit -->
+                <footer class="mt-24 pt-8 border-t border-slate-900 text-center">
+                  <p class="text-xs text-slate-600">
+                    &copy; 2026 Adlai Dyson | Fused Frame Photography. Built for photographers, by photographers.
+                  </p>
+                </footer>
+           </div>
+      </div>
+  </div>
+
+  <!-- New Download Modal (Added) -->
+  <div id="downloadModal" class="modal fixed inset-0 z-[80] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4" onclick="closeModal('downloadModal')">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-2xl w-full mx-4 shadow-2xl relative modal-scrollable overflow-y-auto max-h-[90vh]" onclick="event.stopPropagation()">
+      <button onclick="closeModal('downloadModal')" class="absolute top-6 right-6 text-slate-500 hover:text-white transition bg-slate-800/50 p-2 rounded-full z-10">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold mb-2 accent-text">Get EXIF Overlay</h2>
+        <p class="text-slate-400 text-sm">Select your platform to download or install</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+        
+        <!-- Windows Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Windows</h3>
+          </div>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <a href="https://adffp.uk/exif-msstore" target="_blank" class="badge-link opacity-60">
+                    <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" class="official-badge">
+                </a>
+                <span class="coming-soon-pill">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- macOS Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">macOS</h3>
+          </div>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <a href="https://adffp.uk/exif-mac-appstore" target="_blank" class="badge-link opacity-60">
+                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the Mac App Store" class="official-badge">
+                </a>
+                <span class="coming-soon-pill">Coming Soon</span>
+            </div>
+            <a href="https://adffp.uk/exif-mac-direct" target="_blank" class="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition group">
+               <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition">
+                   <svg class="w-5 h-5 accent-text" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.1 2.48-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.36 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                   <span class="text-sm font-bold">Direct DMG</span>
+               </div>
+               <span class="coming-soon-pill">Coming Soon</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Android Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Android</h3>
+          </div>
+          <div class="flex flex-col gap-3">
+             <div class="flex items-center gap-3">
+                <a href="https://adffp.uk/exif-android-play" target="_blank" class="badge-link opacity-60">
+                <div class="h-[40px] w-[135px] overflow-hidden flex items-center bg-black rounded">
+                    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" class="h-[58px] min-w-[155px] -ml-2">
+                </div>
+                </a>
+                <span class="coming-soon-pill">Coming Soon</span>
+            </div>
+             <a href="https://adffp.uk/exif-android-apk" target="_blank" class="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg border border-slate-700 transition group">
+              <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition">
+                  <svg class="w-5 h-5 accent-text" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414C17.1557 15.3414 16.8574 15.043 16.8574 14.6758C16.8574 14.3085 17.1557 14.0101 17.523 14.0101C17.8903 14.0101 18.1887 14.3085 18.1887 14.6758C18.1887 15.043 17.8903 15.3414 17.523 15.3414ZM6.47704 15.3414C6.10976 15.3414 5.81139 15.043 5.81139 14.6758C5.81139 14.3085 6.10976 14.0101 6.47704 14.0101C6.84431 14.0101 7.14268 14.3085 7.14268 14.6758C7.14268 15.043 6.84431 15.3414 6.47704 15.3414ZM17.9351 10.9576L19.7825 7.75783C19.9193 7.52097 19.8378 7.2177 19.601 7.0809C19.3641 6.9441 19.0608 7.2177 18.9241 7.2624L17.0396 10.5269C15.5414 9.84968 13.8427 9.46875 12 9.46875C10.1573 9.46875 8.45863 9.84968 6.96035 10.5269L5.07593 7.2624C4.93913 7.02554 4.63587 6.9441 4.399 7.0809C4.16213 7.2177 4.0807 7.52097 4.2175 7.75783L6.0649 10.9576C2.62884 12.8273 0.354133 16.3268 0 20.4375H24C23.6459 16.3268 21.3712 12.8273 17.9351 10.9576Z"/></svg>
+                  <span class="text-sm font-bold">Android APK</span>
+              </div>
+              <span class="coming-soon-pill">Coming Soon</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- iOS Section -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">iOS / iPadOS</h3>
+          </div>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <a href="https://adffp.uk/exif-ios-appstore" target="_blank" class="badge-link opacity-60">
+                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" class="official-badge">
+                </a>
+                <span class="coming-soon-pill">Coming Soon</span>
+            </div>
+            <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+              <p class="text-[11px] text-slate-300 leading-tight mb-2">PWA Ready:</p>
+              <p class="text-[10px] text-slate-500 italic">Tap 'Share' → 'Add to Home Screen' in Safari.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PWA / Web Section -->
+        <div class="md:col-span-2 space-y-4 pt-6 mt-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-[#94fdf8] uppercase tracking-widest">PWA (Web App)</h3>
+          </div>
+          <div class="flex flex-col md:flex-row gap-4 items-center">
+             <button onclick="promptPWAInstall()" class="w-full md:w-auto bg-[#94fdf8] text-slate-900 h-[54px] px-8 rounded-xl flex items-center justify-center font-bold badge-link hover:opacity-95 transition gap-3 text-sm shadow-lg shadow-[#94fdf8]/10">
+               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"></path></svg>
+               Install PWA (Web App)
+            </button>
+            <div class="flex flex-col">
+               <p class="text-[11px] text-slate-400 leading-snug max-w-sm">Install directly through your browser for an app-like experience with offline support and home screen access.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+    // --- GLOBAL CANVAS ---
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Performance Limit for Mobile Previews
+    const MAX_PREVIEW_DIM = 1600;
+
+    // --- PWA LOGIC ---
+    let deferredPrompt;
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js').then(reg => {
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            alertCustom("Update Available", "New version available. Please refresh.");
+                        }
+                    };
+                };
+            });
+        });
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+    }
+
+    function promptPWAInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the PWA install prompt');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alertCustom("Install Info", "To install, use your browser menu (Chrome) or Share button (Safari) and select 'Add to Home Screen'.");
+      }
+    }
+
+    // --- ICONS & FONTS ---
+    const ICONS = {
+        aperture: "./icons/aperture.png",
+        shutter: "./icons/exposure.png",
+        iso: "./icons/iso.png",
+        focal: "./icons/focal-length.png",
+        camera: "./icons/camera.png",
+        lens: "./icons/lens.png",
+        facebook: "./icons/facebook.svg",
+        instagram: "./icons/instagram.svg",
+        x: "./icons/x.svg",
+        mastodon: "./icons/mastodon.svg",
+        linkedin: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xOSAwaC0xNGMtMi43NjEgMC01IDIuMjM5LTUgNXYxNGMwIDIuNzYxIDIuMjM5IDUgNSA1aDE0YzIuNzYyIDAgNS0yLjIzOSA1LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV2LTE0YzAtMi43NjEtMi4yMzgtNS01LTV6bS0xMSAxOWgtM3YtMTFoM3YxMXptLTEuNS0xMi4yNjhjLS45NjYgMC0xLjc1LS43OS0xLjc1LTEuNzY0cy43ODQtMS43NjQgMS43NS0xLjc2NCAxLjc1Ljc5IDEuNzUgMS43NjQtLjc4MyAxLjc2NC0xLjc1IDEuNzY0em0xMy41IDEyLjI2OGgtM3YtNS42MDRjMC0zLjM2OC00LTMuMTEzLTQgMHY1LjYwNGgtM3YtMTFoM3YxLjc2NWMxLjM5Ni0yLjU4NiA3LTIuNzc3IDcgMi40NzZ2Ni43NTl6Ii8+PC9zdmc+",
+        tiktok: "./icons/tiktok.svg",
+        snapchat: "./icons/snapchat.svg",
+    };
+    const loadedIcons = {};
+
+    // --- APP STATE ---
+    let images = []; 
+    let selectedId = null;
+    let currentZoom = 1.0;
+    let isComparing = false;
+    
+    // UPDATED DEFAULTS
+    const DEFAULT_SETTINGS = {
+        blur: 10,
+        brightness: 50,
+        showCard: false,
+        cardOpacity: 65,
+        cardRounding: 10,
+        cardColor: '#1e374d',
+        fontScale: 1.0,
+        fontFamily: 'Delius',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textShadow: 5,
+        rowSpacing: 5,
+        textColor: '#ffffff',
+        accentColor: '#94fdf8',
+        position: 'center-left',
+        
+        order: ['Aperture', 'Shutter', 'ISO', 'Focal', 'Divider', 'Description', 'Date', 'Camera', 'Lens', 'Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'],
+        
+        showAperture: true, txtAperture: '',
+        showShutter: true, txtShutter: '',
+        showISO: true, txtISO: '',
+        showFocal: true, txtFocal: '',
+        showDescription: true, txtDescription: 'Description',
+        showDate: true, txtDate: '',
+        showCamera: true, txtCamera: '',
+        showLens: true, txtLens: '',
+        
+        showFacebook: false, txtFacebook: '',
+        showInstagram: false, txtInstagram: '',
+        showX: false, txtX: '',
+        showMastodon: false, txtMastodon: '',
+        showLinkedin: false, txtLinkedin: '',
+        showTiktok: false, txtTiktok: '',
+        showSnapchat: false, txtSnapchat: '',
+
+        showCopyright: true, copyright: 'Your Name',
+    };
+
+    let userDefaults = { ...DEFAULT_SETTINGS };
+
+    // --- INIT ---
+    lucide.createIcons();
+    Object.keys(ICONS).forEach(k => {
+        const img = new Image(); img.crossOrigin="Anonymous"; img.src = ICONS[k]; loadedIcons[k] = img;
+    });
+
+    const savedDefaults = localStorage.getItem('adffp_exif_defaults_v9');
+    if(savedDefaults) {
+        try { userDefaults = { ...userDefaults, ...JSON.parse(savedDefaults) }; } catch(e) {}
+    }
+
+    if (localStorage.getItem('adffp_welcome_seen') !== 'true') {
+        document.getElementById('welcomeModal').classList.add('active');
+    }
+    
+    // Initial Font Load - Simplified for Local Fonts
+    window.addEventListener('load', () => {
+         const defFont = userDefaults.fontFamily || 'Oswald';
+         document.fonts.load(`1em "${defFont}"`).then(() => requestRender());
+    });
+
+    // --- STORAGE & IMPORT/EXPORT ---
+    function saveDefaults() {
+        localStorage.setItem('adffp_exif_defaults_v9', JSON.stringify(userDefaults));
+    }
+
+    function exportSettings() {
+        const blob = new Blob([JSON.stringify(userDefaults, null, 2)], {type: "application/json"});
+        saveAs(blob, "exif-overlay-settings.json");
+    }
+
+    function importSettings(files) {
+        if (!files.length) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const settings = JSON.parse(e.target.result);
+                if(settings.order && settings.blur !== undefined) {
+                    userDefaults = { ...userDefaults, ...settings };
+                    saveDefaults();
+                    buildSidebarUI();
+                    if(selectedId) {
+                        const img = images.find(i => i.id === selectedId);
+                        const newSettings = { ...userDefaults };
+                        // Preserve content
+                        ['txtAperture', 'txtShutter', 'txtISO', 'txtFocal', 'txtDescription', 'txtDate', 'txtCamera', 'txtLens'].forEach(k => {
+                            if(img.settings[k]) newSettings[k] = img.settings[k];
+                        });
+                        img.settings = newSettings;
+                        syncInputsToState();
+                        requestRender();
+                    }
+                    alertCustom("Import Successful", "Settings imported successfully.");
+                } else { throw new Error("Invalid Format"); }
+            } catch(err) { alertCustom("Import Failed", "Invalid JSON settings file."); }
+        };
+        reader.readAsText(files[0]);
+    }
+    
+    function applyStyleToAll() {
+        if(!selectedId || !images.length) return;
+        if(!confirm("Apply current style (colors, position, fonts) to ALL images? Text content will be preserved.")) return;
+        
+        const master = images.find(i => i.id === selectedId).settings;
+        images.forEach(img => {
+            if(img.id === selectedId) return;
+            const contentKeys = ['txtAperture', 'txtShutter', 'txtISO', 'txtFocal', 'txtDescription', 'txtDate', 'txtCamera', 'txtLens', 'txtFacebook', 'txtInstagram', 'txtX', 'txtMastodon', 'txtLinkedin', 'txtTiktok', 'txtSnapchat', 'copyright'];
+            const newSet = { ...master };
+            contentKeys.forEach(k => newSet[k] = img.settings[k]);
+            img.settings = newSet;
+        });
+        alertCustom("Synced", "Style applied to all images.");
+    }
+
+    // --- UI BUILDER ---
+    const buildSidebarUI = () => {
+        const rowsContainer = document.getElementById('content-rows');
+        rowsContainer.innerHTML = '';
+        
+        userDefaults.order.forEach(id => {
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-3 draggable-item bg-slate-900/50 p-1 rounded border-t-2 border-b-2 border-transparent hover:border-slate-700 transition";
+            div.draggable = true;
+            div.dataset.id = id;
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragover', handleDragOver);
+            div.addEventListener('dragleave', handleDragLeave);
+            div.addEventListener('drop', handleDrop);
+            div.addEventListener('dragend', handleDragEnd);
+
+            if (id === 'Divider') {
+                div.innerHTML = `<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
+                <div class="flex-grow flex items-center gap-2 opacity-70"><div class="h-px bg-slate-600 flex-grow"></div><span class="text-[9px] uppercase select-none">Divider</span><div class="h-px bg-slate-600 flex-grow"></div></div>`;
+            } else {
+                let label = id;
+                const keyShow = `show${id}`;
+                const keyTxt = `txt${id}`;
+                const isSocial = ['Facebook', 'Instagram', 'X', 'Mastodon', 'Linkedin', 'Tiktok', 'Snapchat'].includes(id);
+                const placeholder = isSocial ? '@username' : label;
+
+                div.innerHTML = `
+                <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
+                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)" ${userDefaults[keyShow] ? 'checked' : ''}>
+                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate select-none">${label}</span>
+                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="${placeholder}" oninput="updateCurrent('${keyTxt}', this.value)" value="${userDefaults[keyTxt] || ''}">
+                `;
+            }
+            rowsContainer.appendChild(div);
+        });
+        lucide.createIcons();
+    };
+
+    // --- DRAG & DROP ---
+    let dragSrcEl = null;
+    function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; this.classList.add('dragging'); }
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('drop-above', 'drop-below'));
+        if (this === dragSrcEl) return false;
+        const rect = this.getBoundingClientRect();
+        if (e.clientY < (rect.top + rect.height / 2)) this.classList.add('drop-above');
+        else this.classList.add('drop-below');
+        return false;
+    }
+    function handleDragLeave(e) { this.classList.remove('drop-above', 'drop-below'); }
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        this.classList.remove('drop-above', 'drop-below');
+        if (dragSrcEl !== this) {
+            const rect = this.getBoundingClientRect();
+            if (e.clientY < (rect.top + rect.height / 2)) this.before(dragSrcEl);
+            else this.after(dragSrcEl);
+            const newOrder = [...document.getElementById('content-rows').children].map(el => el.dataset.id);
+            userDefaults.order = newOrder;
+            if(selectedId) {
+                const img = images.find(i => i.id === selectedId);
+                img.settings.order = newOrder;
+                requestRender();
+            }
+            saveDefaults();
+        }
+        return false;
+    }
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('drop-above', 'drop-below'));
+    }
+
+    // --- FILE HANDLING ---
+    function handleFiles(files) {
+        if (!files.length) return;
+        if ((images.length + files.length) > 30) {
+            alertCustom("Limit Reached", "You can only upload a maximum of 30 images at once.");
+            return;
+        }
+        
+        document.getElementById('processing-overlay').classList.remove('hidden');
+        let loadedCount = 0;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    EXIF.getData(img, function() {
+                        addContentImage(file, img, this);
+                        loadedCount++;
+                        if (loadedCount === files.length) {
+                            document.getElementById('processing-overlay').classList.add('hidden');
+                            if (!selectedId && images.length > 0) selectImage(images[0].id);
+                        }
+                    });
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function addContentImage(file, imgElement, exifData) {
+        const id = Date.now() + Math.random().toString(16).slice(2);
+        const extracted = parseExif(exifData);
+        const settings = { 
+            ...userDefaults,
+            txtAperture: extracted.aperture,
+            txtShutter: extracted.shutter,
+            txtISO: extracted.iso,
+            txtFocal: extracted.focal,
+            txtCamera: extracted.camera,
+            txtLens: extracted.lens,
+            txtDate: extracted.date,
+        };
+        const nameParts = file.name.split('.'); nameParts.pop();
+        const rawName = nameParts.join('.');
+        
+        images.push({ id, file, rawName, imgElement, settings });
+        createThumbnail({ id, imgElement });
+        updateCounter();
+    }
+
+    function parseExif(exif) {
+        const getTag = (tag) => exif.exifdata ? exif.exifdata[tag] : null;
+        let camera = (getTag('Model') || 'Unknown').replace(/NIKON/i, 'Nikon').replace(/CANON/i, 'Canon').replace(/SONY/i, 'Sony').replace(/CORPORATION/i, '').replace(/DIGITAL CAMERA/i, '');
+        let lens = getTag('LensModel') || '';
+        let iso = getTag('ISOSpeedRatings') || '--';
+        let aperture = getTag('FNumber') ? `f/${getTag('FNumber')}` : 'f/--';
+        let focal = getTag('FocalLength') ? `${Math.round(getTag('FocalLength'))}mm` : '--mm';
+        let shutter = getTag('ExposureTime');
+        if (shutter && shutter < 1) shutter = `1/${Math.round(1/shutter)}s`; else if(shutter) shutter += 's'; else shutter = '--';
+        let date = getTag('DateTimeOriginal') || '';
+        if(date) {
+            const p = date.split(' ');
+            if(p.length > 1) { const d = p[0].split(':'); const t = p[1].split(':'); date = `${d[2]}/${d[1]}/${d[0]} ${t[0]}:${t[1]}`; }
+        }
+        return { camera, iso, aperture, focal, shutter, lens, date };
+    }
+
+    // --- UI HELPERS ---
+    function createThumbnail(imgObj) {
+        const div = document.createElement('div');
+        div.className = `relative w-24 h-24 shrink-0 cursor-pointer border-4 border-slate-800 rounded-lg overflow-hidden group hover:border-slate-600 transition shadow-md`;
+        div.id = `thumb-${imgObj.id}`;
+        div.onclick = (e) => { if(!e.target.closest('.delete-btn')) selectImage(imgObj.id); };
+
+        const img = document.createElement('img');
+        img.src = imgObj.imgElement.src;
+        img.className = "w-full h-full object-cover opacity-70 group-hover:opacity-100 transition";
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = "delete-btn absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition";
+        delBtn.innerHTML = `<i data-lucide="x" class="w-3 h-3"></i>`;
+        delBtn.onclick = () => deleteImage(imgObj.id);
+
+        div.appendChild(img);
+        div.appendChild(delBtn);
+        document.getElementById('filmstrip').appendChild(div);
+        lucide.createIcons();
+    }
+
+    function selectImage(id) {
+        if(!images.find(i => i.id === id)) return;
+        selectedId = id;
+        
+        // Update Thumbnails
+        document.querySelectorAll('#filmstrip > div').forEach(d => {
+            d.classList.remove('border-[#94fdf8]'); d.classList.add('border-slate-800');
+            d.querySelector('img').classList.add('opacity-70');
+        });
+        const active = document.getElementById(`thumb-${id}`);
+        if(active) {
+            active.classList.remove('border-slate-800'); active.classList.add('border-[#94fdf8]');
+            active.querySelector('img').classList.remove('opacity-70');
+            active.scrollIntoView({behavior: 'smooth', inline: 'center'});
+        }
+        
+        // Show Editor, Hide Empty States
+        document.getElementById('sidebar-empty-state').classList.add('hidden');
+        document.getElementById('controls-container').classList.remove('hidden');
+        document.getElementById('empty-state').classList.add('hidden');
+        document.getElementById('previewCanvas').classList.remove('hidden');
+        
+        syncInputsToState();
+        requestRender();
+    }
+
+    function deleteImage(id) {
+        if(!confirm("Delete this image?")) return;
+        images = images.filter(i => i.id !== id);
+        const thumb = document.getElementById(`thumb-${id}`);
+        if(thumb) thumb.remove();
+        
+        if(selectedId === id) {
+            selectedId = null;
+            if(images.length > 0) {
+                selectImage(images[0].id);
+            } else {
+                // Return to Empty State
+                document.getElementById('controls-container').classList.add('hidden');
+                document.getElementById('sidebar-empty-state').classList.remove('hidden');
+                document.getElementById('previewCanvas').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+            }
+        }
+        updateCounter();
+    }
+
+    function syncInputsToState() {
+        const img = images.find(i => i.id === selectedId);
+        if (!img) return;
+        const s = img.settings;
+        
+        userDefaults.order.forEach(k => {
+            if(k === 'Divider') return;
+            const input = document.getElementById(`input-txt${k}`);
+            if(input) input.value = s[`txt${k}`];
+            const check = document.getElementById(`check-show${k}`);
+            if(check) check.checked = s[`show${k}`];
+        });
+        
+        document.getElementById('input-copyright').value = s.copyright;
+        document.getElementById('check-show-copyright').checked = s.showCopyright;
+        document.getElementById('check-show-card').checked = s.showCard;
+
+        // Ranges
+        const rangeMap = { 'blur': 'px', 'brightness': '%', 'cardOpacity': '%', 'fontScale': '', 'textShadow': 'px', 'rowSpacing': 'px' };
+        Object.keys(rangeMap).forEach(k => {
+             const val = s[k];
+             const el = document.getElementById(`range-${k === 'textShadow' ? 'shadow' : k === 'fontScale' ? 'font' : k === 'rowSpacing' ? 'spacing' : k}`);
+             if(el) el.value = val;
+             const disp = document.getElementById(`val-${k}`);
+             if(disp) disp.innerText = `${val}${rangeMap[k]}`;
+        });
+
+        document.getElementById('color-text').value = s.textColor; document.getElementById('hex-text').value = s.textColor;
+        document.getElementById('color-accent').value = s.accentColor; document.getElementById('hex-accent').value = s.accentColor;
+        document.getElementById('color-card').value = s.cardColor;
+
+        document.getElementById('select-font').value = s.fontFamily;
+        document.getElementById('select-weight').value = s.fontWeight;
+        document.getElementById('select-style').value = s.fontStyle;
+
+        document.querySelectorAll('[id^="btn-pos-"]').forEach(btn => {
+            btn.classList.remove('border-[#94fdf8]', 'text-[#94fdf8]');
+            btn.classList.add('border-slate-600');
+        });
+        const activePos = document.getElementById(`btn-pos-${s.position}`);
+        if(activePos) {
+            activePos.classList.add('border-[#94fdf8]', 'text-[#94fdf8]');
+            activePos.classList.remove('border-slate-600');
+        }
+    }
+
+    function updateCurrent(key, value, saveToStorage = true) {
+        if (!selectedId) return;
+        const img = images.find(i => i.id === selectedId);
+        
+        if(['blur','brightness','cardOpacity','cardRounding','textShadow','rowSpacing'].includes(key)) value = parseInt(value);
+        if(key === 'fontScale') value = parseFloat(value);
+        
+        img.settings[key] = value;
+        userDefaults[key] = value;
+        
+        // Optimised: Only save to localStorage when explicit (e.g. onchange)
+        if (saveToStorage) {
+            saveDefaults();
+        }
+        
+        if(key === 'blur') document.getElementById('val-blur').innerText = value + 'px';
+        if(key === 'brightness') document.getElementById('val-brightness').innerText = value + '%';
+        if(key === 'cardOpacity') document.getElementById('val-cardOpacity').innerText = value + '%';
+        if(key === 'fontScale') document.getElementById('val-fontScale').innerText = value;
+        if(key === 'textShadow') document.getElementById('val-textShadow').innerText = value + 'px';
+        if(key === 'rowSpacing') document.getElementById('val-rowSpacing').innerText = value + 'px';
+
+        if(key === 'fontFamily') {
+             // Local font loading check
+             document.fonts.load(`1em "${value}"`).then(() => requestRender());
+        }
+
+        if(key === 'textColor') { document.getElementById('color-text').value = value; document.getElementById('hex-text').value = value; }
+        if(key === 'accentColor') { document.getElementById('color-accent').value = value; document.getElementById('hex-accent').value = value; }
+        
+        if(key === 'position') syncInputsToState();
+
+        requestRender();
+    }
+
+    function toggleFaq(button) {
+      const item = button.parentElement;
+      const isActive = item.classList.contains('active');
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
+      if (!isActive) item.classList.add('active');
+    }
+
+    // --- RENDER LOOP (Improved Performance) ---
+    let renderRequested = false;
+
+    // Cache offscreen canvas for performance
+    const offscreenCanvas = document.createElement('canvas');
+    const offCtx = offscreenCanvas.getContext('2d');
+
+    function requestRender() {
+        if (!renderRequested) {
+            renderRequested = true;
+            requestAnimationFrame(() => {
+                renderCanvas(false); // Default to preview mode
+                renderRequested = false;
+            });
+        }
+    }
+
+    // New helper to determine optimal preview dimensions
+    function getRenderDimensions(img, forceFull) {
+        if (forceFull) return { w: img.naturalWidth, h: img.naturalHeight, scale: 1 };
+        
+        // For preview, cap the size to prevent mobile choking
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        let scale = 1;
+        
+        if (w > MAX_PREVIEW_DIM || h > MAX_PREVIEW_DIM) {
+            scale = Math.min(MAX_PREVIEW_DIM / w, MAX_PREVIEW_DIM / h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+        }
+        return { w, h, scale };
+    }
+
+    function renderCanvas(forceFull = false) {
+        if (!selectedId) return;
+        const imgObj = images.find(i => i.id === selectedId);
+        if(!imgObj) return; 
+
+        const s = imgObj.settings;
+        const baseImg = imgObj.imgElement;
+        
+        // Use smart dimensions
+        const { w, h, scale } = getRenderDimensions(baseImg, forceFull);
+        
+        // Update Canvas Size
+        if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
+        }
+        
+        // Clean slate
+        ctx.clearRect(0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        if (isComparing) {
+            ctx.drawImage(baseImg, 0, 0, w, h);
+            ctx.font = "bold 40px sans-serif";
+            ctx.fillStyle = "rgba(255,255,255,0.8)";
+            ctx.fillText("ORIGINAL", 50, 80);
+            return; 
+        }
+
+        // --- FILTER RENDERING (iOS SAFE PIXEL MANIPULATION) ---
+        // Replacing WebKit filters with direct pixel manipulation (CPU based)
+        // 1. Draw Image
+        ctx.drawImage(baseImg, 0, 0, w, h);
+
+        // 2. Get Data
+        const imageData = ctx.getImageData(0, 0, w, h);
+        
+        // 3. Apply Brightness
+        if (s.brightness !== 100) {
+            applyBrightness(imageData, s.brightness);
+        }
+        
+        // 4. Apply Blur (using safe scale for performance)
+        if (s.blur > 0) {
+             // Scale radius by image size context
+             const blurRad = Math.max(1, Math.round(s.blur * 2 * scale));
+             stackBlurCanvasRGBA(imageData, blurRad);
+        }
+
+        // 5. Put Data Back
+        ctx.putImageData(imageData, 0, 0);
+
+        // --- END PIXEL MANIPULATION ---
+
+        const minDim = Math.min(w, h);
+        const baseScale = minDim * 0.0016 * s.fontScale;
+        
+        const fontSize = Math.round(28 * baseScale);
+        const spacingAdd = s.rowSpacing * baseScale;
+        const rowHeight = Math.round((45 * baseScale) + spacingAdd);
+        const iconSize = Math.round(32 * baseScale);
+        const padding = Math.round(40 * baseScale);
+        const gap = Math.round(20 * baseScale);
+
+        const renderItems = [];
+        
+        s.order.forEach(k => {
+            if(k === 'Divider') {
+                if(renderItems.length > 0) renderItems.push({ type: 'divider' });
+                return;
+            }
+            if(s[`show${k}`]) {
+                let txt = s[`txt${k}`];
+                let iconKey = k.toLowerCase();
+                let type = 'row';
+                if(k === 'Description') type = 'text-bold';
+                if(k === 'Date') iconKey = 'clock'; 
+                renderItems.push({ type, iconKey, text: txt });
+            }
+        });
+
+        if(s.showCopyright) renderItems.push({ type: 'copyright', text: s.copyright || 'Your Name' });
+
+        if(renderItems.length === 0) return;
+
+        ctx.font = `${s.fontStyle} ${s.fontWeight} ${fontSize}px "${s.fontFamily}", sans-serif`;
+        let maxTextW = 0;
+        let contentH = padding * 2;
+
+        renderItems.forEach(item => {
+            if(item.type === 'row' || item.type === 'copyright') {
+                const tw = ctx.measureText(item.text).width;
+                maxTextW = Math.max(maxTextW, iconSize + gap + tw);
+                contentH += rowHeight;
+            } else if (item.type === 'text-bold') {
+                const tw = ctx.measureText(item.text).width;
+                maxTextW = Math.max(maxTextW, tw);
+                contentH += rowHeight;
+            } else if (item.type === 'divider') {
+                contentH += rowHeight;
+            }
+        });
+
+        const cardW = Math.round(Math.max(minDim * 0.35, maxTextW + (padding * 2)));
+        contentH = Math.round(contentH);
+
+        const margin = Math.round(minDim * 0.04);
+        let startX = margin, startY = margin;
+        let textAlign = 'left';
+
+        const [vPos, hPos] = s.position.split('-');
+        if(hPos === 'left') { startX = margin; textAlign = 'left'; }
+        if(hPos === 'center') { startX = (w - cardW)/2; textAlign = 'center'; } 
+        if(hPos === 'right') { startX = w - cardW - margin; textAlign = 'right'; }
+
+        if(vPos === 'top') startY = margin;
+        if(vPos === 'center') startY = (h - contentH)/2;
+        if(vPos === 'bottom') startY = h - contentH - margin;
+
+        if(s.showCard) {
+            ctx.save();
+            ctx.fillStyle = s.cardColor;
+            ctx.globalAlpha = s.cardOpacity / 100;
+            const r = Math.round(s.cardRounding * 2 * baseScale);
+            ctx.beginPath();
+            ctx.roundRect(startX, startY, cardW, contentH, r);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        let curY = Math.round(startY + padding + (rowHeight/2));
+        ctx.fillStyle = s.textColor;
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = s.textShadow * baseScale * 2; 
+
+        ctx.textAlign = textAlign;
+        ctx.textBaseline = 'middle';
+
+        renderItems.forEach(item => {
+            let drawX = startX + padding;
+            if (textAlign === 'center') drawX = startX + (cardW / 2);
+            if (textAlign === 'right') drawX = startX + cardW - padding;
+
+            let textX = drawX;
+            let iconX = drawX;
+
+            if(item.type === 'row' || item.type === 'copyright') {
+                if (textAlign === 'left') {
+                    textX = drawX + iconSize + gap;
+                    iconX = drawX;
+                } else if (textAlign === 'right') {
+                    iconX = drawX - iconSize;
+                    textX = iconX - gap;
+                    ctx.textAlign = 'right'; 
+                } else {
+                    const tw = ctx.measureText(item.text).width;
+                    const blockW = iconSize + gap + tw;
+                    iconX = drawX - (blockW/2);
+                    textX = iconX + iconSize + gap;
+                    ctx.textAlign = 'left';
+                }
+
+                if(item.type === 'copyright') {
+                     ctx.save();
+                     ctx.textAlign = 'center'; // Force center alignment for the symbol itself
+                     ctx.font = `${iconSize}px "${s.fontFamily}", sans-serif`;
+                     ctx.fillStyle = s.accentColor;
+                     // Draw exactly in the center of the icon box
+                     ctx.fillText("©", iconX + (iconSize/2), curY + (iconSize*0.1));
+                     ctx.restore();
+                } else if (item.iconKey === 'clock') {
+                     ctx.strokeStyle = s.accentColor;
+                     ctx.lineWidth = Math.max(1, Math.round(2 * baseScale));
+                     ctx.beginPath();
+                     ctx.arc(iconX + iconSize/2, curY, iconSize/2 - ctx.lineWidth, 0, Math.PI * 2);
+                     ctx.stroke();
+                     ctx.beginPath();
+                     ctx.moveTo(iconX + iconSize/2, curY);
+                     ctx.lineTo(iconX + iconSize/2, curY - (iconSize/3));
+                     ctx.stroke();
+                } else if (loadedIcons[item.iconKey]) {
+                    try { 
+                        const tCanvas = document.createElement('canvas');
+                        tCanvas.width = iconSize; tCanvas.height = iconSize;
+                        const tCtxIcon = tCanvas.getContext('2d');
+                        tCtxIcon.drawImage(loadedIcons[item.iconKey], 0, 0, iconSize, iconSize);
+                        tCtxIcon.globalCompositeOperation = 'source-in';
+                        tCtxIcon.fillStyle = s.accentColor;
+                        tCtxIcon.fillRect(0, 0, iconSize, iconSize);
+                        ctx.drawImage(tCanvas, iconX, curY - iconSize/2);
+                    } catch(e) {}
+                }
+                
+                ctx.fillText(item.text, textX, curY);
+                if(textAlign !== 'left') ctx.textAlign = textAlign; // Restore
+                curY += rowHeight;
+
+            } else if (item.type === 'text-bold') {
+                ctx.save();
+                ctx.font = `${s.fontStyle} bold ${fontSize}px "${s.fontFamily}", sans-serif`;
+                ctx.fillText(item.text, drawX, curY);
+                ctx.restore();
+                curY += rowHeight;
+
+            } else if (item.type === 'divider') {
+                ctx.strokeStyle = s.accentColor;
+                ctx.lineWidth = Math.max(1, Math.round(3 * baseScale));
+                ctx.beginPath();
+                ctx.moveTo(startX + padding, curY);
+                ctx.lineTo(startX + cardW - padding, curY);
+                ctx.stroke();
+                curY += rowHeight;
+            }
+        });
+    }
+
+    function toggleCompare(active) { isComparing = active; requestRender(); }
+    
+    function resetDefaults() {
+        if(!confirm("Reset all settings to default?")) return;
+        userDefaults = { ...DEFAULT_SETTINGS };
+        saveDefaults();
+        if(selectedId) {
+            const img = images.find(i => i.id === selectedId);
+            const contentKeys = ['txtAperture','txtShutter','txtISO','txtFocal','txtDescription','txtDate','txtCamera','txtLens','copyright','txtFacebook','txtInstagram','txtX','txtMastodon','txtLinkedin','txtTiktok','txtSnapchat'];
+            const savedContent = {};
+            contentKeys.forEach(k => savedContent[k] = img.settings[k]);
+            img.settings = { ...DEFAULT_SETTINGS, ...savedContent };
+            syncInputsToState();
+            requestRender();
+        }
+        buildSidebarUI();
+    }
+
+    function downloadCurrent() {
+        if (!selectedId) return;
+        const imgObj = images.find(i => i.id === selectedId);
+        // Force full resolution render for save
+        renderCanvas(true);
+        canvas.toBlob((blob) => {
+            saveAs(blob, `${imgObj.rawName}-Overlay.jpg`);
+            // Restore preview resolution
+            renderCanvas(false);
+        }, 'image/jpeg', 0.95);
+    }
+
+    async function downloadAll() {
+        if (!images.length) return;
+        document.getElementById('processing-overlay').classList.remove('hidden');
+        document.getElementById('processing-text').innerText = "Processing Batch...";
+        const zip = new JSZip();
+        
+        const originalId = selectedId;
+        for (let i = 0; i < images.length; i++) {
+            selectedId = images[i].id; 
+            // Force full resolution for each image
+            renderCanvas(true);
+            await new Promise(r => canvas.toBlob(b => {
+                zip.file(`${images[i].rawName}-Overlay.jpg`, b);
+                r();
+            }, 'image/jpeg', 0.95));
+        }
+        selectedId = originalId;
+        // Restore preview
+        renderCanvas(false);
+        
+        const content = await zip.generateAsync({type:"blob"});
+        saveAs(content, "exif-overlays.zip");
+        document.getElementById('processing-overlay').classList.add('hidden');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { 
+        document.getElementById(id).classList.remove('active'); 
+        if(id === 'welcomeModal' && document.getElementById('dontShowWelcome').checked) {
+            localStorage.setItem('adffp_welcome_seen', 'true');
+        }
+    }
+    function alertCustom(title, msg) {
+        document.getElementById('alertTitle').innerText = title;
+        document.getElementById('alertMessage').innerText = msg;
+        openModal('alertModal');
+    }
+    function clearAll() {
+        if(!confirm("Remove all images?")) return;
+        images = []; selectedId = null;
+        document.getElementById('filmstrip').innerHTML = '';
+        document.getElementById('controls-container').classList.add('hidden');
+        document.getElementById('sidebar-empty-state').classList.remove('hidden');
+        document.getElementById('previewCanvas').classList.add('hidden');
+        document.getElementById('empty-state').classList.remove('hidden');
+        updateCounter();
+        alertCustom("Images Cleared", "All images have been removed from the session.");
+    }
+    function updateCounter() { document.getElementById('status-counter').innerText = `${images.length} / 30 images`; }
+    
+    let zoomLevel = 1.0;
+    function changeZoom(delta) {
+        zoomLevel += delta;
+        if(zoomLevel < 0.1) zoomLevel = 0.1;
+        document.getElementById('previewCanvas').style.transform = `scale(${zoomLevel})`;
+        document.getElementById('zoom-display').innerText = Math.round(zoomLevel * 100) + '%';
+    }
+    function resetZoom() {
+        zoomLevel = 1.0;
+        document.getElementById('previewCanvas').style.transform = `scale(1)`;
+        document.getElementById('zoom-display').innerText = 'Fit';
+    }
+    
+    document.addEventListener('keydown', (e) => {
+        if(e.code === 'Space' && selectedId && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); toggleCompare(true); }
+        if((e.code === 'Delete' || e.code === 'Backspace') && selectedId && document.activeElement.tagName !== 'INPUT') { deleteImage(selectedId); }
+    });
+    document.addEventListener('keyup', (e) => { if(e.code === 'Space') toggleCompare(false); });
+
+    buildSidebarUI();
+
+    // --- HELPER FUNCTIONS FOR PIXEL MANIPULATION (iOS Safe) ---
+    
+    function applyBrightness(imageData, brightness) {
+        if (brightness === 100) return;
+        var data = imageData.data;
+        var factor = brightness / 100;
+        for (var i = 0; i < data.length; i += 4) {
+            data[i] = Math.min(255, Math.max(0, data[i] * factor));
+            data[i+1] = Math.min(255, Math.max(0, data[i+1] * factor));
+            data[i+2] = Math.min(255, Math.max(0, data[i+2] * factor));
+        }
+    }
+
+    // StackBlur Implementation - Corrected Version
+    function stackBlurCanvasRGBA(imageData, radius) {
+        if (isNaN(radius) || radius < 1) return;
+        radius |= 0;
+        
+        var pixels = imageData.data;
+        var width = imageData.width;
+        var height = imageData.height;
+        
+        var x, y, i, p, yp, yi, yw, r_sum, g_sum, b_sum,
+        r_out_sum, g_out_sum, b_out_sum,
+        r_in_sum, g_in_sum, b_in_sum,
+        pr, pg, pb, rbs;
+        
+        var div = radius + radius + 1;
+        var w4 = width << 2;
+        var widthMinus1 = width - 1;
+        var heightMinus1 = height - 1;
+        var radiusPlus1 = radius + 1;
+        
+        // FIX: The sum of weights for the kernel (1, 2, ... R+1, ... 2, 1) is (R+1)^2
+        // Previous incorrect formula: radiusPlus1 * (radiusPlus1 + 1) / 2
+        var sumFactor = radiusPlus1 * radiusPlus1; 
+        
+        var stackStart = new Int32Array(div);
+        var stack = new Int32Array(div * 3);
+        var stackIn = new Int32Array(div);
+        var stackOut = new Int32Array(div);
+        
+        var mul_sum = new Int32Array(div);
+        var shg_sum = new Int32Array(div);
+        
+        for (i = 0; i < div; i++) {
+            mul_sum[i] = sumFactor; 
+        }
+        
+        var stackpointer;
+        var stackIndex;
+        var sir;
+        
+        // Pass 1: Horizontal Blur
+        yw = yi = 0;
+        
+        for (y = 0; y < height; y++) {
+            r_in_sum = g_in_sum = b_in_sum = r_sum = g_sum = b_sum = 0;
+            r_out_sum = g_out_sum = b_out_sum = 0;
+            
+            // Pre-fill sum with the first pixel
+            var pr0 = pixels[yi];
+            var pg0 = pixels[yi+1];
+            var pb0 = pixels[yi+2];
+            
+            for(i = -radius; i <= radius; i++){
+                // Clamp to edge
+                p = yi + (Math.min(widthMinus1, Math.max(i, 0))) * 4;
+                var r = pixels[p];
+                var g = pixels[p+1];
+                var b = pixels[p+2];
+                
+                var rbs = radiusPlus1 - Math.abs(i);
+                
+                r_sum += r * rbs;
+                g_sum += g * rbs;
+                b_sum += b * rbs;
+                
+                if (i > 0) {
+                    r_in_sum += r; g_in_sum += g; b_in_sum += b;
+                } else {
+                    r_out_sum += r; g_out_sum += g; b_out_sum += b;
+                }
+                
+                if(i < 0){
+                    stackIndex = (i + radius) * 3;
+                    stack[stackIndex] = r;
+                    stack[stackIndex + 1] = g;
+                    stack[stackIndex + 2] = b;
+                } else {
+                    // For positive i, we will fill in the loop below or handle boundaries
+                    // Actually, standard StackBlur pre-fills strictly.
+                    // Simplified logic:
+                }
+            }
+            
+            // Correct Stack Initialization
+            for(i = 0; i < div; i++){
+                var dist = i - radius;
+                p = yi + (Math.min(widthMinus1, Math.max(dist, 0))) * 4;
+                stack[i*3] = pixels[p];
+                stack[i*3+1] = pixels[p+1];
+                stack[i*3+2] = pixels[p+2];
+            }
+            
+            stackpointer = radius;
+            
+            for (x = 0; x < width; x++) {
+                pixels[yi] = (r_sum / sumFactor) | 0;
+                pixels[yi+1] = (g_sum / sumFactor) | 0;
+                pixels[yi+2] = (b_sum / sumFactor) | 0;
+                
+                r_sum -= r_out_sum;
+                g_sum -= g_out_sum;
+                b_sum -= b_out_sum;
+                
+                stackIndex = ((stackpointer - radius + div) % div) * 3;
+                
+                r_out_sum -= stack[stackIndex];
+                g_out_sum -= stack[stackIndex + 1];
+                b_out_sum -= stack[stackIndex + 2];
+                
+                if(y === 0) {
+                    stackStart[x] = stackIndex; // Keep track for vertical pass? No, simpler to just recalc.
+                }
+                
+                // Get next pixel (incoming)
+                var nextX = Math.min(x + radius + 1, widthMinus1);
+                var pNext = (yw + nextX) * 4;
+                
+                var rNext = pixels[pNext];
+                var gNext = pixels[pNext+1];
+                var bNext = pixels[pNext+2];
+                
+                stack[stackIndex] = rNext;
+                stack[stackIndex + 1] = gNext;
+                stack[stackIndex + 2] = bNext;
+                
+                r_in_sum += rNext;
+                g_in_sum += gNext;
+                b_in_sum += bNext;
+                
+                r_sum += r_in_sum;
+                g_sum += g_in_sum;
+                b_sum += b_in_sum;
+                
+                stackpointer = (stackpointer + 1) % div;
+                stackIndex = (stackpointer % div) * 3;
+                
+                var rPr = stack[stackIndex];
+                var gPr = stack[stackIndex + 1];
+                var bPr = stack[stackIndex + 2];
+                
+                r_out_sum += rPr;
+                g_out_sum += gPr;
+                b_out_sum += bPr;
+                
+                r_in_sum -= rPr;
+                g_in_sum -= gPr;
+                b_in_sum -= bPr;
+                
+                yi += 4;
+            }
+            yw += width;
+        }
+
+        // Pass 2: Vertical Blur
+        for (x = 0; x < width; x++) {
+            r_in_sum = g_in_sum = b_in_sum = r_sum = g_sum = b_sum = 0;
+            r_out_sum = g_out_sum = b_out_sum = 0;
+            
+            // Fill Stack
+            for(i = 0; i < div; i++){
+                var dist = i - radius;
+                var yPos = Math.min(heightMinus1, Math.max(dist, 0));
+                p = (yPos * width + x) * 4;
+                
+                stack[i*3] = pixels[p];
+                stack[i*3+1] = pixels[p+1];
+                stack[i*3+2] = pixels[p+2];
+                
+                var rbs = radiusPlus1 - Math.abs(dist);
+                r_sum += stack[i*3] * rbs;
+                g_sum += stack[i*3+1] * rbs;
+                b_sum += stack[i*3+2] * rbs;
+                
+                if (dist > 0) {
+                    r_in_sum += stack[i*3]; g_in_sum += stack[i*3+1]; b_in_sum += stack[i*3+2];
+                } else {
+                    r_out_sum += stack[i*3]; g_out_sum += stack[i*3+1]; b_out_sum += stack[i*3+2];
+                }
+            }
+            
+            stackpointer = radius;
+            yi = x << 2; // initial pixel index for column
+            
+            for (y = 0; y < height; y++) {
+                // We must read/write to the buffer directly
+                var pInd = (y * width + x) * 4;
+                
+                pixels[pInd] = (r_sum / sumFactor) | 0;
+                pixels[pInd+1] = (g_sum / sumFactor) | 0;
+                pixels[pInd+2] = (b_sum / sumFactor) | 0;
+                
+                r_sum -= r_out_sum;
+                g_sum -= g_out_sum;
+                b_sum -= b_out_sum;
+                
+                stackIndex = ((stackpointer - radius + div) % div) * 3;
+                
+                r_out_sum -= stack[stackIndex];
+                g_out_sum -= stack[stackIndex + 1];
+                b_out_sum -= stack[stackIndex + 2];
+                
+                // Get next pixel
+                var nextY = Math.min(y + radius + 1, heightMinus1);
+                var pNext = (nextY * width + x) * 4;
+                
+                var rNext = pixels[pNext];
+                var gNext = pixels[pNext+1];
+                var bNext = pixels[pNext+2];
+                
+                stack[stackIndex] = rNext;
+                stack[stackIndex + 1] = gNext;
+                stack[stackIndex + 2] = bNext;
+                
+                r_in_sum += rNext;
+                g_in_sum += gNext;
+                b_in_sum += bNext;
+                
+                r_sum += r_in_sum;
+                g_sum += g_in_sum;
+                b_sum += b_in_sum;
+                
+                stackpointer = (stackpointer + 1) % div;
+                stackIndex = (stackpointer % div) * 3;
+                
+                var rPr = stack[stackIndex];
+                var gPr = stack[stackIndex + 1];
+                var bPr = stack[stackIndex + 2];
+                
+                r_out_sum += rPr;
+                g_out_sum += gPr;
+                b_out_sum += bPr;
+                
+                r_in_sum -= rPr;
+                g_in_sum -= gPr;
+                b_in_sum -= bPr;
+            }
+        }
+    }
+</script>
+</body>
+</html>
