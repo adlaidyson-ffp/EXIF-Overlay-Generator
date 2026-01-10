@@ -1,9 +1,7 @@
-const CACHE_NAME = 'exif-overlay-sw-v1.9';
+const CACHE_NAME = 'exif-overlay-sw-v2.0';
 
-// TIP: Ensure these paths exactly match your folder structure on GitHub
 const ASSETS = [
   './',
-  './index.html',
   './manifest.json',
   './assets/libs/exif-js.js',
   './assets/libs/jszip.min.js',
