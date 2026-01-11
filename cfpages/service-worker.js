@@ -1,7 +1,5 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.4';
+const CACHE_NAME = 'exif-overlay-sw-v2.5';
 
-// We remove explicit './index.html' to avoid redundancy and redirects.
-// The root './' will represent our main page.
 const ASSETS = [
   './',
   './manifest.json',
@@ -45,21 +43,11 @@ const ASSETS = [
   './icons/snapchat.svg'
 ];
 
-// Install: Cache all assets
+// Install: Cache essential assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        ASSETS.map(async (url) => {
-          try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            await cache.put(url, response);
-          } catch (err) {
-            console.warn(`PWA Warning: Could not cache ${url}`);
-          }
-        })
-      );
+      return cache.addAll(ASSETS);
     })
   );
   self.skipWaiting();
@@ -83,13 +71,14 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Network-first falling back to cache
 self.addEventListener('fetch', (event) => {
-  if (!event.request.url.startsWith(self.location.origin)) return;
+  // Only handle GET requests and same-origin requests
+  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses for future offline use
-        if (response && response.status === 200 && response.type === 'basic') {
+        // Only cache valid responses
+        if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -98,15 +87,13 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // OFFLINE MODE
+        // If network fails, try the cache
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
 
-          // If it's a navigation request (page load) or index.html explicitly,
-          // return the cached root './'
-          const url = new URL(event.request.url);
-          if (event.request.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
-            return caches.match('./');
+          // For navigation requests, always return the root/index if not found
+          if (event.request.mode === 'navigate') {
+            return caches.match('./') || caches.match('./index.html');
           }
         });
       })

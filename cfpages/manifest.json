@@ -2,21 +2,44 @@
   "name": "EXIF Overlay",
   "short_name": "EXIF Overlay",
   "description": "Create clean, customisable camera setting overlays for your photos.",
-  "start_url": ".",
-  "scope": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
+  "orientation": "any",
+  "categories": [
+    "photography",
+    "utilities"
+  ],
   "icons": [
     {
-      "src": "./icons/favicon.jpg",
+      "src": "./icons/favicon192.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "./icons/favicon.jpg",
+      "src": "./icons/favicon512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./assets/screenshots/desktop-main.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The main editor of EXIF Overlay on Desktop"
+    },
+    {
+      "src": "./assets/screenshots/mobile-main.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "The mobile interface for editing EXIF data"
     }
   ]
 }
