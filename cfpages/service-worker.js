@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.6';
+const CACHE_NAME = 'exif-overlay-sw-v2.7';
 
 const ASSETS = [
   './',
@@ -24,26 +24,65 @@ const ASSETS = [
   './fonts/EBGaramond/EBGaramond-VariableFont_wght.ttf',
   './fonts/EBGaramond/EBGaramond-Italic-VariableFont_wght.ttf',
   './fonts/Courier_Prime/CourierPrime-Regular.ttf',
-  './fonts/Courier_Prime/CourierPrime-Italic.ttf',
-  './fonts/Courier_Prime/CourierPrime-Bold.ttf',
-  './fonts/Courier_Prime/CourierPrime-BoldItalic.ttf',
-  
-  // Icons
-  './icons/aperture.png',
-  './icons/exposure.png',
-  './icons/iso.png',
-  './icons/focal-length.png',
-  './icons/camera.png',
-  './icons/lens.png',
-  './icons/facebook.svg',
-  './icons/instagram.svg',
-  './icons/x.svg',
-  './icons/mastodon.svg',
-  './icons/tiktok.svg',
-  './icons/snapchat.svg'
+
+  // Manifest Icons (Fully sync'd from manifest.json)
+  './icons/windows11/SmallTile.scale-100.png',
+  './icons/windows11/SmallTile.scale-125.png',
+  './icons/windows11/SmallTile.scale-150.png',
+  './icons/windows11/SmallTile.scale-200.png',
+  './icons/windows11/SmallTile.scale-400.png',
+  './icons/windows11/Square150x150Logo.scale-100.png',
+  './icons/windows11/Square150x150Logo.scale-125.png',
+  './icons/windows11/Square150x150Logo.scale-150.png',
+  './icons/windows11/Square150x150Logo.scale-200.png',
+  './icons/windows11/Square150x150Logo.scale-400.png',
+  './icons/windows11/WideTile.scale-100.png',
+  './icons/windows11/WideTile.scale-125.png',
+  './icons/windows11/WideTile.scale-150.png',
+  './icons/windows11/WideTile.scale-200.png',
+  './icons/windows11/WideTile.scale-400.png',
+  './icons/windows11/LargeTile.scale-100.png',
+  './icons/windows11/LargeTile.scale-125.png',
+  './icons/windows11/LargeTile.scale-150.png',
+  './icons/windows11/LargeTile.scale-200.png',
+  './icons/windows11/LargeTile.scale-400.png',
+  './icons/windows11/Square44x44Logo.scale-100.png',
+  './icons/windows11/Square44x44Logo.scale-125.png',
+  './icons/windows11/Square44x44Logo.scale-150.png',
+  './icons/windows11/Square44x44Logo.scale-200.png',
+  './icons/windows11/Square44x44Logo.scale-400.png',
+  './icons/windows11/StoreLogo.scale-100.png',
+  './icons/windows11/StoreLogo.scale-125.png',
+  './icons/windows11/StoreLogo.scale-150.png',
+  './icons/windows11/StoreLogo.scale-200.png',
+  './icons/windows11/StoreLogo.scale-400.png',
+  './icons/windows11/SplashScreen.scale-100.png',
+  './icons/windows11/SplashScreen.scale-125.png',
+  './icons/windows11/SplashScreen.scale-150.png',
+  './icons/windows11/SplashScreen.scale-200.png',
+  './icons/windows11/SplashScreen.scale-400.png',
+  './icons/windows11/Square44x44Logo.targetsize-16.png',
+  './icons/windows11/Square44x44Logo.targetsize-20.png',
+  './icons/windows11/Square44x44Logo.targetsize-24.png',
+  './icons/windows11/Square44x44Logo.targetsize-30.png',
+  './icons/windows11/Square44x44Logo.targetsize-32.png',
+  './icons/windows11/Square44x44Logo.targetsize-36.png',
+  './icons/windows11/Square44x44Logo.targetsize-40.png',
+  './icons/windows11/Square44x44Logo.targetsize-44.png',
+  './icons/windows11/Square44x44Logo.targetsize-48.png',
+  './icons/windows11/Square44x44Logo.targetsize-60.png',
+  './icons/windows11/Square44x44Logo.targetsize-64.png',
+  './icons/windows11/Square44x44Logo.targetsize-72.png',
+  './icons/windows11/Square44x44Logo.targetsize-80.png',
+  './icons/windows11/Square44x44Logo.targetsize-96.png',
+  './icons/windows11/Square44x44Logo.targetsize-256.png',
+  './icons/android/android-launchericon-512-512.png',
+  './icons/android/android-launchericon-192-192.png',
+  './icons/favicon512.png',
+  './icons/favicon192.png'
 ];
 
-// Install: Cache essential assets
+// Install: Cache all assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -93,7 +132,7 @@ self.addEventListener('fetch', (event) => {
 
           // For navigation requests, always return the root/index if not found
           if (event.request.mode === 'navigate') {
-            return caches.match('./') || caches.match('./index.html');
+            return caches.match('./');
           }
         });
       })
