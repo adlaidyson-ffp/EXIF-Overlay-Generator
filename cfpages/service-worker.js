@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.7';
+const CACHE_NAME = 'exif-overlay-sw-v2.8';
 
 const ASSETS = [
   './',
@@ -9,6 +9,7 @@ const ASSETS = [
   './assets/libs/lucide.min.js',
   './icons/favicon.jpg',
   './src/styles.css',
+  'https://get.microsoft.com/images/en-us%20dark.svg',
   
   // Fonts
   './fonts/Playfair/Playfair-VariableFont_opsz,wdth,wght.ttf',
