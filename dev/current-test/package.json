@@ -1,0 +1,26 @@
+{
+  "name": "cfpages",
+  "version": "1.0.0",
+  "description": "**EXIF Overlay** is a privacy first tool that turns your camera settings into clean, fully customisable overlays for your photos.",
+  "main": "service-worker.js",
+  "scripts": {
+    "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./src/styles.css --minify",
+    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./src/styles.css --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adlaidyson-ffp/EXIF-Overlay-DEV.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/adlaidyson-ffp/EXIF-Overlay-Generator/issues"
+  },
+  "homepage": "https://exifoverlay.com",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18"
+  }
+}
