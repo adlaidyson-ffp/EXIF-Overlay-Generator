@@ -59,7 +59,9 @@
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
       background: #94fdf8; cursor: pointer; margin-top: -6px; border: 2px solid #1e293b;
+      transition: transform 0.1s ease;
     }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
     input[type=range]::-webkit-slider-runnable-track {
       width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
     }
@@ -79,7 +81,7 @@
     }
     
     /* Drag & Drop Styles */
-    .draggable-item { cursor: grab; transition: transform 0.1s, border-color 0.2s; user-select: none; }
+    .draggable-item { cursor: grab; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; user-select: none; }
     .draggable-item:active { cursor: grabbing; }
     .dragging { opacity: 0.5; background: #1e293b; }
     
@@ -110,6 +112,10 @@
     .modal-scrollable::-webkit-scrollbar { width: 6px; }
     .modal-scrollable::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
 
+    /* Editor Accordion Transitions */
+    .panel-icon { transition: transform 0.3s ease; }
+    .rotate-180 { transform: rotate(180deg); }
+
     body { font-family: 'Noto Sans', sans-serif; }
   </style>
 </head>
@@ -118,19 +124,33 @@
 
   <!-- Header -->
   <header class="py-3 px-4 lg:px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center z-50 shadow-md shrink-0 h-16 sticky top-0 lg:static select-none">
-    <div class="flex items-center gap-4">
-      <a href="https://www.fusedframe.co.uk" class="flex items-center gap-3 hover:opacity-80 transition group">
-        <img src="./icons/favicon.jpg" alt="ADFFP Favicon Logo" class="h-9 w-auto rounded-full" />
-        <span class="text-xs text-slate-500 border-l border-slate-700 pl-3 hidden sm:block group-hover:text-slate-300 transition">Visit the Main Site</span>
-      </a>
-      <div class="border-l border-slate-700 pl-4 hidden md:flex flex-col justify-center">
-        <h1 class="text-lg font-bold text-slate-100 leading-tight">EXIF Overlay</h1>
-        <span class="text-[10px] text-[#94fdf8] font-medium tracking-wide uppercase">Clean Summaries for Every Shot!</span>
-      </div>
+    
+    <!-- Left: Branding -->
+    <div class="flex items-center gap-3">
+        <!-- Logo -->
+        <img src="./icons/favicon.jpg" alt="Logo" class="h-8 w-8 rounded-full shadow-sm ring-1 ring-slate-800">
+        
+        <!-- Title Block -->
+        <div class="flex flex-col">
+            <h1 class="text-lg font-bold text-slate-100 leading-none tracking-tight">EXIF Overlay</h1>
+            <span class="text-[10px] text-[#94fdf8] font-medium tracking-wider uppercase hidden sm:block">Clean Summaries for Every Shot!</span>
+        </div>
     </div>
-    <div class="flex gap-3">
-        <button onclick="document.getElementById('fileInput').click()" class="bg-[#94fdf8] text-slate-950 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] transition flex items-center gap-2 shadow-lg shadow-cyan-900/20">
-            <i data-lucide="upload" class="w-4 h-4"></i> <span class="hidden sm:inline">Upload Images</span><span class="sm:hidden">Upload</span>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-3 md:gap-4">
+        <!-- Back Link (Desktop Only) -->
+        <a href="https://www.fusedframe.co.uk" class="text-xs font-medium text-slate-400 hover:text-white transition flex items-center gap-2 group hidden sm:flex">
+            <i data-lucide="arrow-left" class="w-3 h-3 group-hover:-translate-x-0.5 transition-transform"></i>
+            Fused Frame
+        </a>
+
+        <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
+
+        <button onclick="document.getElementById('fileInput').click()" class="bg-[#94fdf8] text-slate-950 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#6ee7e2] transition flex items-center gap-2 shadow-lg shadow-cyan-900/20 group">
+            <i data-lucide="upload" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> 
+            <span class="hidden sm:inline">Upload Images</span>
+            <span class="sm:hidden">Upload</span>
         </button>
         <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
     </div>
@@ -140,221 +160,248 @@
   <div class="flex-grow flex flex-col lg:flex-row relative overflow-hidden">
     
     <!-- LEFT SIDEBAR: Editor -->
-    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full pb-20 lg:pb-0 order-2 lg:order-1">
+    <aside class="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-r border-slate-800 flex flex-col shrink-0 z-30 overflow-visible lg:overflow-y-auto custom-scrollbar h-auto lg:h-full pb-20 lg:pb-0 order-2 lg:order-1 transition-all">
       <div class="p-4 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 space-y-2 shadow-sm select-none">
         <div class="flex justify-between items-center">
-             <h2 class="font-bold text-[#94fdf8]">Editor</h2>
+             <h2 class="font-bold text-[#94fdf8] flex items-center gap-2"><i data-lucide="sliders" class="w-4 h-4"></i> Editor</h2>
              <div class="flex gap-2">
-                 <button onclick="exportSettings()" title="Export JSON" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="save" class="w-4 h-4"></i></button>
-                 <button onclick="document.getElementById('importInput').click()" title="Import JSON" class="text-slate-400 hover:text-[#94fdf8] transition"><i data-lucide="file-up" class="w-4 h-4"></i></button>
+                 <button onclick="exportSettings()" title="Export JSON" class="text-slate-400 hover:text-[#94fdf8] transition p-1.5 hover:bg-slate-800 rounded"><i data-lucide="save" class="w-4 h-4"></i></button>
+                 <button onclick="document.getElementById('importInput').click()" title="Import JSON" class="text-slate-400 hover:text-[#94fdf8] transition p-1.5 hover:bg-slate-800 rounded"><i data-lucide="file-up" class="w-4 h-4"></i></button>
                  <input type="file" id="importInput" accept=".json" class="hidden" onchange="importSettings(this.files)">
              </div>
         </div>
-        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition border border-slate-700 font-medium" title="Apply visual settings to all images">
-            Sync Style to All Images
+        <button onclick="applyStyleToAll()" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded transition border border-slate-700 font-medium flex items-center justify-center gap-2" title="Apply visual settings to all images">
+            <i data-lucide="copy-check" class="w-3 h-3"></i> Sync Style to All Images
         </button>
       </div>
 
       <!-- Empty Sidebar State -->
-      <div id="sidebar-empty-state" class="flex flex-col items-center justify-center p-8 mt-10 text-slate-600 select-none">
-          <i data-lucide="image-plus" class="w-12 h-12 mb-4 opacity-30"></i>
-          <p class="text-sm font-medium opacity-60">No Image Selected</p>
-          <p class="text-xs text-center opacity-40 mt-1">Upload and select an image<br>to enable the editor.</p>
+      <div id="sidebar-empty-state" class="flex flex-col items-center justify-center p-8 mt-10 text-slate-600 select-none h-full min-h-[300px]">
+          <div class="p-4 bg-slate-800/30 rounded-full mb-4">
+            <i data-lucide="image-plus" class="w-8 h-8 opacity-40"></i>
+          </div>
+          <p class="text-sm font-bold opacity-70 mb-1">No Image Selected</p>
+          <p class="text-xs text-center opacity-40">Upload and select an image<br>to enable the editor.</p>
       </div>
 
-      <!-- Controls -->
-      <div id="controls-container" class="hidden p-4 space-y-6 pb-10">
+      <!-- Controls Container -->
+      <div id="controls-container" class="hidden p-3 space-y-3 pb-10">
         
-        <!-- Content (Drag & Drop) -->
-        <div class="space-y-3">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between select-none">
-                <span>Overlay Content</span>
-                <span class="text-[10px] text-slate-600 font-normal">Drag to reorder</span>
-            </h3>
-            
-            <div id="content-rows" class="space-y-2">
-                <!-- Injected via JS -->
-            </div>
+        <!-- Accordion 1: Composition -->
+        <div class="bg-slate-800/20 rounded-lg border border-slate-800 overflow-hidden">
+             <button onclick="toggleAccordion('panel-composition')" class="w-full flex items-center justify-between p-3 bg-slate-800/40 hover:bg-slate-800 transition text-xs font-bold uppercase tracking-wider text-slate-300 select-none">
+                 <span class="flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4 text-[#94fdf8]"></i> Composition</span>
+                 <i data-lucide="chevron-down" class="w-4 h-4 panel-icon rotate-180" id="icon-panel-composition"></i>
+             </button>
+             <div id="panel-composition" class="p-4 space-y-5 border-t border-slate-800/50">
+                 <!-- Content (Drag & Drop) -->
+                <div class="space-y-3">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex justify-between select-none">
+                        <span>Fields</span>
+                        <span class="text-[9px] text-slate-600 font-normal">Drag to reorder</span>
+                    </h3>
+                    
+                    <div id="content-rows" class="space-y-2">
+                        <!-- Injected via JS -->
+                    </div>
 
-            <div class="pt-2 border-t border-slate-800 mt-2">
-                 <div class="flex items-center gap-3 mb-2">
-                    <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('showCopyright', this.checked)">
-                    <span class="text-xs font-bold text-slate-300 w-20 shrink-0 select-none">Copyright</span>
-                    <input type="text" id="input-copyright" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" oninput="updateCurrent('copyright', this.value)">
+                    <div class="pt-3 border-t border-slate-800/50 mt-3">
+                         <div class="flex items-center gap-3 mb-2">
+                            <input type="checkbox" id="check-show-copyright" class="accent-[#94fdf8] h-4 w-4 shrink-0 rounded cursor-pointer" onchange="updateCurrent('showCopyright', this.checked)">
+                            <span class="text-xs font-bold text-slate-300 w-20 shrink-0 select-none cursor-pointer" onclick="document.getElementById('check-show-copyright').click()">Copyright</span>
+                            <input type="text" id="input-copyright" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none transition-colors" oninput="updateCurrent('copyright', this.value)">
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Position -->
+                <div class="space-y-2 select-none pt-2 border-t border-slate-800/50">
+                     <div class="flex justify-between items-center mb-2">
+                         <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Position</h3>
+                         <span class="text-[9px] text-slate-600">Auto-aligns text</span>
+                     </div>
+                     <div class="grid grid-cols-3 gap-2 max-w-[160px]">
+                         <!-- Grid Buttons -->
+                         <button onclick="updateCurrent('position', 'top-left')" id="btn-pos-top-left" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-start justify-start p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         <button onclick="updateCurrent('position', 'top-center')" id="btn-pos-top-center" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-start justify-center p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         <button onclick="updateCurrent('position', 'top-right')" id="btn-pos-top-right" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-start justify-end p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         
+                         <button onclick="updateCurrent('position', 'center-left')" id="btn-pos-center-left" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-center justify-start p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         <button onclick="updateCurrent('position', 'center-center')" id="btn-pos-center-center" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-center justify-center p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         <button onclick="updateCurrent('position', 'center-right')" id="btn-pos-center-right" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-center justify-end p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         
+                         <button onclick="updateCurrent('position', 'bottom-left')" id="btn-pos-bottom-left" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-end justify-start p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         <button onclick="updateCurrent('position', 'bottom-center')" id="btn-pos-bottom-center" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-end justify-center p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                         <button onclick="updateCurrent('position', 'bottom-right')" id="btn-pos-bottom-right" class="h-10 border border-slate-600 rounded bg-slate-900 hover:border-[#94fdf8] flex items-end justify-end p-2 transition-colors"><div class="w-2 h-2 bg-current rounded-sm"></div></button>
+                     </div>
+                </div>
+             </div>
         </div>
 
-        <hr class="border-slate-800">
-
-        <!-- Position -->
-        <div class="space-y-3 select-none">
-             <div class="flex justify-between items-center">
-                 <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Position</h3>
-                 <span class="text-[10px] text-slate-500">Auto-aligns text</span>
-             </div>
-             <div class="grid grid-cols-3 gap-2 max-w-[150px]">
-                 <!-- Grid Buttons -->
-                 <button onclick="updateCurrent('position', 'top-left')" id="btn-pos-top-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'top-center')" id="btn-pos-top-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'top-right')" id="btn-pos-top-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-start justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 
-                 <button onclick="updateCurrent('position', 'center-left')" id="btn-pos-center-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'center-center')" id="btn-pos-center-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'center-right')" id="btn-pos-center-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-center justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 
-                 <button onclick="updateCurrent('position', 'bottom-left')" id="btn-pos-bottom-left" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-start p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'bottom-center')" id="btn-pos-bottom-center" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-center p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-                 <button onclick="updateCurrent('position', 'bottom-right')" id="btn-pos-bottom-right" class="h-8 border border-slate-600 rounded bg-slate-800 hover:border-[#94fdf8] flex items-end justify-end p-1"><div class="w-1.5 h-1.5 bg-current rounded-sm"></div></button>
-             </div>
-        </div>
-
-        <hr class="border-slate-800">
-
-        <!-- Image Style (Optimized for Mobile) -->
-        <div class="space-y-4">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider select-none">Image Style</h3>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs text-slate-400 select-none">Scale</label>
-                        <span id="val-fontScale" class="text-[10px] text-slate-500 font-mono">1.0</span>
-                    </div>
-                    <!-- Update on Input (No Save), Save on Change (Release) -->
-                    <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" 
-                           oninput="updateCurrent('fontScale', this.value, false)" 
-                           onchange="updateCurrent('fontScale', this.value, true)">
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs text-slate-400 select-none">Brightness</label>
-                        <span id="val-brightness" class="text-[10px] text-slate-500 font-mono">65%</span>
-                    </div>
-                    <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full"
-                           oninput="updateCurrent('brightness', this.value, false)" 
-                           onchange="updateCurrent('brightness', this.value, true)">
-                </div>
-            </div>
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <label class="text-xs text-slate-400 select-none">Background Blur</label>
-                    <span id="val-blur" class="text-[10px] text-slate-500 font-mono">5px</span>
-                </div>
-                <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full"
-                       oninput="updateCurrent('blur', this.value, false)" 
-                       onchange="updateCurrent('blur', this.value, true)">
-            </div>
-            
-            <!-- Card Settings -->
-            <div class="bg-slate-800/30 p-3 rounded-lg border border-slate-700/50 space-y-3">
-                <div class="flex justify-between items-center">
-                    <label class="text-xs text-slate-300 font-bold select-none">Background Card</label>
-                    <input type="checkbox" id="check-show-card" class="accent-[#94fdf8]" onchange="updateCurrent('showCard', this.checked)">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+        <!-- Accordion 2: Image & Background -->
+        <div class="bg-slate-800/20 rounded-lg border border-slate-800 overflow-hidden">
+            <button onclick="toggleAccordion('panel-image')" class="w-full flex items-center justify-between p-3 bg-slate-800/40 hover:bg-slate-800 transition text-xs font-bold uppercase tracking-wider text-slate-300 select-none">
+                 <span class="flex items-center gap-2"><i data-lucide="image" class="w-4 h-4 text-[#94fdf8]"></i> Image & Background</span>
+                 <i data-lucide="chevron-down" class="w-4 h-4 panel-icon" id="icon-panel-image"></i>
+            </button>
+            <div id="panel-image" class="hidden p-4 space-y-5 border-t border-slate-800/50">
+                <!-- Image Style -->
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] text-slate-500 block mb-1 select-none">Color</label>
-                        <div class="flex gap-1"><input type="color" id="color-card" class="h-5 w-5 bg-transparent border-0 p-0" oninput="updateCurrent('cardColor', this.value)"></div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">Scale</label>
+                            <span id="val-fontScale" class="text-[10px] text-[#94fdf8] font-mono">1.0</span>
+                        </div>
+                        <input type="range" id="range-font" min="0.5" max="2.0" step="0.1" class="w-full" 
+                               oninput="updateCurrent('fontScale', this.value, false)" 
+                               onchange="updateCurrent('fontScale', this.value, true)">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                             <label class="text-[10px] text-slate-500 select-none">Opacity</label>
-                             <span id="val-cardOpacity" class="text-[9px] text-slate-500 font-mono">65%</span>
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">Bright</label>
+                            <span id="val-brightness" class="text-[10px] text-[#94fdf8] font-mono">65%</span>
                         </div>
-                        <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full"
-                               oninput="updateCurrent('cardOpacity', this.value, false)" 
-                               onchange="updateCurrent('cardOpacity', this.value, true)">
+                        <input type="range" id="range-brightness" min="0" max="200" step="5" class="w-full"
+                               oninput="updateCurrent('brightness', this.value, false)" 
+                               onchange="updateCurrent('brightness', this.value, true)">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">Background Blur</label>
+                        <span id="val-blur" class="text-[10px] text-[#94fdf8] font-mono">5px</span>
+                    </div>
+                    <input type="range" id="range-blur" min="0" max="50" step="1" class="w-full"
+                           oninput="updateCurrent('blur', this.value, false)" 
+                           onchange="updateCurrent('blur', this.value, true)">
+                </div>
+                
+                <!-- Card Settings -->
+                <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs text-slate-300 font-bold select-none cursor-pointer flex items-center gap-2" onclick="document.getElementById('check-show-card').click()">
+                            <i data-lucide="sticky-note" class="w-3 h-3 text-slate-500"></i> Card Background
+                        </label>
+                        <input type="checkbox" id="check-show-card" class="accent-[#94fdf8] cursor-pointer" onchange="updateCurrent('showCard', this.checked)">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1 select-none">Color</label>
+                            <div class="flex gap-1 h-6 items-center"><input type="color" id="color-card" class="h-6 w-full bg-slate-800 rounded cursor-pointer border-0 p-0" oninput="updateCurrent('cardColor', this.value)"></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                 <label class="text-[10px] text-slate-500 select-none">Opacity</label>
+                                 <span id="val-cardOpacity" class="text-[9px] text-[#94fdf8] font-mono">65%</span>
+                            </div>
+                            <input type="range" id="range-card-opacity" min="0" max="100" step="5" class="w-full"
+                                   oninput="updateCurrent('cardOpacity', this.value, false)" 
+                                   onchange="updateCurrent('cardOpacity', this.value, true)">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <hr class="border-slate-800">
-
-        <!-- Typography -->
-        <div class="space-y-4">
-            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider select-none">Typography</h3>
-            
-            <div>
-                <label class="text-xs text-slate-400 block mb-1 select-none">Font Family</label>
-                <select id="select-font" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none focus:border-[#94fdf8]" onchange="updateCurrent('fontFamily', this.value)">
-                    <option value="Oswald" selected>Oswald</option>
-                    <option value="Playfair Display">Playfair Display</option>
-                    <option value="Rubik Burned">Rubik Burned</option>
-                    <option value="Lato">Lato</option>
-                    <option value="Story Script">Story Script</option>
-                    <option value="Orbitron">Orbitron</option>
-                    <option value="Shadows Into Light">Shadows Into Light</option>
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Rubik Distressed">Rubik Distressed</option>
-                    <option value="Open Sans">Open Sans</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Barriecito">Barriecito</option>
-                    <option value="Schoolbell">Schoolbell</option>
-                    <option value="Delius">Delius</option>
-                    <option value="Jersey 10">Jersey 10</option>
-                </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
+        <!-- Accordion 3: Typography -->
+        <div class="bg-slate-800/20 rounded-lg border border-slate-800 overflow-hidden">
+            <button onclick="toggleAccordion('panel-typography')" class="w-full flex items-center justify-between p-3 bg-slate-800/40 hover:bg-slate-800 transition text-xs font-bold uppercase tracking-wider text-slate-300 select-none">
+                 <span class="flex items-center gap-2"><i data-lucide="type" class="w-4 h-4 text-[#94fdf8]"></i> Typography</span>
+                 <i data-lucide="chevron-down" class="w-4 h-4 panel-icon" id="icon-panel-typography"></i>
+            </button>
+            <div id="panel-typography" class="hidden p-4 space-y-5 border-t border-slate-800/50">
+                
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1 select-none">Weight</label>
-                    <select id="select-weight" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontWeight', this.value)">
-                        <option value="normal">Normal</option>
-                        <option value="bold">Bold</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs text-slate-400 block mb-1 select-none">Style</label>
-                    <select id="select-style" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white outline-none" onchange="updateCurrent('fontStyle', this.value)">
-                        <option value="normal">Normal</option>
-                        <option value="italic">Italic</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                 <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs text-slate-400 select-none">Shadow</label>
-                        <span id="val-textShadow" class="text-[10px] text-slate-500 font-mono">5px</span>
-                    </div>
-                    <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full"
-                           oninput="updateCurrent('textShadow', this.value, false)" 
-                           onchange="updateCurrent('textShadow', this.value, true)">
-                 </div>
-                 <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs text-slate-400 select-none">Line Spacing</label>
-                        <span id="val-rowSpacing" class="text-[10px] text-slate-500 font-mono">2px</span>
-                    </div>
-                    <input type="range" id="range-spacing" min="-10" max="50" step="1" class="w-full"
-                           oninput="updateCurrent('rowSpacing', this.value, false)" 
-                           onchange="updateCurrent('rowSpacing', this.value, true)">
-                 </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 pt-2">
-                <div>
-                    <label class="text-xs text-slate-400 block mb-1 select-none">Text Color</label>
-                    <div class="flex gap-2 items-center">
-                        <input type="color" id="color-text" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('textColor', this.value)">
-                        <input type="text" id="hex-text" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('textColor', this.value)">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 select-none">Font Family</label>
+                    <div class="relative">
+                        <select id="select-font" class="w-full appearance-none bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white outline-none focus:border-[#94fdf8] transition-colors" onchange="updateCurrent('fontFamily', this.value)">
+                            <option value="Oswald" selected>Oswald</option>
+                            <option value="Playfair Display">Playfair Display</option>
+                            <option value="Rubik Burned">Rubik Burned</option>
+                            <option value="Lato">Lato</option>
+                            <option value="Story Script">Story Script</option>
+                            <option value="Orbitron">Orbitron</option>
+                            <option value="Shadows Into Light">Shadows Into Light</option>
+                            <option value="Montserrat">Montserrat</option>
+                            <option value="Rubik Distressed">Rubik Distressed</option>
+                            <option value="Open Sans">Open Sans</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Barriecito">Barriecito</option>
+                            <option value="Schoolbell">Schoolbell</option>
+                            <option value="Delius">Delius</option>
+                            <option value="Jersey 10">Jersey 10</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-2 top-2.5 pointer-events-none"></i>
                     </div>
                 </div>
-                <div>
-                     <label class="text-xs text-slate-400 block mb-1 select-none">Accent</label>
-                    <div class="flex gap-2 items-center">
-                        <input type="color" id="color-accent" class="h-6 w-6 bg-transparent border-0 cursor-pointer p-0" oninput="updateCurrent('accentColor', this.value)">
-                        <input type="text" id="hex-accent" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1 text-slate-300 uppercase" onchange="updateCurrent('accentColor', this.value)">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 select-none">Weight</label>
+                        <div class="relative">
+                            <select id="select-weight" class="w-full appearance-none bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white outline-none focus:border-[#94fdf8]" onchange="updateCurrent('fontWeight', this.value)">
+                                <option value="normal">Normal</option>
+                                <option value="bold">Bold</option>
+                            </select>
+                             <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-2 top-2.5 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5 select-none">Style</label>
+                        <div class="relative">
+                            <select id="select-style" class="w-full appearance-none bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white outline-none focus:border-[#94fdf8]" onchange="updateCurrent('fontStyle', this.value)">
+                                <option value="normal">Normal</option>
+                                <option value="italic">Italic</option>
+                            </select>
+                             <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 absolute right-2 top-2.5 pointer-events-none"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                     <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">Shadow</label>
+                            <span id="val-textShadow" class="text-[9px] text-[#94fdf8] font-mono">5px</span>
+                        </div>
+                        <input type="range" id="range-shadow" min="0" max="20" step="1" class="w-full"
+                               oninput="updateCurrent('textShadow', this.value, false)" 
+                               onchange="updateCurrent('textShadow', this.value, true)">
+                     </div>
+                     <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">Spacing</label>
+                            <span id="val-rowSpacing" class="text-[9px] text-[#94fdf8] font-mono">2px</span>
+                        </div>
+                        <input type="range" id="range-spacing" min="-10" max="50" step="1" class="w-full"
+                               oninput="updateCurrent('rowSpacing', this.value, false)" 
+                               onchange="updateCurrent('rowSpacing', this.value, true)">
+                     </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/50">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1 select-none">Text Color</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="color" id="color-text" class="h-7 w-8 bg-slate-800 rounded cursor-pointer border-0 p-0" oninput="updateCurrent('textColor', this.value)">
+                            <input type="text" id="hex-text" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1.5 text-slate-300 uppercase font-mono" onchange="updateCurrent('textColor', this.value)">
+                        </div>
+                    </div>
+                    <div>
+                         <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1 select-none">Accent</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="color" id="color-accent" class="h-7 w-8 bg-slate-800 rounded cursor-pointer border-0 p-0" oninput="updateCurrent('accentColor', this.value)">
+                            <input type="text" id="hex-accent" class="w-full bg-slate-950 border border-slate-700 rounded text-xs px-2 py-1.5 text-slate-300 uppercase font-mono" onchange="updateCurrent('accentColor', this.value)">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="pt-4">
-            <button onclick="resetDefaults()" class="w-full text-xs text-red-400 hover:text-red-300 py-2 border border-slate-800 hover:border-red-900 rounded transition">Reset to Defaults</button>
+        <div class="pt-2">
+            <button onclick="resetDefaults()" class="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-900/10 py-3 border border-slate-800 hover:border-red-900/30 rounded-lg transition flex items-center justify-center gap-2">
+                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset to Defaults
+            </button>
         </div>
 
       </div>
@@ -397,9 +444,11 @@
                 <div class="w-full h-full flex items-center justify-center p-4 lg:p-8 overflow-hidden" id="canvas-wrapper">
                     <canvas id="previewCanvas" class="shadow-2xl border border-slate-700 rounded-sm hidden transition-transform duration-200 ease-out origin-center" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
                     <div id="empty-state" class="text-center text-slate-600 select-none">
-                        <i data-lucide="camera" class="w-16 h-16 lg:w-24 lg:h-24 mx-auto mb-4 opacity-20"></i>
-                        <h2 class="text-xl font-bold opacity-50">Ready to Create</h2>
-                        <p class="text-sm opacity-40">Upload images to begin</p>
+                        <div class="w-24 h-24 rounded-full bg-slate-900/50 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="camera" class="w-12 h-12 lg:w-16 lg:h-16 opacity-30"></i>
+                        </div>
+                        <h2 class="text-xl font-bold opacity-60">Ready to Create</h2>
+                        <p class="text-sm opacity-40 mt-1">Upload images to begin editing</p>
                     </div>
                 </div>
                 
@@ -1053,7 +1102,8 @@
         
         userDefaults.order.forEach(id => {
             const div = document.createElement('div');
-            div.className = "flex items-center gap-3 draggable-item bg-slate-900/50 p-1 rounded border-t-2 border-b-2 border-transparent hover:border-slate-700 transition";
+            // UPDATED: Increased padding (p-2.5) and adjusted border color for cleaner look
+            div.className = "flex items-center gap-3 draggable-item bg-slate-900/50 p-2.5 rounded border border-slate-700/50 hover:border-slate-600 transition group";
             div.draggable = true;
             div.dataset.id = id;
             div.addEventListener('dragstart', handleDragStart);
@@ -1063,8 +1113,8 @@
             div.addEventListener('dragend', handleDragEnd);
 
             if (id === 'Divider') {
-                div.innerHTML = `<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
-                <div class="flex-grow flex items-center gap-2 opacity-70"><div class="h-px bg-slate-600 flex-grow"></div><span class="text-[9px] uppercase select-none">Divider</span><div class="h-px bg-slate-600 flex-grow"></div></div>`;
+                div.innerHTML = `<i data-lucide="grip-vertical" class="w-3 h-3 text-slate-600 cursor-grab group-hover:text-slate-400"></i>
+                <div class="flex-grow flex items-center gap-2 opacity-70"><div class="h-px bg-slate-700 flex-grow"></div><span class="text-[9px] uppercase select-none text-slate-500 font-bold tracking-wider">Divider</span><div class="h-px bg-slate-700 flex-grow"></div></div>`;
             } else {
                 let label = id;
                 const keyShow = `show${id}`;
@@ -1073,16 +1123,30 @@
                 const placeholder = isSocial ? '@username' : label;
 
                 div.innerHTML = `
-                <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-600 cursor-grab"></i>
-                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-4 w-4 shrink-0" onchange="updateCurrent('${keyShow}', this.checked)" ${userDefaults[keyShow] ? 'checked' : ''}>
-                <span class="text-xs font-bold text-slate-300 w-20 shrink-0 truncate select-none">${label}</span>
-                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white focus:border-[#94fdf8] outline-none" placeholder="${placeholder}" oninput="updateCurrent('${keyTxt}', this.value)" value="${userDefaults[keyTxt] || ''}">
+                <i data-lucide="grip-vertical" class="w-3 h-3 text-slate-600 cursor-grab group-hover:text-slate-400"></i>
+                <input type="checkbox" id="check-${keyShow}" class="accent-[#94fdf8] h-3.5 w-3.5 shrink-0 rounded cursor-pointer" onchange="updateCurrent('${keyShow}', this.checked)" ${userDefaults[keyShow] ? 'checked' : ''}>
+                <span class="text-[11px] font-bold text-slate-400 w-16 shrink-0 truncate select-none cursor-pointer hover:text-slate-200 transition" onclick="document.getElementById('check-${keyShow}').click()">${label}</span>
+                <input type="text" id="input-${keyTxt}" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:border-[#94fdf8] outline-none transition-colors" placeholder="${placeholder}" oninput="updateCurrent('${keyTxt}', this.value)" value="${userDefaults[keyTxt] || ''}">
                 `;
             }
             rowsContainer.appendChild(div);
         });
         lucide.createIcons();
     };
+
+    // --- ACCORDION LOGIC ---
+    function toggleAccordion(panelId) {
+        const panel = document.getElementById(panelId);
+        const icon = document.getElementById('icon-' + panelId);
+        
+        if (panel.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+        } else {
+            panel.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    }
 
     // --- DRAG & DROP ---
     let dragSrcEl = null;

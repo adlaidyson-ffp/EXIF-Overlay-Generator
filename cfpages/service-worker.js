@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exif-overlay-sw-v2.8';
+const CACHE_NAME = 'exif-overlay-sw-v3';
 
 const ASSETS = [
   './',
@@ -8,6 +8,7 @@ const ASSETS = [
   './assets/libs/filesaver.min.js',
   './assets/libs/lucide.min.js',
   './icons/favicon.jpg',
+  './icons/headerfavicon.png',
   './src/styles.css',
   'https://get.microsoft.com/images/en-us%20dark.svg',
   
